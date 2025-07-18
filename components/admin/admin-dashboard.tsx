@@ -8,11 +8,11 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Spinner } from '@/components/ui/loading-states'
-import { 
-  PlusCircle, 
-  BarChart3, 
-  Users, 
-  FileText, 
+import {
+  PlusCircle,
+  BarChart3,
+  Users,
+  FileText,
   TrendingUp,
   Eye,
   Settings
@@ -23,7 +23,7 @@ import { AdminRoute } from '@/components/auth/admin-route'
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
-  
+
   const { data: stats, loading, error } = useQuery({
     queryKey: ['admin-dashboard-stats'],
     queryFn: getAdminDashboardStats,
@@ -63,8 +63,8 @@ export function AdminDashboard() {
                 </p>
               </div>
               <div className="flex space-x-3">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => setActiveTab('surveys')}
                 >
