@@ -1,0 +1,78 @@
+'use client'
+
+import { useAuth } from '@/hooks/use-auth'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Spinner } from '@/components/ui/loading-states'
+
+interface AdminRouteProps {
+  children: React.ReactNode
+  requiredRole?: 'admin' | 'survey_creator'
+  fallbackPath?: string
+}
+
+export function AdminRoute({ 
+  children, 
+  requiredRole = 'admin',
+  fallbackPath = '/' 
+}: AdminRouteProps) {
+  const { user, isAuthenticated, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push(fallbackPath)
+      return
+    }
+
+    if (!loading && isAuthenticated && user) {
+      const hasRequiredRole = requiredRole === 'admin' 
+        ? user.role === 'admin'
+        : user.role === 'admin' || user.role === 'survey_creator'
+
+      if (!hasRequiredRole) {
+        router.push(fallbackPath)
+        return
+      }
+    }
+  }, [user, isAuthenticated, loading, router, requiredRole, fallbackPath])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    )
+  }
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+          <p className="text-gray-600">Please connect your wallet to continue.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const hasRequiredRole = requiredRole === 'admin' 
+    ? user.role === 'admin'
+    : user.role === 'admin' || user.role === 'survey_creator'
+
+  if (!hasRequiredRole) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+          <p className="text-gray-600">
+            You don't have permission to access this page. 
+            {requiredRole === 'admin' ? ' Admin access required.' : ' Survey creator access required.'}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return <>{children}</>
+}
