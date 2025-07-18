@@ -3,14 +3,35 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Button } from "@/components/ui/button"
 import { HerdPointsBalance } from "@/components/ui/herd-points-balance"
-import { useAuth } from "@/hooks/use-auth"
+import { useAuthActions } from "@/components/providers/auth-provider"
+import { useIsAuthenticated, useUser, useAuthLoading } from "@/lib/store"
+import { useAccount } from 'wagmi'
 import { useNotifications } from "@/components/ui/notifications"
 import { formatAddress } from "@/lib/web3"
 import { Check, ArrowRight, Shield, Loader2 } from 'lucide-react'
 
 export function AuthSection() {
-  const { user, isAuthenticated, isConnected, loading, login } = useAuth()
+  const { login } = useAuthActions()
+  const isAuthenticated = useIsAuthenticated()
+  const user = useUser()
+  const loading = useAuthLoading()
+  const { isConnected } = useAccount()
   const notifications = useNotifications()
+  
+  const handleLogin = async () => {
+    try {
+      console.log('AuthSection: Starting login process')
+      await login()
+      console.log('AuthSection: Login successful')
+      notifications.success('Authentication successful', 'You can now take surveys')
+    } catch (error: any) {
+      console.error('AuthSection: Login failed', error)
+      notifications.error(
+        'Authentication failed',
+        error.message || 'Please try again or contact support'
+      )
+    }
+  }
   
   // Handle balance changes with notifications
   const handleBalanceChange = (newBalance: number, previousBalance: number) => {
@@ -73,7 +94,7 @@ export function AuthSection() {
       </div>
       
       <Button
-        onClick={login}
+        onClick={handleLogin}
         disabled={loading}
         className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-4 py-2 font-medium"
         title="Sign a message to prove wallet ownership (free, no gas)"

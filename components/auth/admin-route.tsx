@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/hooks/use-auth'
+import { useIsAuthenticated, useAuthLoading, useUser } from '@/lib/store'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Spinner } from '@/components/ui/loading-states'
@@ -16,7 +16,9 @@ export function AdminRoute({
   requiredRole = 'admin',
   fallbackPath = '/' 
 }: AdminRouteProps) {
-  const { user, isAuthenticated, loading } = useAuth()
+  const user = useUser()
+  const isAuthenticated = useIsAuthenticated()
+  const loading = useAuthLoading()
   const router = useRouter()
 
   useEffect(() => {

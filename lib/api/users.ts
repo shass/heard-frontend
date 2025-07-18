@@ -8,7 +8,7 @@ import type {
 } from '@/lib/types'
 
 export interface GetHerdPointsResponse {
-  balance: number
+  currentBalance: number
   totalEarned: number
   totalSpent: number
   transactionCount: number
@@ -21,11 +21,8 @@ export interface GetHerdPointsHistoryRequest {
 }
 
 export interface GetHerdPointsHistoryResponse {
-  transactions: HerdPointsTransaction[]
-  total: number
-  meta: {
-    pagination: PaginationMeta
-  }
+  items: HerdPointsTransaction[]
+  pagination: PaginationMeta
 }
 
 export interface UpdateUserRequest {
@@ -64,7 +61,7 @@ export class UserApi {
    * Get HerdPoints balance and statistics
    */
   async getHerdPoints(): Promise<GetHerdPointsResponse> {
-    return await apiClient.get<GetHerdPointsResponse>('/users/herd-points')
+    return await apiClient.get<GetHerdPointsResponse>('/users/me/herd-points')
   }
 
   /**
@@ -77,7 +74,7 @@ export class UserApi {
     if (params.offset) queryParams.append('offset', params.offset.toString())
     if (params.type) queryParams.append('type', params.type)
 
-    const url = `/users/herd-points/history${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+    const url = `/users/me/herd-points/history${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
     return await apiClient.get<GetHerdPointsHistoryResponse>(url)
   }
 
@@ -130,7 +127,7 @@ export class UserApi {
    */
   async getRecentTransactions(): Promise<HerdPointsTransaction[]> {
     const response = await this.getHerdPointsHistory({ limit: 10, offset: 0 })
-    return response.transactions
+    return response.items
   }
 
   /**
@@ -158,7 +155,7 @@ export class UserApi {
       .reduce((sum, tx) => sum + tx.amount, 0)
 
     return {
-      balance: pointsData.balance,
+      balance: pointsData.currentBalance,
       recentTransactions,
       monthlyEarned
     }
@@ -172,11 +169,11 @@ export class UserApi {
     currentBalance: number
     required: number
   }> {
-    const { balance } = await this.getHerdPoints()
+    const { currentBalance } = await this.getHerdPoints()
     
     return {
-      hasEnough: balance >= requiredPoints,
-      currentBalance: balance,
+      hasEnough: currentBalance >= requiredPoints,
+      currentBalance: currentBalance,
       required: requiredPoints
     }
   }

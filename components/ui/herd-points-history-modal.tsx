@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { LoadingState } from "@/components/ui/loading-states"
 import { X, TrendingUp, TrendingDown, Gift, Settings } from "lucide-react"
 import { useHerdPointsHistory } from "@/hooks/use-users"
-import { useAuth } from "@/hooks/use-auth"
+import { useUser } from "@/lib/store"
 import type { HerdPointsTransaction } from "@/lib/types"
 import { formatDistance } from 'date-fns'
 
@@ -16,7 +16,7 @@ interface HerdPointsHistoryModalProps {
 
 export function HerdPointsHistoryModal({ isOpen, onClose }: HerdPointsHistoryModalProps) {
   const [filterType, setFilterType] = useState<'all' | 'earned' | 'spent' | 'bonus' | 'admin_adjustment'>('all')
-  const { user } = useAuth()
+  const user = useUser()
   
   const { 
     data: history, 

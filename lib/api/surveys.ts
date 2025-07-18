@@ -1,8 +1,8 @@
 // Survey API endpoints
 
 import { apiClient } from './client'
-import type { 
-  Survey, 
+import type {
+  Survey,
   Question,
   EligibilityResponse,
   PaginationMeta
@@ -39,7 +39,7 @@ export class SurveyApi {
    */
   async getSurveys(params: GetSurveysRequest = {}): Promise<GetSurveysResponse> {
     const queryParams = new URLSearchParams()
-    
+
     if (params.limit) queryParams.append('limit', params.limit.toString())
     if (params.offset) queryParams.append('offset', params.offset.toString())
     if (params.company) queryParams.append('company', params.company)
@@ -56,7 +56,7 @@ export class SurveyApi {
         hasMore: boolean
       }
     }>(url)
-    
+
     // Transform backend response to frontend expected format
     return {
       surveys: response.items,
@@ -83,16 +83,21 @@ export class SurveyApi {
   /**
    * Check user eligibility for survey
    */
-  async checkEligibility(id: string, params: { 
+  async checkEligibility(id: string, params: {
     walletAddress?: string
-    linkDropCode?: string 
   } = {}): Promise<EligibilityResponse> {
     const queryParams = new URLSearchParams()
-    
-    if (params.walletAddress) queryParams.append('walletAddress', params.walletAddress)
-    if (params.linkDropCode) queryParams.append('linkDropCode', params.linkDropCode)
 
-    const url = `/surveys/${id}/eligibility${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+    console.log('walletAddress', params.walletAddress)
+
+    if (params.walletAddress) {
+      queryParams.append('walletAddress', params.walletAddress)
+    } else {
+      // Don't make request without wallet address - this should not happen
+      throw new Error('Wallet address is required for eligibility check')
+    }
+
+    const url = `/surveys/${id}/eligibility?${queryParams.toString()}`
     return await apiClient.get<EligibilityResponse>(url)
   }
 
@@ -113,14 +118,14 @@ export class SurveyApi {
   /**
    * Get active surveys for public display (no auth required)
    */
-  async getActiveSurveys(params: { 
+  async getActiveSurveys(params: {
     limit?: number
     offset?: number
     company?: string
   } = {}): Promise<Survey[]> {
-    const response = await this.getSurveys({ 
-      ...params, 
-      status: 'active' 
+    const response = await this.getSurveys({
+      ...params,
+      status: 'active'
     })
     return response.surveys
   }
@@ -129,8 +134,8 @@ export class SurveyApi {
    * Search surveys by name or company
    */
   async searchSurveys(query: string, params: GetSurveysRequest = {}): Promise<Survey[]> {
-    const response = await this.getSurveys({ 
-      ...params, 
+    const response = await this.getSurveys({
+      ...params,
       search: query,
       status: 'active'
     })
@@ -141,8 +146,8 @@ export class SurveyApi {
    * Get surveys by company
    */
   async getSurveysByCompany(company: string, params: GetSurveysRequest = {}): Promise<Survey[]> {
-    const response = await this.getSurveys({ 
-      ...params, 
+    const response = await this.getSurveys({
+      ...params,
       company,
       status: 'active'
     })

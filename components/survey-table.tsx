@@ -3,8 +3,10 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { LoadingState, SurveyTableSkeleton } from "@/components/ui/loading-states"
-import { useActiveSurveys, useSurveyEligibility } from "@/hooks/use-surveys"
-import { useAuth } from "@/hooks/use-auth"
+import { useActiveSurveys, useBatchSurveyEligibility } from "@/hooks/use-surveys"
+import { useAuthActions } from "@/components/providers/auth-provider"
+import { useIsAuthenticated, useUser } from "@/lib/store"
+import { useAccount } from 'wagmi'
 import { useNotifications } from "@/components/ui/notifications"
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import type { Survey } from "@/lib/types"
@@ -18,21 +20,20 @@ interface SurveyRowProps {
   onTakeSurvey: (survey: Survey) => void
   onConnectWallet?: () => void
   onAuthenticate?: () => void
+  eligibility?: any // Pass eligibility data from batch request
 }
 
-function SurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate }: SurveyRowProps) {
-  const { user, isAuthenticated, isConnected } = useAuth()
-  const { data: eligibility } = useSurveyEligibility(
-    survey.id, 
-    user?.walletAddress
-  )
-  
-  const isEligible = eligibility?.eligible ?? true
-  const alreadyCompleted = eligibility?.alreadyCompleted ?? false
-  
+function SurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, eligibility }: SurveyRowProps) {
+  const isAuthenticated = useIsAuthenticated()
+  const { isConnected } = useAccount()
+
+  // Only use batch eligibility data - no fallback to avoid duplicate requests
+  const isEligible = eligibility?.isEligible ?? true
+  const alreadyCompleted = eligibility?.hasCompleted ?? false
+
   const canTake = isAuthenticated && isEligible && !alreadyCompleted
   const canInteract = isConnected && (!isAuthenticated || canTake)
-  
+
   const getButtonText = () => {
     if (!isConnected) return "Connect Wallet"
     if (!isAuthenticated) return "Authenticate"
@@ -40,7 +41,7 @@ function SurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate }: Su
     if (!isEligible) return "Not Eligible"
     return "Take"
   }
-  
+
   const getButtonStyle = () => {
     if (!canInteract) return "bg-zinc-400 cursor-not-allowed"
     return "bg-zinc-900 hover:bg-zinc-800"
@@ -85,7 +86,7 @@ function SurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate }: Su
             title={
               !isConnected ? "Connect your wallet to participate" :
               !isAuthenticated ? "Sign a message to prove wallet ownership (free, no gas)" :
-              !isEligible ? eligibility?.reason : 
+              !isEligible ? eligibility?.reason :
               "Start this survey"
             }
           >
@@ -104,7 +105,7 @@ function SurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate }: Su
               {survey.totalQuestions} questions • {survey.responseCount} responses
             </p>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <div className="text-base font-medium text-zinc-900">{formatReward(survey)}</div>
@@ -119,7 +120,7 @@ function SurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate }: Su
               title={
                 !isConnected ? "Connect your wallet to participate" :
                 !isAuthenticated ? "Sign a message to prove wallet ownership (free, no gas)" :
-                !isEligible ? eligibility?.reason : 
+                !isEligible ? eligibility?.reason :
                 "Start this survey"
               }
             >
@@ -135,26 +136,36 @@ function SurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate }: Su
 export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCompany, setSelectedCompany] = useState("")
-  
-  const { 
-    data: surveys = [], 
-    isLoading, 
-    error, 
-    refetch 
+
+  const {
+    data: surveys = [],
+    isLoading,
+    error,
+    refetch
   } = useActiveSurveys({ limit: 50 })
-  
+
   const notifications = useNotifications()
-  const { login, isConnected, isAuthenticated } = useAuth()
+  const { login } = useAuthActions()
+  const isAuthenticated = useIsAuthenticated()
+  const user = useUser()
+  const { isConnected } = useAccount()
   const { openConnectModal } = useConnectModal()
+
+  // Batch eligibility check for all surveys
+  // Only make request if user is authenticated and has a wallet address
+  const { data: batchEligibility } = useBatchSurveyEligibility(
+    surveys.map(s => s.id),
+    isAuthenticated && user?.walletAddress ? user.walletAddress : undefined
+  )
 
   // Filter surveys based on search and company
   const filteredSurveys = surveys.filter(survey => {
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       survey.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       survey.company.toLowerCase().includes(searchQuery.toLowerCase())
-    
+
     const matchesCompany = !selectedCompany || survey.company === selectedCompany
-    
+
     return matchesSearch && matchesCompany
   })
 
@@ -180,12 +191,15 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
 
   const handleAuthenticate = async () => {
     try {
+      console.log('SurveyTable: Starting login process')
       await login()
+      console.log('SurveyTable: Login successful')
       notifications.success("Authentication successful", "You can now take surveys")
-    } catch (error) {
+    } catch (error: any) {
+      console.error('SurveyTable: Login failed', error)
       notifications.error(
         "Authentication failed",
-        "Please try again or contact support if the problem persists"
+        error.message || "Please try again or contact support if the problem persists"
       )
     }
   }
@@ -257,12 +271,13 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
                 </thead>
                 <tbody className="divide-y divide-zinc-200">
                   {filteredSurveys.map((survey) => (
-                    <SurveyRow 
-                      key={survey.id} 
-                      survey={survey} 
+                    <SurveyRow
+                      key={survey.id}
+                      survey={survey}
                       onTakeSurvey={handleTakeSurvey}
                       onConnectWallet={handleConnectWallet}
                       onAuthenticate={handleAuthenticate}
+                      eligibility={batchEligibility?.[survey.id]}
                     />
                   ))}
                 </tbody>
@@ -273,12 +288,13 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
           {/* Mobile Cards */}
           <div className="lg:hidden space-y-4">
             {filteredSurveys.map((survey) => (
-              <SurveyRow 
-                key={survey.id} 
-                survey={survey} 
+              <SurveyRow
+                key={survey.id}
+                survey={survey}
                 onTakeSurvey={handleTakeSurvey}
                 onConnectWallet={handleConnectWallet}
                 onAuthenticate={handleAuthenticate}
+                eligibility={batchEligibility?.[survey.id]}
               />
             ))}
           </div>

@@ -1,7 +1,6 @@
 // Custom React hooks exports
 
 // Authentication hooks
-export { useAuth } from './use-auth'
 
 // Survey hooks  
 export * from './use-surveys'

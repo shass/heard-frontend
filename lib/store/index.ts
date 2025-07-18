@@ -93,6 +93,12 @@ export const useAuthStore = create<AuthStore>()(
   )
 )
 
+// Optimized selectors for frequently used data
+export const useIsAuthenticated = () => useAuthStore(state => state.isAuthenticated)
+export const useUser = () => useAuthStore(state => state.user)
+export const useAuthLoading = () => useAuthStore(state => state.loading)
+export const useAuthError = () => useAuthStore(state => state.error)
+
 // Survey store  
 interface SurveyStore {
   surveys: Survey[]

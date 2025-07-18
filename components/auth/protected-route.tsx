@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useAuth } from '@/hooks/use-auth'
+import { useIsAuthenticated, useAuthLoading } from '@/lib/store'
+import { useAuthActions } from '@/components/providers/auth-provider'
+import { useAccount } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Button } from '@/components/ui/button'
 
@@ -11,7 +13,12 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
-  const { isAuthenticated, isConnected, loading, login, checkAuth } = useAuth()
+  const isAuthenticated = useIsAuthenticated()
+  const loading = useAuthLoading()
+  
+  // Get auth actions and wallet connection status
+  const { login, checkAuth } = useAuthActions()
+  const { isConnected } = useAccount()
 
   // Check authentication on mount
   useEffect(() => {

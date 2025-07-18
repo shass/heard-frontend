@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAutoRefreshHerdPoints } from '@/hooks/use-users'
-import { useAuth } from '@/hooks/use-auth'
+import { useUser } from '@/lib/store'
 import { HerdPointsHistoryModal } from '@/components/lazy'
 import { History } from 'lucide-react'
 
@@ -21,7 +21,7 @@ export function HerdPointsBalance({
   clickable = true,
   onBalanceChange 
 }: HerdPointsBalanceProps) {
-  const { user } = useAuth()
+  const user = useUser()
   const [previousBalance, setPreviousBalance] = useState<number | null>(null)
   const [isAnimating, setIsAnimating] = useState(false)
   const [animationType, setAnimationType] = useState<'increase' | 'decrease' | null>(null)
@@ -32,7 +32,7 @@ export function HerdPointsBalance({
   const { data: herdPoints, isLoading: pointsLoading } = useAutoRefreshHerdPoints(refreshInterval)
   
   // Use fallback to user balance if API is not available
-  const currentBalance = herdPoints?.balance ?? user?.herdPointsBalance ?? 0
+  const currentBalance = herdPoints?.currentBalance ?? user?.herdPointsBalance ?? 0
   
   // Initialize displayed balance
   useEffect(() => {

@@ -120,8 +120,9 @@ export interface NonceResponse {
 
 // Eligibility types
 export interface EligibilityResponse {
-  eligible: boolean
-  alreadyCompleted: boolean
+  isEligible: boolean
+  hasStarted: boolean
+  hasCompleted: boolean
   reason?: string
 }
 

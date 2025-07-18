@@ -6,7 +6,7 @@ import { LoadingState, InlineLoading } from "@/components/ui/loading-states"
 import { Copy, ExternalLink, Gift, CheckCircle2 } from "lucide-react"
 import { useSurveyResponseState } from "@/hooks/use-survey-response"
 import { useHerdPoints } from "@/hooks/use-users"
-import { useAuth } from "@/hooks/use-auth"
+import { useIsAuthenticated, useUser } from "@/lib/store"
 import { useNotifications } from "@/components/ui/notifications"
 import type { Survey } from "@/lib/types"
 
@@ -20,7 +20,8 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null)
   const [claimStatus, setClaimStatus] = useState<'pending' | 'claimed' | 'error'>('pending')
   
-  const { user, isAuthenticated } = useAuth()
+  const user = useUser()
+  const isAuthenticated = useIsAuthenticated()
   const notifications = useNotifications()
   
   // Get response data if responseId is provided

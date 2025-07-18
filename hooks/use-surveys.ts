@@ -3,8 +3,8 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { surveyApi, responseApi, type GetSurveysRequest, type StartSurveyRequest } from '@/lib/api/surveys'
-import { useAuth } from './use-auth'
+import { surveyApi, type GetSurveysRequest, type StartSurveyRequest } from '@/lib/api/surveys'
+import { useIsAuthenticated } from '@/lib/store'
 import type { Survey, Question, EligibilityResponse } from '@/lib/types'
 
 // Query keys for cache management
@@ -63,7 +63,7 @@ export function useSurvey(id: string) {
  * Hook to get survey questions (requires auth)
  */
 export function useSurveyQuestions(id: string) {
-  const { isAuthenticated } = useAuth()
+  const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
     queryKey: surveyKeys.questions(id),
@@ -76,12 +76,13 @@ export function useSurveyQuestions(id: string) {
 
 /**
  * Hook to check survey eligibility
+ * Only makes request if both id and walletAddress are provided
  */
 export function useSurveyEligibility(id: string, walletAddress?: string) {
   return useQuery({
     queryKey: surveyKeys.eligibility(id, walletAddress),
     queryFn: () => surveyApi.checkEligibility(id, { walletAddress }),
-    enabled: !!id,
+    enabled: !!id && !!walletAddress,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
   })
@@ -180,4 +181,44 @@ export function useInvalidateSurveys() {
     invalidateLists: () => queryClient.invalidateQueries({ queryKey: surveyKeys.lists() }),
     invalidateSurvey: (id: string) => queryClient.invalidateQueries({ queryKey: surveyKeys.detail(id) }),
   }
+}
+
+/**
+ * Hook to check eligibility for multiple surveys at once
+ * Optimizes network requests by batching eligibility checks
+ */
+export function useBatchSurveyEligibility(
+  surveyIds: string[],
+  walletAddress?: string
+) {
+  const isAuthenticated = useIsAuthenticated()
+  
+  return useQuery({
+    queryKey: [...surveyKeys.all, 'batch-eligibility', surveyIds, walletAddress],
+    queryFn: async () => {
+      if (!walletAddress || surveyIds.length === 0) return {}
+      
+      // Make parallel requests for all surveys
+      const results = await Promise.all(
+        surveyIds.map(async (id) => {
+          try {
+            const result = await surveyApi.checkEligibility(id, { walletAddress })
+            return { id, ...result }
+          } catch (error) {
+            console.error(`Eligibility check failed for survey ${id}:`, error)
+            return { id, isEligible: false, reason: 'Check failed' }
+          }
+        })
+      )
+      
+      // Convert array to object for easy lookup
+      return results.reduce((acc, result) => {
+        acc[result.id] = result
+        return acc
+      }, {} as Record<string, any>)
+    },
+    enabled: isAuthenticated && !!walletAddress && surveyIds.length > 0,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 2 * 60 * 1000, // 2 minutes
+  })
 }

@@ -4,8 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userApi, type GetHerdPointsHistoryRequest, type UpdateUserRequest, type AdjustHerdPointsRequest } from '@/lib/api/users'
-import { useAuth } from './use-auth'
-import { useUIStore } from '@/lib/store'
+import { useUIStore, useIsAuthenticated, useUser } from '@/lib/store'
 import type { User, HerdPointsTransaction } from '@/lib/types'
 
 // Query keys for cache management
@@ -24,7 +23,7 @@ export const userKeys = {
  * Hook to get current user HerdPoints balance and stats
  */
 export function useHerdPoints() {
-  const { isAuthenticated } = useAuth()
+  const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
     queryKey: userKeys.herdPoints(),
@@ -39,7 +38,7 @@ export function useHerdPoints() {
  * Hook to get HerdPoints transaction history
  */
 export function useHerdPointsHistory(params: GetHerdPointsHistoryRequest = {}) {
-  const { isAuthenticated } = useAuth()
+  const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
     queryKey: userKeys.herdPointsHistory(params),
@@ -54,7 +53,7 @@ export function useHerdPointsHistory(params: GetHerdPointsHistoryRequest = {}) {
  * Hook to get recent HerdPoints transactions (last 10)
  */
 export function useRecentTransactions() {
-  const { isAuthenticated } = useAuth()
+  const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
     queryKey: [...userKeys.herdPoints(), 'recent'],
@@ -69,7 +68,7 @@ export function useRecentTransactions() {
  * Hook to get HerdPoints summary for dashboard
  */
 export function useHerdPointsSummary() {
-  const { isAuthenticated } = useAuth()
+  const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
     queryKey: userKeys.herdPointsSummary(),
@@ -84,7 +83,7 @@ export function useHerdPointsSummary() {
  * Hook to check if user has enough HerdPoints
  */
 export function useHasEnoughPoints(requiredPoints: number) {
-  const { isAuthenticated } = useAuth()
+  const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
     queryKey: [...userKeys.herdPoints(), 'hasEnough', requiredPoints],
@@ -99,7 +98,7 @@ export function useHasEnoughPoints(requiredPoints: number) {
  * Hook to get current user profile
  */
 export function useCurrentUser() {
-  const { isAuthenticated } = useAuth()
+  const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
     queryKey: userKeys.current(),
@@ -113,9 +112,9 @@ export function useCurrentUser() {
 /**
  * Hook to get user by ID (admin only)
  */
-export function useUser(userId: string) {
-  const { user } = useAuth()
-  const isAdmin = user?.role === 'admin'
+export function useUserById(userId: string) {
+  const currentUser = useUser()
+  const isAdmin = currentUser?.role === 'admin'
   
   return useQuery({
     queryKey: userKeys.detail(userId),
@@ -130,7 +129,7 @@ export function useUser(userId: string) {
  * Hook to get all users with filtering (admin only)
  */
 export function useAllUsers(params: Parameters<typeof userApi.getAllUsers>[0] = {}) {
-  const { user } = useAuth()
+  const user = useUser()
   const isAdmin = user?.role === 'admin'
   
   return useQuery({
@@ -146,7 +145,7 @@ export function useAllUsers(params: Parameters<typeof userApi.getAllUsers>[0] = 
  * Hook to search users (admin only)
  */
 export function useSearchUsers(query: string, params: Parameters<typeof userApi.getAllUsers>[0] = {}) {
-  const { user } = useAuth()
+  const user = useUser()
   const isAdmin = user?.role === 'admin'
   
   return useQuery({
@@ -232,7 +231,7 @@ export function useAdjustHerdPoints() {
  * Hook to auto-refresh HerdPoints balance
  */
 export function useAutoRefreshHerdPoints(intervalMs: number = 30000) {
-  const { isAuthenticated } = useAuth()
+  const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
     queryKey: [...userKeys.herdPoints(), 'auto-refresh'],

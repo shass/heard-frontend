@@ -16,7 +16,7 @@ import type {
 
 // Admin Dashboard Stats
 export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => {
-  const response = await apiClient.get<ApiResponse<AdminDashboardStats>>('/admin/dashboard/stats')
+  const response = await apiClient.get<ApiResponse<AdminDashboardStats>>('/admin/dashboard')
   return response.data.data
 }
 

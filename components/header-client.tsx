@@ -5,7 +5,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/hooks/use-auth"
+import { useUser } from "@/lib/store"
 import { Settings } from "lucide-react"
 
 // Dynamically import Web3 components to avoid SSR issues
@@ -26,7 +26,7 @@ const AuthSection = dynamic(
 
 export function HeaderClient() {
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const { user } = useAuth()
+  const user = useUser()
 
   const isAdmin = user?.role === 'admin' || user?.role === 'survey_creator'
 

@@ -4,8 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { responseApi, type SubmitAnswerRequest, type SubmitSurveyRequest } from '@/lib/api/responses'
-import { useAuth } from './use-auth'
-import { useUIStore } from '@/lib/store'
+import { useIsAuthenticated, useUIStore } from '@/lib/store'
 import type { SurveyResponse, Question } from '@/lib/types'
 
 // Query keys for cache management
@@ -20,7 +19,7 @@ export const responseKeys = {
  * Hook to get survey response details
  */
 export function useSurveyResponse(responseId: string) {
-  const { isAuthenticated } = useAuth()
+  const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
     queryKey: responseKeys.detail(responseId),
@@ -35,7 +34,7 @@ export function useSurveyResponse(responseId: string) {
  * Hook to get survey response progress
  */
 export function useSurveyProgress(responseId: string) {
-  const { isAuthenticated } = useAuth()
+  const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
     queryKey: responseKeys.progress(responseId),
@@ -51,7 +50,7 @@ export function useSurveyProgress(responseId: string) {
  * Hook to check if user can continue survey response
  */
 export function useCanContinueSurvey(responseId: string) {
-  const { isAuthenticated } = useAuth()
+  const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
     queryKey: [...responseKeys.detail(responseId), 'canContinue'],
@@ -189,10 +188,10 @@ export function useAnswerValidation() {
 /**
  * Hook to manage survey response state
  */
-export function useSurveyResponseState(responseId: string) {
-  const { data: response, isLoading: responseLoading } = useSurveyResponse(responseId)
-  const { data: progress, isLoading: progressLoading } = useSurveyProgress(responseId)
-  const { data: canContinue } = useCanContinueSurvey(responseId)
+export function useSurveyResponseState(responseId: string | null) {
+  const { data: response, isLoading: responseLoading } = useSurveyResponse(responseId || '')
+  const { data: progress, isLoading: progressLoading } = useSurveyProgress(responseId || '')
+  const { data: canContinue } = useCanContinueSurvey(responseId || '')
   
   const submitAnswer = useSubmitAnswer()
   const submitSurvey = useSubmitSurvey()

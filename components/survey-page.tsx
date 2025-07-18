@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { LoadingState, InlineLoading } from "@/components/ui/loading-states"
 import { ArrowLeft, ArrowRight, Save } from "lucide-react"
 import { useSurveyQuestions, useStartSurvey } from "@/hooks/use-surveys"
 import { useSurveyResponseState, useAnswerValidation } from "@/hooks/use-survey-response"
-import { useAuth } from "@/hooks/use-auth"
+import { useIsAuthenticated, useUser } from "@/lib/store"
 import { useNotifications } from "@/components/ui/notifications"
 import type { Survey, Question } from "@/lib/types"
 
@@ -21,8 +21,11 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
   const [answers, setAnswers] = useState<Record<string, string[]>>({})
   const [responseId, setResponseId] = useState<string | null>(null)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [isStarting, setIsStarting] = useState(false) // Add flag to prevent multiple start requests
+  const hasStarted = useRef(false) // Ref to track if start has been attempted
   
-  const { user, isAuthenticated } = useAuth()
+  const user = useUser()
+  const isAuthenticated = useIsAuthenticated()
   const notifications = useNotifications()
   
   // Load survey questions
@@ -36,31 +39,41 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
   const startSurvey = useStartSurvey()
   
   // Response state management (only after we have a responseId)
-  const responseState = useSurveyResponseState(responseId || '')
+  const responseState = useSurveyResponseState(responseId || null)
   
   // Answer validation
   const { validateRequired, validateSingleChoice } = useAnswerValidation()
 
-  const currentQuestion = questions[currentQuestionIndex]
-  const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0
+  const currentQuestion = Array.isArray(questions) ? questions[currentQuestionIndex] : undefined
+  const questionsArray = Array.isArray(questions) ? questions : []
+  const progress = questionsArray.length > 0 ? ((currentQuestionIndex + 1) / questionsArray.length) * 100 : 0
   
   // Start survey when component mounts
   useEffect(() => {
-    if (isAuthenticated && !responseId && !startSurvey.isPending) {
+    if (isAuthenticated && !responseId && !isStarting && !startSurvey.isPending && !hasStarted.current) {
+      console.log('Starting survey:', survey.id)
+      hasStarted.current = true
+      setIsStarting(true)
+      
       startSurvey.mutate(
         { id: survey.id },
         {
           onSuccess: (data) => {
+            console.log('Survey started successfully:', data)
             setResponseId(data.responseId)
+            setIsStarting(false)
             notifications.success('Survey started', 'Your progress will be saved automatically')
           },
           onError: (error: any) => {
+            console.error('Failed to start survey:', error)
+            hasStarted.current = false // Reset on error to allow retry
+            setIsStarting(false)
             notifications.error('Failed to start survey', error.message)
           }
         }
       )
     }
-  }, [isAuthenticated, survey.id, responseId, startSurvey, notifications])
+  }, [isAuthenticated, survey.id]) // Removed responseId and isStarting from dependencies to prevent loops
   
   // Load previous answers when response is available
   useEffect(() => {
@@ -146,7 +159,7 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
         selectedAnswers
       })
       
-      if (currentQuestionIndex < questions.length - 1) {
+      if (currentQuestionIndex < questionsArray.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1)
       } else {
         // Submit completed survey
@@ -165,7 +178,7 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
   }
 
   const canProceed = currentQuestion && (answers[currentQuestion.id] || []).length > 0
-  const isLastQuestion = currentQuestionIndex === questions.length - 1
+  const isLastQuestion = currentQuestionIndex === questionsArray.length - 1
   
   // Loading states
   if (!isAuthenticated) {
@@ -182,17 +195,19 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
     )
   }
   
-  if (questionsLoading || startSurvey.isPending) {
+  if (questionsLoading || startSurvey.isPending || isStarting) {
     return (
       <section className="w-full py-16">
         <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
-          <LoadingState loading={true} />
+          <LoadingState loading={true}>
+            <div>Loading survey...</div>
+          </LoadingState>
         </div>
       </section>
     )
   }
   
-  if (questionsError || !questions.length) {
+  if (questionsError || !questionsArray.length) {
     return (
       <section className="w-full py-16">
         <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 text-center">
@@ -253,7 +268,7 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
         <div className="mb-8">
           <div className="flex justify-between text-sm text-zinc-600 mb-2">
             <span>
-              Question {currentQuestionIndex + 1} of {questions.length}
+              Question {currentQuestionIndex + 1} of {questionsArray.length}
             </span>
             <span>{Math.round(progress)}% complete</span>
           </div>
@@ -270,7 +285,7 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
           <h3 className="text-lg font-medium text-zinc-900">{currentQuestion.questionText}</h3>
 
           <div className="space-y-3">
-            {currentQuestion.answers.map((answer) => {
+            {currentQuestion.answers.map((answer: any) => {
               const isMultiple = currentQuestion.questionType === 'multiple'
               const selectedAnswers = answers[currentQuestion.id] || []
               const isSelected = selectedAnswers.includes(answer.id)
