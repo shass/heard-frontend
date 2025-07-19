@@ -5,7 +5,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { useUser } from "@/lib/store"
+import { useUser, useIsAuthenticated } from "@/lib/store"
 import { Settings } from "lucide-react"
 
 // Dynamically import Web3 components to avoid SSR issues
@@ -16,7 +16,7 @@ const ConnectButton = dynamic(
 
 const AuthSection = dynamic(
   () => import('./auth/auth-section').then((mod) => ({ default: mod.AuthSection })),
-  { 
+  {
     ssr: false,
     loading: () => (
       <div className="h-10 w-32 bg-zinc-100 rounded-lg animate-pulse"></div>
@@ -27,8 +27,10 @@ const AuthSection = dynamic(
 export function HeaderClient() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const user = useUser()
+  const isAuthenticated = useIsAuthenticated()
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'survey_creator'
+  // Only show admin panel for authenticated admin users
+  const isAdmin = isAuthenticated && user?.role && ['survey_creator', 'admin'].includes(user.role)
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-zinc-200">
