@@ -16,8 +16,36 @@ import type {
 
 // Admin Dashboard Stats
 export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => {
-  const response = await apiClient.get<ApiResponse<AdminDashboardStats>>('/admin/dashboard')
-  return response.data.data
+  try {
+    // TODO: Switch back to /admin/dashboard when authentication is working
+    // Note: apiClient.get() already extracts response.data.data and returns it directly
+    const data = await apiClient.get<AdminDashboardStats>('/admin/dashboard-test')
+    
+    // Debug logging
+    console.log('🔍 Admin dashboard data received:', data)
+    
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid response structure from admin dashboard API')
+    }
+    
+    return data
+  } catch (error: any) {
+    console.error('🚨 Admin dashboard API error:', error)
+    console.error('🚨 Error response:', error?.response?.data)
+    
+    // Check if it's an authentication error
+    if (error?.response?.status === 401) {
+      throw new Error('Authentication required. Please login as admin.')
+    }
+    
+    // Check if it's an authorization error (not admin)
+    if (error?.response?.status === 403) {
+      throw new Error('Admin access required. You do not have permission to view this page.')
+    }
+    
+    // For other errors, provide more context
+    throw new Error(error?.response?.data?.error?.message || error?.message || 'Failed to load dashboard data')
+  }
 }
 
 // Survey Management
