@@ -55,11 +55,20 @@ export const LazyRewardPage = lazy(() =>
   }))
 )
 
-export const LazySurveyPage = lazy(() => 
-  import('@/components/survey-page').then(module => ({
-    default: module.SurveyPage
-  }))
-)
+// Временно убираем lazy loading для диагностики
+import { SurveyPage } from '@/components/survey-page'
+
+function DiagnosticSurveyPage(props: any) {
+  console.log('DiagnosticSurveyPage rendering with props:', props)
+  try {
+    return <SurveyPage {...props} />
+  } catch (error) {
+    console.error('DiagnosticSurveyPage error:', error)
+    return <div>Error in SurveyPage: {error.message}</div>
+  }
+}
+
+export const LazySurveyPage = DiagnosticSurveyPage
 
 // Wrapped route components
 export function RewardPageWithSuspense(props: any) {
@@ -71,11 +80,17 @@ export function RewardPageWithSuspense(props: any) {
 }
 
 export function SurveyPageWithSuspense(props: any) {
-  return (
-    <Suspense fallback={<PageLoading message="Loading survey..." />}>
-      <LazySurveyPage {...props} />
-    </Suspense>
-  )
+  console.log('SurveyPageWithSuspense rendering with props:', props)
+  try {
+    return (
+      <Suspense fallback={<PageLoading message="Loading survey..." />}>
+        <LazySurveyPage {...props} />
+      </Suspense>
+    )
+  } catch (error) {
+    console.error('SurveyPageWithSuspense error:', error)
+    return <PageLoading message="Error loading survey..." />
+  }
 }
 
 // Admin components lazy loading

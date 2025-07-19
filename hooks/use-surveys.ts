@@ -117,23 +117,17 @@ export function useSurveysByCompany(company: string, params: GetSurveysRequest =
 /**
  * Mutation hook to start a survey
  */
-export function useStartSurvey() {
+export function useStartSurvey(callbacks?: {
+  onSuccess?: (data: any) => void
+  onError?: (error: any) => void
+}) {
   const queryClient = useQueryClient()
   
   return useMutation({
     mutationFn: ({ id, request }: { id: string; request?: StartSurveyRequest }) => 
       surveyApi.startSurvey(id, request),
-    onSuccess: (data, variables) => {
-      // Invalidate eligibility cache as user has now started
-      queryClient.invalidateQueries({ 
-        queryKey: surveyKeys.eligibility(variables.id) 
-      })
-      
-      // Invalidate survey details to refresh response count
-      queryClient.invalidateQueries({ 
-        queryKey: surveyKeys.detail(variables.id) 
-      })
-    },
+    onSuccess: callbacks?.onSuccess,
+    onError: callbacks?.onError
   })
 }
 

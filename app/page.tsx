@@ -5,6 +5,7 @@ import { Header } from "@/components/header"
 import { HeroSection } from "@/components/hero-section"
 import { SurveyTable } from "@/components/survey-table"
 import { SurveyPageWithSuspense, RewardPageWithSuspense } from "@/components/lazy"
+import { SurveyPage } from "@/components/survey-page"
 import { Footer } from "@/components/footer"
 import type { ViewState, Survey } from "@/lib/types"
 
@@ -12,6 +13,7 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<ViewState>("home")
   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null)
   const [responseId, setResponseId] = useState<string | null>(null)
+  
 
   const handleTakeSurvey = (survey: Survey) => {
     setSelectedSurvey(survey)
@@ -44,7 +46,7 @@ export default function Home() {
         )}
 
         {currentView === "survey" && selectedSurvey && (
-          <SurveyPageWithSuspense survey={selectedSurvey} onSubmit={handleSubmitSurvey} onBack={handleBackToSurveys} />
+          <SurveyPage survey={selectedSurvey} onSubmit={handleSubmitSurvey} onBack={handleBackToSurveys} />
         )}
 
         {currentView === "reward" && selectedSurvey && (

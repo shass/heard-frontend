@@ -79,7 +79,7 @@ export function SurveyTableSkeleton({ rows = 5, className }: SurveyTableSkeleton
         <Skeleton className="h-4 w-18" />
         <Skeleton className="h-4 w-12" />
       </div>
-      
+
       {/* Table rows */}
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="hidden md:grid grid-cols-4 gap-4 p-4 border-b">
@@ -92,7 +92,7 @@ export function SurveyTableSkeleton({ rows = 5, className }: SurveyTableSkeleton
           <Skeleton className="h-8 w-16" />
         </div>
       ))}
-      
+
       {/* Mobile cards */}
       <div className="md:hidden space-y-4">
         {Array.from({ length: rows }).map((_, i) => (
@@ -127,13 +127,13 @@ interface LoadingButtonProps {
   onClick?: () => void
 }
 
-export function LoadingButton({ 
-  loading = false, 
-  children, 
-  className, 
+export function LoadingButton({
+  loading = false,
+  children,
+  className,
   disabled,
   onClick,
-  ...props 
+  ...props
 }: LoadingButtonProps) {
   return (
     <button
@@ -160,15 +160,15 @@ interface LoadingOverlayProps {
   className?: string
 }
 
-export function LoadingOverlay({ 
-  visible, 
-  message = 'Loading...', 
-  className 
+export function LoadingOverlay({
+  visible,
+  message = 'Loading...',
+  className
 }: LoadingOverlayProps) {
   if (!visible) return null
 
   return (
-    <div 
+    <div
       className={cn(
         'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50',
         className
@@ -190,10 +190,10 @@ interface InlineLoadingProps {
   className?: string
 }
 
-export function InlineLoading({ 
-  size = 'sm', 
-  message, 
-  className 
+export function InlineLoading({
+  size = 'sm',
+  message,
+  className
 }: InlineLoadingProps) {
   return (
     <div className={cn('flex items-center gap-2', className)}>

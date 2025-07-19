@@ -88,7 +88,6 @@ export class SurveyApi {
   } = {}): Promise<EligibilityResponse> {
     const queryParams = new URLSearchParams()
 
-    console.log('walletAddress', params.walletAddress)
 
     if (params.walletAddress) {
       queryParams.append('walletAddress', params.walletAddress)
