@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   title: 'Heard Labs - Web3 Survey Platform',
   description: 'Earn crypto rewards by completing surveys on the Web3 platform',
   generator: 'Heard Labs',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/logo.png',
+  },
 }
 
 export default function RootLayout({

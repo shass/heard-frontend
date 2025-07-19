@@ -15,6 +15,9 @@ const config = getDefaultConfig({
   projectId: env.WALLETCONNECT_PROJECT_ID || 'demo', // Fallback for development
   chains: [mainnet, polygon, bsc],
   ssr: true,
+  batch: {
+    multicall: true,
+  },
 })
 
 // Create a client for React Query
@@ -44,6 +47,11 @@ const queryClient = new QueryClient({
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     },
+  },
+  logger: {
+    log: () => {}, // Suppress logs in development
+    warn: () => {},
+    error: () => {},
   },
 })
 

@@ -18,6 +18,15 @@ const nextConfig = {
     NEXT_PUBLIC_ENABLE_TESTNET: process.env.NEXT_PUBLIC_ENABLE_TESTNET,
     NEXT_PUBLIC_ENABLE_DEBUG: process.env.NEXT_PUBLIC_ENABLE_DEBUG,
   },
+  // Development indicators
+  devIndicators: {
+    position: 'bottom-left',
+  },
+  logging: {
+    fetches: {
+      fullUrl: process.env.NODE_ENV === 'development',
+    },
+  },
   async rewrites() {
     return [
       {
