@@ -77,16 +77,16 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
     }
   }, [isAuthenticated, survey.id])
 
-  // Load previous answers when response is available
-  useEffect(() => {
-    if (responseState.response?.responses) {
-      const previousAnswers: Record<string, string[]> = {}
-      responseState.response.responses.forEach(response => {
-        previousAnswers[response.questionId] = response.selectedAnswers
-      })
-      setAnswers(previousAnswers)
-    }
-  }, [responseState.response])
+  // TODO: Load previous answers when response endpoint is implemented
+  // useEffect(() => {
+  //   if (responseState.response?.responses) {
+  //     const previousAnswers: Record<string, string[]> = {}
+  //     responseState.response.responses.forEach(response => {
+  //       previousAnswers[response.questionId] = response.selectedAnswers
+  //     })
+  //     setAnswers(previousAnswers)
+  //   }
+  // }, [responseState.response])
 
   const handleAnswerChange = (questionId: string, answer: string, isMultiple: boolean = false) => {
     setAnswers((prev) => {
@@ -107,33 +107,11 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
         newAnswers[questionId] = [answer]
       }
 
+
       return newAnswers
     })
-
-    // Auto-save the answer
-    if (responseId) {
-      autoSaveAnswer(questionId, isMultiple ? answers[questionId] || [] : [answer])
-    }
   }
 
-  const autoSaveAnswer = async (questionId: string, selectedAnswers: string[]) => {
-    if (!responseId) return
-
-    setSaveStatus('saving')
-
-    try {
-      await responseState.autoSave({
-        responseId,
-        questionId,
-        selectedAnswers
-      })
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 2000)
-    } catch (error) {
-      setSaveStatus('error')
-      setTimeout(() => setSaveStatus('idle'), 3000)
-    }
-  }
 
   const handleNext = async () => {
     if (!currentQuestion || !responseId) return
@@ -154,12 +132,17 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
     }
 
     // Save answer before proceeding
+    setSaveStatus('saving')
+    
     try {
       await responseState.submitAnswer({
         responseId,
         questionId: currentQuestion.id,
         selectedAnswers
       })
+      
+      setSaveStatus('saved')
+      setTimeout(() => setSaveStatus('idle'), 2000)
 
       if (currentQuestionIndex < questionsArray.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1)
@@ -169,6 +152,8 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
         onSubmit(responseId)
       }
     } catch (error: any) {
+      setSaveStatus('error')
+      setTimeout(() => setSaveStatus('idle'), 3000)
       notifications.error('Failed to save answer', error.message)
     }
   }

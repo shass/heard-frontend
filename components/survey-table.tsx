@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { LoadingState, SurveyTableSkeleton } from "@/components/ui/loading-states"
 import { useActiveSurveys, useBatchSurveyEligibility } from "@/hooks/use-surveys"
@@ -9,6 +10,7 @@ import { useIsAuthenticated, useUser } from "@/lib/store"
 import { useAccount } from 'wagmi'
 import { useNotifications } from "@/components/ui/notifications"
 import { useConnectModal } from '@rainbow-me/rainbowkit'
+import { Eye } from "lucide-react"
 import type { Survey } from "@/lib/types"
 
 interface SurveyTableProps {
@@ -93,6 +95,18 @@ function SurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, elig
             {getButtonText()}
           </Button>
         </td>
+        <td className="px-6 py-4">
+          <Link href={`/surveys/${survey.id}/info`}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Eye className="w-4 h-4" />
+              View
+            </Button>
+          </Link>
+        </td>
       </tr>
 
       {/* Mobile Card */}
@@ -113,19 +127,31 @@ function SurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, elig
                 <div className="text-xs text-red-600 mt-1">{eligibility?.reason}</div>
               )}
             </div>
-            <Button
-              onClick={handleButtonClick}
-              disabled={!canInteract}
-              className={`text-white rounded-lg px-4 py-2 text-sm font-medium ${getButtonStyle()}`}
-              title={
-                !isConnected ? "Connect your wallet to participate" :
-                !isAuthenticated ? "Sign a message to prove wallet ownership (free, no gas)" :
-                !isEligible ? eligibility?.reason :
-                "Start this survey"
-              }
-            >
-              {getButtonText()}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Link href={`/surveys/${survey.id}/info`}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                >
+                  <Eye className="w-4 h-4" />
+                  Info
+                </Button>
+              </Link>
+              <Button
+                onClick={handleButtonClick}
+                disabled={!canInteract}
+                className={`text-white rounded-lg px-4 py-2 text-sm font-medium ${getButtonStyle()}`}
+                title={
+                  !isConnected ? "Connect your wallet to participate" :
+                  !isAuthenticated ? "Sign a message to prove wallet ownership (free, no gas)" :
+                  !isEligible ? eligibility?.reason :
+                  "Start this survey"
+                }
+              >
+                {getButtonText()}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -267,6 +293,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900">Company</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900">Reward</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900">Action</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900">Details</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200">

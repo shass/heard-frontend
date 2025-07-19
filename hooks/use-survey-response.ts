@@ -189,9 +189,16 @@ export function useAnswerValidation() {
  * Hook to manage survey response state
  */
 export function useSurveyResponseState(responseId: string | null) {
-  const { data: response, isLoading: responseLoading } = useSurveyResponse(responseId || '')
-  const { data: progress, isLoading: progressLoading } = useSurveyProgress(responseId || '')
-  const { data: canContinue } = useCanContinueSurvey(responseId || '')
+  // Temporarily disable response queries that require missing backend endpoints
+  // const { data: response, isLoading: responseLoading } = useSurveyResponse(responseId || '')
+  // const { data: progress, isLoading: progressLoading } = useSurveyProgress(responseId || '')
+  // const { data: canContinue } = useCanContinueSurvey(responseId || '')
+  
+  const response = null
+  const progress = null
+  const canContinue = null
+  const responseLoading = false
+  const progressLoading = false
   
   const submitAnswer = useSubmitAnswer()
   const submitSurvey = useSubmitSurvey()
