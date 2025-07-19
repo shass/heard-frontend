@@ -25,7 +25,7 @@ interface SurveyRowProps {
   eligibility?: any // Pass eligibility data from batch request
 }
 
-function SurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, eligibility }: SurveyRowProps) {
+function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, eligibility }: SurveyRowProps) {
   const isAuthenticated = useIsAuthenticated()
   const { isConnected } = useAccount()
 
@@ -66,96 +66,135 @@ function SurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, elig
   }
 
   return (
-    <>
-      {/* Desktop Row */}
-      <tr className="hidden lg:table-row hover:bg-zinc-50">
-        <td className="px-6 py-4">
-          <div>
-            <div className="text-base font-medium text-zinc-900">{survey.name}</div>
-            <div className="text-sm text-zinc-500">{survey.totalQuestions} questions</div>
-          </div>
-        </td>
-        <td className="px-6 py-4 text-base text-zinc-600">{survey.company}</td>
-        <td className="px-6 py-4">
-          <div className="text-base font-medium text-zinc-900">{formatReward(survey)}</div>
-          <div className="text-sm text-zinc-500">{survey.responseCount} responses</div>
-        </td>
-        <td className="px-6 py-4">
+    <tr className="hover:bg-zinc-50">
+      <td className="px-6 py-4">
+        <div>
+          <div className="text-base font-medium text-zinc-900">{survey.name}</div>
+          <div className="text-sm text-zinc-500">{survey.totalQuestions} questions</div>
+        </div>
+      </td>
+      <td className="px-6 py-4 text-base text-zinc-600">{survey.company}</td>
+      <td className="px-6 py-4">
+        <div className="text-base font-medium text-zinc-900">{formatReward(survey)}</div>
+        <div className="text-sm text-zinc-500">{survey.responseCount} responses</div>
+      </td>
+      <td className="px-6 py-4">
+        <Button
+          onClick={handleButtonClick}
+          disabled={!canInteract}
+          className={`text-white rounded-lg px-4 py-2 text-sm font-medium ${getButtonStyle()}`}
+          title={
+            !isConnected ? "Connect your wallet to participate" :
+            !isAuthenticated ? "Sign a message to prove wallet ownership (free, no gas)" :
+            !isEligible ? eligibility?.reason :
+            "Start this survey"
+          }
+        >
+          {getButtonText()}
+        </Button>
+      </td>
+      <td className="px-6 py-4">
+        <Link href={`/surveys/${survey.id}/info`}>
           <Button
-            onClick={handleButtonClick}
-            disabled={!canInteract}
-            className={`text-white rounded-lg px-4 py-2 text-sm font-medium ${getButtonStyle()}`}
-            title={
-              !isConnected ? "Connect your wallet to participate" :
-              !isAuthenticated ? "Sign a message to prove wallet ownership (free, no gas)" :
-              !isEligible ? eligibility?.reason :
-              "Start this survey"
-            }
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
           >
-            {getButtonText()}
+            <Eye className="w-4 h-4" />
+            View
           </Button>
-        </td>
-        <td className="px-6 py-4">
-          <Link href={`/surveys/${survey.id}/info`}>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Eye className="w-4 h-4" />
-              View
-            </Button>
-          </Link>
-        </td>
-      </tr>
+        </Link>
+      </td>
+    </tr>
+  )
+}
 
-      {/* Mobile Card */}
-      <div className="lg:hidden bg-white border border-zinc-200 rounded-lg p-6">
-        <div className="space-y-4">
+function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, eligibility }: SurveyRowProps) {
+  const isAuthenticated = useIsAuthenticated()
+  const { isConnected } = useAccount()
+
+  // Only use batch eligibility data - no fallback to avoid duplicate requests
+  const isEligible = eligibility?.isEligible ?? true
+  const alreadyCompleted = eligibility?.hasCompleted ?? false
+
+  const canTake = isAuthenticated && isEligible && !alreadyCompleted
+  const canInteract = isConnected && (!isAuthenticated || canTake)
+
+  const getButtonText = () => {
+    if (!isConnected) return "Connect Wallet"
+    if (!isAuthenticated) return "Authenticate"
+    if (alreadyCompleted) return "Completed"
+    if (!isEligible) return "Not Eligible"
+    return "Take"
+  }
+
+  const getButtonStyle = () => {
+    if (!canInteract) return "bg-zinc-400 cursor-not-allowed"
+    return "bg-zinc-900 hover:bg-zinc-800"
+  }
+
+  const handleButtonClick = () => {
+    if (!isConnected && onConnectWallet) {
+      onConnectWallet()
+    } else if (isConnected && !isAuthenticated && onAuthenticate) {
+      onAuthenticate()
+    } else if (canTake) {
+      onTakeSurvey(survey)
+    }
+  }
+
+  const formatReward = (survey: Survey) => {
+    const tokenReward = `${survey.rewardAmount} ${survey.rewardToken}`
+    const pointsReward = survey.herdPointsReward > 0 ? ` + ${survey.herdPointsReward} HP` : ""
+    return tokenReward + pointsReward
+  }
+
+  return (
+    <div className="bg-white border border-zinc-200 rounded-lg p-6">
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-base font-semibold text-zinc-900">{survey.name}</h3>
+          <p className="text-sm text-zinc-600">{survey.company}</p>
+          <p className="text-xs text-zinc-500 mt-1">
+            {survey.totalQuestions} questions • {survey.responseCount} responses
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-zinc-900">{survey.name}</h3>
-            <p className="text-sm text-zinc-600">{survey.company}</p>
-            <p className="text-xs text-zinc-500 mt-1">
-              {survey.totalQuestions} questions • {survey.responseCount} responses
-            </p>
+            <div className="text-base font-medium text-zinc-900">{formatReward(survey)}</div>
+            {!isEligible && (
+              <div className="text-xs text-red-600 mt-1">{eligibility?.reason}</div>
+            )}
           </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-base font-medium text-zinc-900">{formatReward(survey)}</div>
-              {!isEligible && (
-                <div className="text-xs text-red-600 mt-1">{eligibility?.reason}</div>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <Link href={`/surveys/${survey.id}/info`}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <Eye className="w-4 h-4" />
-                  Info
-                </Button>
-              </Link>
+          <div className="flex items-center gap-2">
+            <Link href={`/surveys/${survey.id}/info`}>
               <Button
-                onClick={handleButtonClick}
-                disabled={!canInteract}
-                className={`text-white rounded-lg px-4 py-2 text-sm font-medium ${getButtonStyle()}`}
-                title={
-                  !isConnected ? "Connect your wallet to participate" :
-                  !isAuthenticated ? "Sign a message to prove wallet ownership (free, no gas)" :
-                  !isEligible ? eligibility?.reason :
-                  "Start this survey"
-                }
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1"
               >
-                {getButtonText()}
+                <Eye className="w-4 h-4" />
+                Info
               </Button>
-            </div>
+            </Link>
+            <Button
+              onClick={handleButtonClick}
+              disabled={!canInteract}
+              className={`text-white rounded-lg px-4 py-2 text-sm font-medium ${getButtonStyle()}`}
+              title={
+                !isConnected ? "Connect your wallet to participate" :
+                !isAuthenticated ? "Sign a message to prove wallet ownership (free, no gas)" :
+                !isEligible ? eligibility?.reason :
+                "Start this survey"
+              }
+            >
+              {getButtonText()}
+            </Button>
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
@@ -298,7 +337,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
                 </thead>
                 <tbody className="divide-y divide-zinc-200">
                   {filteredSurveys.map((survey) => (
-                    <SurveyRow
+                    <DesktopSurveyRow
                       key={survey.id}
                       survey={survey}
                       onTakeSurvey={handleTakeSurvey}
@@ -315,7 +354,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
           {/* Mobile Cards */}
           <div className="lg:hidden space-y-4">
             {filteredSurveys.map((survey) => (
-              <SurveyRow
+              <MobileSurveyCard
                 key={survey.id}
                 survey={survey}
                 onTakeSurvey={handleTakeSurvey}
