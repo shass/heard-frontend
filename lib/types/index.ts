@@ -109,7 +109,7 @@ export interface PaginationMeta {
 // Authentication types
 export interface AuthResponse {
   user: User
-  token: string
+  token?: string // Optional for backward compatibility, HttpOnly cookie is preferred
   expiresAt: string
 }
 

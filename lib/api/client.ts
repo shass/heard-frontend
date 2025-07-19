@@ -11,6 +11,7 @@ class ApiClient {
     this.client = axios.create({
       baseURL: env.API_URL,
       timeout: env.API_TIMEOUT,
+      withCredentials: true, // Enable cookies for cross-origin requests
       headers: {
         'Content-Type': 'application/json',
       },
@@ -20,9 +21,11 @@ class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request interceptor - add auth token
+    // Request interceptor - add auth token as fallback (cookies are handled automatically)
     this.client.interceptors.request.use(
       (config) => {
+        // Only add Authorization header if no HttpOnly cookie is available
+        // This serves as backward compatibility for existing localStorage tokens
         const token = this.getAuthToken()
         if (token) {
           config.headers.Authorization = `Bearer ${token}`

@@ -108,7 +108,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Step 3: Send signature to backend for verification
       console.log('Step 3: Sending signature to backend for verification')
-      const { user: userData, token } = await authApi.connectWallet({
+      const { user: userData } = await authApi.connectWallet({
         walletAddress: address,
         signature,
         message,
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Step 4: Update store with user data
       console.log('Step 4: Updating store with user data')
       setUser(userData)
-      console.log('Login successful!')
+      console.log('Login successful! Token stored as HttpOnly cookie by backend.')
       
     } catch (error: any) {
       console.error('Login failed at step:', error)
