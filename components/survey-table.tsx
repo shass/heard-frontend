@@ -34,14 +34,13 @@ function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
   const isEligible = eligibility?.isEligible ?? true
   const alreadyCompleted = eligibility?.hasCompleted ?? false
 
-  const canTake = isAuthenticated && isEligible && !alreadyCompleted
+  // Anyone can click "Take" to view survey info after connecting wallet and authenticating
+  const canTake = isAuthenticated
   const canInteract = isConnected && (!isAuthenticated || canTake)
 
   const getButtonText = () => {
     if (!isConnected) return "Connect Wallet"
     if (!isAuthenticated) return "Authenticate"
-    if (alreadyCompleted) return "Completed"
-    if (!isEligible) return "Not Eligible"
     return "Take"
   }
 
@@ -87,8 +86,7 @@ function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
           title={
             !isConnected ? "Connect your wallet to participate" :
             !isAuthenticated ? "Sign a message to prove wallet ownership (free, no gas)" :
-            !isEligible ? eligibility?.reason :
-            "Start this survey"
+            "View survey information"
           }
         >
           {getButtonText()}
@@ -126,14 +124,13 @@ function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
   const isEligible = eligibility?.isEligible ?? true
   const alreadyCompleted = eligibility?.hasCompleted ?? false
 
-  const canTake = isAuthenticated && isEligible && !alreadyCompleted
+  // Anyone can click "Take" to view survey info after connecting wallet and authenticating
+  const canTake = isAuthenticated
   const canInteract = isConnected && (!isAuthenticated || canTake)
 
   const getButtonText = () => {
     if (!isConnected) return "Connect Wallet"
     if (!isAuthenticated) return "Authenticate"
-    if (alreadyCompleted) return "Completed"
-    if (!isEligible) return "Not Eligible"
     return "Take"
   }
 
@@ -172,9 +169,6 @@ function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
         <div className="flex items-center justify-between">
           <div>
             <div className="text-base font-medium text-zinc-900">{formatReward(survey)}</div>
-            {!isEligible && (
-              <div className="text-xs text-red-600 mt-1">{eligibility?.reason}</div>
-            )}
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -202,8 +196,7 @@ function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
               title={
                 !isConnected ? "Connect your wallet to participate" :
                 !isAuthenticated ? "Sign a message to prove wallet ownership (free, no gas)" :
-                !isEligible ? eligibility?.reason :
-                "Start this survey"
+                "View survey information"
               }
             >
               {getButtonText()}
