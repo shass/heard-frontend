@@ -32,7 +32,7 @@ export default function SurveyDetailPage({ params }: SurveyDetailPageProps) {
   }
 
   const handleBackToSurveys = () => {
-    router.push("/surveys")
+    router.push("/")
   }
 
   if (isLoading) {
@@ -67,7 +67,7 @@ export default function SurveyDetailPage({ params }: SurveyDetailPageProps) {
                 className="mb-4"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Surveys
+                Back to Home
               </Button>
               
               <Alert variant="destructive">

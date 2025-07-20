@@ -174,7 +174,7 @@ export function SurveyErrorFallback({ error, resetError }: ErrorFallbackProps) {
             variant="outline"
             className="border-zinc-300 text-zinc-700 hover:bg-zinc-50"
           >
-            Back to Surveys
+            Back to Home
           </Button>
         </div>
       </div>

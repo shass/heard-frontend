@@ -37,7 +37,7 @@ export function HeaderClient() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center h-40">
-            <Link href="/surveys">
+            <Link href="/">
               <Image src="/logo.png" alt="Heard Labs" width={640} height={168} className="h-40 w-auto" />
             </Link>
           </div>

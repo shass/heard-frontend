@@ -27,7 +27,7 @@ export default function SurveyRewardPage({ params, searchParams }: SurveyRewardP
   const { data: survey, isLoading, error } = useSurvey(id)
 
   const handleBackToSurveys = () => {
-    router.push("/surveys")
+    router.push("/")
   }
 
   if (isLoading) {
@@ -61,7 +61,7 @@ export default function SurveyRewardPage({ params, searchParams }: SurveyRewardP
                 className="mb-4"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Surveys
+                Back to Home
               </Button>
               
               <Alert variant="destructive">

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { LoadingState, SurveyTableSkeleton } from "@/components/ui/loading-states"
 import { useActiveSurveys, useBatchSurveyEligibility } from "@/hooks/use-surveys"
@@ -10,7 +9,7 @@ import { useIsAuthenticated, useUser } from "@/lib/store"
 import { useAccount } from 'wagmi'
 import { useNotifications } from "@/components/ui/notifications"
 import { useConnectModal } from '@rainbow-me/rainbowkit'
-import { Eye } from "lucide-react"
+import { Copy, Check } from "lucide-react"
 import type { Survey } from "@/lib/types"
 
 interface SurveyTableProps {
@@ -22,10 +21,12 @@ interface SurveyRowProps {
   onTakeSurvey: (survey: Survey) => void
   onConnectWallet?: () => void
   onAuthenticate?: () => void
+  onCopyLink: (surveyId: string) => void
+  copiedSurveyId: string | null
   eligibility?: any // Pass eligibility data from batch request
 }
 
-function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, eligibility }: SurveyRowProps) {
+function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, onCopyLink, copiedSurveyId, eligibility }: SurveyRowProps) {
   const isAuthenticated = useIsAuthenticated()
   const { isConnected } = useAccount()
 
@@ -94,22 +95,30 @@ function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
         </Button>
       </td>
       <td className="px-6 py-4">
-        <Link href={`/surveys/${survey.id}/info`}>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <Eye className="w-4 h-4" />
-            View
-          </Button>
-        </Link>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onCopyLink(survey.id)}
+          className="flex items-center gap-2"
+        >
+          {copiedSurveyId === survey.id ? (
+            <>
+              <Check className="w-4 h-4" />
+              Copied
+            </>
+          ) : (
+            <>
+              <Copy className="w-4 h-4" />
+              Copy Link
+            </>
+          )}
+        </Button>
       </td>
     </tr>
   )
 }
 
-function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, eligibility }: SurveyRowProps) {
+function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, onCopyLink, copiedSurveyId, eligibility }: SurveyRowProps) {
   const isAuthenticated = useIsAuthenticated()
   const { isConnected } = useAccount()
 
@@ -168,16 +177,24 @@ function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Link href={`/surveys/${survey.id}/info`}>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1"
-              >
-                <Eye className="w-4 h-4" />
-                Info
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onCopyLink(survey.id)}
+              className="flex items-center gap-1"
+            >
+              {copiedSurveyId === survey.id ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  Copy
+                </>
+              )}
+            </Button>
             <Button
               onClick={handleButtonClick}
               disabled={!canInteract}
@@ -201,6 +218,7 @@ function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
 export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCompany, setSelectedCompany] = useState("")
+  const [copiedSurveyId, setCopiedSurveyId] = useState<string | null>(null)
 
   const {
     data: surveys = [],
@@ -269,6 +287,22 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
     }
   }
 
+  const handleCopyLink = async (surveyId: string) => {
+    try {
+      const url = `${window.location.origin}/surveys/${surveyId}/info`
+      await navigator.clipboard.writeText(url)
+      setCopiedSurveyId(surveyId)
+      notifications.success("Link copied!", "Survey link has been copied to clipboard")
+      
+      // Reset the copied state after 2 seconds
+      setTimeout(() => {
+        setCopiedSurveyId(null)
+      }, 2000)
+    } catch (error) {
+      notifications.error("Failed to copy link", "Please try again")
+    }
+  }
+
   if (error) {
     return (
       <section className="w-full py-16">
@@ -332,7 +366,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900">Company</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900">Reward</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900">Action</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900">Details</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900">Share</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200">
@@ -343,6 +377,8 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
                       onTakeSurvey={handleTakeSurvey}
                       onConnectWallet={handleConnectWallet}
                       onAuthenticate={handleAuthenticate}
+                      onCopyLink={handleCopyLink}
+                      copiedSurveyId={copiedSurveyId}
                       eligibility={batchEligibility?.[survey.id]}
                     />
                   ))}
@@ -360,6 +396,8 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
                 onTakeSurvey={handleTakeSurvey}
                 onConnectWallet={handleConnectWallet}
                 onAuthenticate={handleAuthenticate}
+                onCopyLink={handleCopyLink}
+                copiedSurveyId={copiedSurveyId}
                 eligibility={batchEligibility?.[survey.id]}
               />
             ))}

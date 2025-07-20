@@ -97,7 +97,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
         <div className="mx-auto max-w-lg px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-xl font-semibold text-zinc-900 mb-4">Authentication Required</h2>
           <p className="text-zinc-600 mb-4">Please connect your wallet to view your reward.</p>
-          <Button onClick={onBackToSurveys}>Back to Surveys</Button>
+          <Button onClick={onBackToSurveys}>Back to Home</Button>
         </div>
       </section>
     )
@@ -225,7 +225,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
               variant="outline"
               className="w-full border-zinc-300 text-zinc-700 hover:bg-zinc-50 rounded-lg py-3 text-base font-medium bg-transparent"
             >
-              Back to Surveys
+              Back to Home
             </Button>
           </div>
           
