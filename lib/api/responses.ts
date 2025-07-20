@@ -66,6 +66,8 @@ export class ResponseApi {
    */
   async submitSurvey(request: SubmitSurveyRequest): Promise<SubmitSurveyResponse> {
     const { responseId } = request
+    console.log('Submitting survey with responseId:', responseId)
+    console.log('Submit URL:', `/surveys/responses/${responseId}/submit`)
     return await apiClient.post<SubmitSurveyResponse>(
       `/surveys/responses/${responseId}/submit`,
       {}
@@ -74,9 +76,11 @@ export class ResponseApi {
 
   /**
    * Get survey response details
+   * TODO: Implement backend endpoint for getting response details
    */
   async getResponse(responseId: string): Promise<SurveyResponse> {
-    return await apiClient.get<SurveyResponse>(`/surveys/responses/${responseId}`)
+    throw new Error('Response details endpoint not implemented on backend')
+    // return await apiClient.get<SurveyResponse>(`/surveys/responses/${responseId}`)
   }
 
   /**

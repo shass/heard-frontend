@@ -45,7 +45,10 @@ export class AuthApi {
    * Get current user profile
    */
   async getMe(): Promise<User> {
-    return await apiClient.get<User>('/auth/me')
+    console.log('🔍 Making /auth/me request')
+    const result = await apiClient.get<User>('/auth/me')
+    console.log('✅ /auth/me response:', result)
+    return result
   }
 
   /**

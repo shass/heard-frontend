@@ -68,7 +68,20 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
   const questionsArray = Array.isArray(questions) ? questions : []
   const progress = questionsArray.length > 0 ? ((currentQuestionIndex + 1) / questionsArray.length) * 100 : 0
 
-  // Start survey when component mounts
+  // Clear survey state when authentication changes
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Clear survey state when user logs out or wallet changes
+      setAnswers({})
+      setResponseId(null)
+      setSaveStatus('idle')
+      setIsStarting(false)
+      hasStarted.current = false
+      setCurrentQuestionIndex(0)
+    }
+  }, [isAuthenticated])
+
+  // Start survey when component mounts or authentication is restored
   useEffect(() => {
     if (isAuthenticated && !responseId && !isStarting && !startSurvey.isPending && !hasStarted.current) {
       hasStarted.current = true
@@ -148,7 +161,9 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
         setCurrentQuestionIndex(currentQuestionIndex + 1)
       } else {
         // Submit completed survey
+        console.log('Submitting completed survey with responseId:', responseId)
         await responseState.submitSurvey({ responseId })
+        console.log('Survey submitted successfully')
         onSubmit(responseId)
       }
     } catch (error: any) {

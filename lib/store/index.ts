@@ -72,12 +72,19 @@ export const useAuthStore = create<AuthStore>()(
 
         setError: (error) => set({ error, loading: false }),
 
-        logout: () => set({
-          user: null,
-          isAuthenticated: false,
-          loading: false,
-          error: null,
-        }),
+        logout: () => {
+          // Clear auth state
+          set({
+            user: null,
+            isAuthenticated: false,
+            loading: false,
+            error: null,
+          })
+          
+          // Clear all survey state as well
+          const { clearAll } = useSurveyStore.getState()
+          clearAll()
+        },
       }),
       {
         name: 'heard-auth-store',
@@ -138,6 +145,14 @@ export const useSurveyStore = create<SurveyStore>()(
       clearCurrent: () => set({
         currentSurvey: null,
         currentResponse: null,
+        error: null,
+      }),
+
+      clearAll: () => set({
+        surveys: [],
+        currentSurvey: null,
+        currentResponse: null,
+        loading: false,
         error: null,
       }),
     }),

@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect } from 'react'
 import { useAccount, useConfig } from 'wagmi'
 import { useAuthStore } from '@/lib/store'
 import { authApi } from '@/lib/api/auth'
+import { useAuthCleanup } from '@/hooks/use-auth-cleanup'
 
 // Создаем контекст для auth actions
 interface AuthContextType {
@@ -39,6 +40,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout: storeLogout 
   } = useAuthStore()
 
+  // Enable global authentication cleanup
+  useAuthCleanup()
+
   /**
    * Check authentication status
    */
@@ -65,7 +69,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.log('Auth check successful, user found:', userData.walletAddress)
         setUser(userData)
       } else {
-        console.log('Auth check failed: user not found or address mismatch')
+        console.log('Auth check failed: user not found or address mismatch', { userData, address })
+        if (userData) {
+          console.log('Address mismatch - expected:', address, 'got:', userData.walletAddress)
+        }
         storeLogout()
       }
     } catch (error: any) {
@@ -157,6 +164,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     setLoading(false)
   }
+
+  /**
+   * Auto-check auth on app load (if cookie exists)
+   */
+  useEffect(() => {
+    // Only check once on mount, regardless of wallet connection
+    // This will use the HttpOnly cookie if available
+    const checkInitialAuth = async () => {
+      console.log('🚀 Running initial auth check on app load')
+      setLoading(true)
+      try {
+        const userData = await authApi.checkAuth()
+        if (userData) {
+          console.log('✅ Initial auth check successful:', userData.walletAddress)
+          setUser(userData)
+        } else {
+          console.log('❌ No user data returned from checkAuth')
+        }
+      } catch (error: any) {
+        // No valid session - this is normal
+        console.log('🔍 No existing session found:', error?.status || error?.message || 'Unknown error')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkInitialAuth()
+  }, []) // Run only once on mount
 
   /**
    * Auto-check auth when wallet connection changes

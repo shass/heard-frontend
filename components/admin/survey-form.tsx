@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Plus, Minus, GripVertical } from 'lucide-react'
+import { Spinner } from '@/components/ui/loading-states'
+import { getSurveyQuestions } from '@/lib/api/admin'
 import type { 
   CreateSurveyRequest, 
   UpdateSurveyRequest, 
@@ -61,6 +63,7 @@ interface SurveyFormProps {
 
 export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyFormProps) {
   const [whitelistText, setWhitelistText] = useState('')
+  const [loadingQuestions, setLoadingQuestions] = useState(false)
   
   const {
     register,
@@ -111,6 +114,35 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
     control,
     name: 'questions'
   })
+
+  // Load questions when editing an existing survey
+  useEffect(() => {
+    if (survey?.id) {
+      setLoadingQuestions(true)
+      getSurveyQuestions(survey.id)
+        .then((response) => {
+          const formattedQuestions = response.questions.map(q => ({
+            questionText: q.questionText,
+            questionType: q.questionType,
+            order: q.order,
+            isRequired: q.isRequired,
+            answers: q.answers.map(a => ({
+              text: a.text,
+              order: a.order
+            }))
+          }))
+          
+          // Replace the default empty questions array with actual questions
+          setValue('questions', formattedQuestions)
+        })
+        .catch((error) => {
+          console.error('Failed to load survey questions:', error)
+        })
+        .finally(() => {
+          setLoadingQuestions(false)
+        })
+    }
+  }, [survey?.id, setValue])
 
   const handleFormSubmit = (data: SurveyFormData) => {
     const whitelist = whitelistText
@@ -285,19 +317,28 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {questions.map((question, questionIndex) => (
-            <QuestionEditor
-              key={question.id}
-              questionIndex={questionIndex}
-              register={register}
-              control={control}
-              errors={errors}
-              onRemove={() => removeQuestion(questionIndex)}
-              canRemove={questions.length > 1}
-            />
-          ))}
-          {errors.questions && (
-            <p className="text-sm text-red-600">{errors.questions.message}</p>
+          {loadingQuestions ? (
+            <div className="flex items-center justify-center py-8">
+              <Spinner size="lg" />
+              <span className="ml-2 text-sm text-gray-600">Loading questions...</span>
+            </div>
+          ) : (
+            <>
+              {questions.map((question, questionIndex) => (
+                <QuestionEditor
+                  key={question.id}
+                  questionIndex={questionIndex}
+                  register={register}
+                  control={control}
+                  errors={errors}
+                  onRemove={() => removeQuestion(questionIndex)}
+                  canRemove={questions.length > 1}
+                />
+              ))}
+              {errors.questions && (
+                <p className="text-sm text-red-600">{errors.questions.message}</p>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

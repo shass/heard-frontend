@@ -28,9 +28,11 @@ import {
   Pause,
   Search,
   Filter,
-  Download
+  Download,
+  Users
 } from 'lucide-react'
 import { SurveyForm } from './survey-form'
+import { SurveyResponses } from './survey-responses'
 import type { AdminSurveyListItem, CreateSurveyRequest, UpdateSurveyRequest } from '@/lib/types'
 
 export function SurveyManagement() {
@@ -39,6 +41,7 @@ export function SurveyManagement() {
   const [selectedSurvey, setSelectedSurvey] = useState<AdminSurveyListItem | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isResponsesDialogOpen, setIsResponsesDialogOpen] = useState(false)
 
   const notifications = useNotifications()
   const queryClient = useQueryClient()
@@ -259,6 +262,18 @@ export function SurveyManagement() {
                   size="sm"
                   onClick={() => {
                     setSelectedSurvey(survey)
+                    setIsResponsesDialogOpen(true)
+                  }}
+                  title="View Responses"
+                >
+                  <Users className="w-4 h-4" />
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setSelectedSurvey(survey)
                     setIsEditDialogOpen(true)
                   }}
                 >
@@ -324,6 +339,20 @@ export function SurveyManagement() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Survey Responses Dialog */}
+      {selectedSurvey && (
+        <SurveyResponses
+          survey={selectedSurvey}
+          open={isResponsesDialogOpen}
+          onOpenChange={(open) => {
+            setIsResponsesDialogOpen(open)
+            if (!open) {
+              setSelectedSurvey(null)
+            }
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -80,13 +80,13 @@ export const getAdminSurveys = async (params?: {
 }
 
 export const createSurvey = async (surveyData: CreateSurveyRequest): Promise<Survey> => {
-  const response = await apiClient.post<ApiResponse<Survey>>('/admin/surveys', surveyData)
-  return response.data.data
+  const data = await apiClient.post<Survey>('/admin/surveys', surveyData)
+  return data
 }
 
 export const updateSurvey = async (surveyData: UpdateSurveyRequest): Promise<Survey> => {
-  const response = await apiClient.put<ApiResponse<Survey>>(`/admin/surveys/${surveyData.id}`, surveyData)
-  return response.data.data
+  const data = await apiClient.put<Survey>(`/admin/surveys/${surveyData.id}`, surveyData)
+  return data
 }
 
 export const deleteSurvey = async (surveyId: string): Promise<void> => {
@@ -94,17 +94,17 @@ export const deleteSurvey = async (surveyId: string): Promise<void> => {
 }
 
 export const toggleSurveyStatus = async (surveyId: string, isActive: boolean): Promise<Survey> => {
-  const response = await apiClient.patch<ApiResponse<Survey>>(`/admin/surveys/${surveyId}/status`, {
+  const data = await apiClient.patch<Survey>(`/admin/surveys/${surveyId}/status`, {
     isActive
   })
-  return response.data.data
+  return data
 }
 
 export const duplicateSurvey = async (surveyId: string, newName: string): Promise<Survey> => {
-  const response = await apiClient.post<ApiResponse<Survey>>(`/admin/surveys/${surveyId}/duplicate`, {
+  const data = await apiClient.post<Survey>(`/admin/surveys/${surveyId}/duplicate`, {
     name: newName
   })
-  return response.data.data
+  return data
 }
 
 // Survey Responses Management
@@ -112,31 +112,36 @@ export const getSurveyResponses = async (surveyId: string, params?: {
   limit?: number
   offset?: number
   status?: 'completed' | 'in_progress' | 'all'
+  search?: string
 }): Promise<{ responses: SurveyResponse[]; meta: PaginationMeta }> => {
-  const response = await apiClient.get<ApiResponse<SurveyResponse[]>>(`/admin/surveys/${surveyId}/responses`, {
+  const data = await apiClient.get<{
+    items: SurveyResponse[]
+    pagination: PaginationMeta
+  }>(`/admin/surveys/${surveyId}/responses`, {
     params: {
       limit: params?.limit || 20,
       offset: params?.offset || 0,
-      status: params?.status || 'all'
+      status: params?.status || 'all',
+      search: params?.search
     }
   })
   return {
-    responses: response.data.data,
-    meta: response.data.meta?.pagination || {
+    responses: data.items || [],
+    meta: data.pagination || {
       limit: params?.limit || 20,
       offset: params?.offset || 0,
-      total: response.data.data.length,
+      total: data.items?.length || 0,
       hasMore: false
     }
   }
 }
 
 export const exportSurveyResponses = async (surveyId: string, format: 'csv' | 'json' = 'csv'): Promise<Blob> => {
-  const response = await apiClient.get(`/admin/surveys/${surveyId}/export`, {
+  const data = await apiClient.get<Blob>(`/admin/surveys/${surveyId}/export`, {
     params: { format },
     responseType: 'blob'
   })
-  return response.data
+  return data
 }
 
 // Whitelist Management
@@ -204,6 +209,41 @@ export const importWhitelistFromCSV = async (surveyId: string, file: File): Prom
   return data
 }
 
+// Survey Questions Management
+export const getSurveyQuestions = async (surveyId: string): Promise<{
+  questions: Array<{
+    id: string
+    questionText: string
+    questionType: 'single' | 'multiple'
+    order: number
+    isRequired: boolean
+    answers: Array<{
+      id: string
+      text: string
+      order: number
+    }>
+    responseCount: number
+  }>
+}> => {
+  const data = await apiClient.get<{
+    questions: Array<{
+      id: string
+      questionText: string
+      questionType: 'single' | 'multiple'
+      order: number
+      isRequired: boolean
+      answers: Array<{
+        id: string
+        text: string
+        order: number
+      }>
+      responseCount: number
+    }>
+  }>(`/admin/surveys/${surveyId}/questions`)
+  
+  return data
+}
+
 // User Management
 export const getUsers = async (params?: {
   limit?: number
@@ -211,7 +251,10 @@ export const getUsers = async (params?: {
   search?: string
   role?: 'all' | 'admin' | 'survey_creator' | 'respondent'
 }): Promise<{ users: User[]; meta: PaginationMeta }> => {
-  const response = await apiClient.get<ApiResponse<User[]>>('/admin/users', {
+  const data = await apiClient.get<{
+    items: User[]
+    pagination: PaginationMeta
+  }>('/admin/users', {
     params: {
       limit: params?.limit || 20,
       offset: params?.offset || 0,
@@ -220,30 +263,30 @@ export const getUsers = async (params?: {
     }
   })
   return {
-    users: response.data.data,
-    meta: response.data.meta?.pagination || {
+    users: data.items || [],
+    meta: data.pagination || {
       limit: params?.limit || 20,
       offset: params?.offset || 0,
-      total: response.data.data.length,
+      total: data.items?.length || 0,
       hasMore: false
     }
   }
 }
 
 export const updateUserRole = async (userId: string, role: User['role']): Promise<User> => {
-  const response = await apiClient.patch<ApiResponse<User>>(`/admin/users/${userId}/role`, { role })
-  return response.data.data
+  const data = await apiClient.patch<User>(`/admin/users/${userId}/role`, { role })
+  return data
 }
 
 export const toggleUserStatus = async (userId: string, isActive: boolean): Promise<User> => {
-  const response = await apiClient.patch<ApiResponse<User>>(`/admin/users/${userId}/status`, { isActive })
-  return response.data.data
+  const data = await apiClient.patch<User>(`/admin/users/${userId}/status`, { isActive })
+  return data
 }
 
 export const adjustUserHerdPoints = async (userId: string, amount: number, reason: string): Promise<User> => {
-  const response = await apiClient.post<ApiResponse<User>>(`/admin/users/${userId}/herd-points/adjust`, {
+  const data = await apiClient.post<User>(`/admin/users/${userId}/herd-points/adjust`, {
     amount,
     reason
   })
-  return response.data.data
+  return data
 }

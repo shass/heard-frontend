@@ -2,6 +2,7 @@
 
 'use client'
 
+import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { responseApi, type SubmitAnswerRequest, type SubmitSurveyRequest } from '@/lib/api/responses'
 import { useIsAuthenticated, useUIStore } from '@/lib/store'
@@ -189,6 +190,17 @@ export function useAnswerValidation() {
  * Hook to manage survey response state
  */
 export function useSurveyResponseState(responseId: string | null) {
+  const isAuthenticated = useIsAuthenticated()
+  const queryClient = useQueryClient()
+  
+  // Clear response caches when not authenticated or responseId changes
+  React.useEffect(() => {
+    if (!isAuthenticated || !responseId) {
+      // Clear all response-related queries when authentication is lost
+      queryClient.removeQueries({ queryKey: responseKeys.all })
+    }
+  }, [isAuthenticated, responseId, queryClient])
+  
   // Temporarily disable response queries that require missing backend endpoints
   // const { data: response, isLoading: responseLoading } = useSurveyResponse(responseId || '')
   // const { data: progress, isLoading: progressLoading } = useSurveyProgress(responseId || '')

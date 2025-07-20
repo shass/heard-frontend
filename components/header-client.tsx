@@ -30,7 +30,7 @@ export function HeaderClient() {
   const isAuthenticated = useIsAuthenticated()
 
   // Only show admin panel for authenticated admin users
-  const isAdmin = isAuthenticated && user?.role && ['survey_creator', 'admin'].includes(user.role)
+  const isAdmin = isAuthenticated && user?.role === 'admin'
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-zinc-200">
