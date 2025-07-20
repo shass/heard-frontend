@@ -186,12 +186,51 @@ export function WhitelistManagement() {
     const file = event.target.files?.[0]
     if (!file || !selectedSurveyId) return
 
-    if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
-      notifications.error('Invalid File', 'Please select a CSV file')
+    if (file.type !== 'text/csv' && !file.name.endsWith('.csv') && !file.name.endsWith('.json')) {
+      notifications.error('Invalid File', 'Please select a CSV or JSON file')
       return
     }
 
-    importCSVMutation.mutate({ surveyId: selectedSurveyId, file })
+    // For CSV files, parse and extract wallet addresses
+    if (file.name.endsWith('.csv')) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const csvContent = e.target?.result as string
+        const lines = csvContent.split('\n')
+        const walletAddresses: string[] = []
+        
+        // Skip header line, parse remaining lines
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim()
+          if (!line) continue
+          
+          // Split by semicolon (as seen in the example file)
+          const columns = line.split(';')
+          if (columns.length > 0) {
+            const walletAddress = columns[0].trim()
+            // Basic validation for Ethereum address
+            if (walletAddress.startsWith('0x') && walletAddress.length === 42) {
+              walletAddresses.push(walletAddress)
+            }
+          }
+        }
+
+        if (walletAddresses.length === 0) {
+          notifications.error('No Valid Addresses', 'No valid wallet addresses found in the CSV file')
+          return
+        }
+
+        // Bulk add the addresses
+        bulkAddMutation.mutate({
+          surveyId: selectedSurveyId,
+          walletAddresses
+        })
+      }
+      reader.readAsText(file)
+    } else {
+      // For other files, use the original API
+      importCSVMutation.mutate({ surveyId: selectedSurveyId, file })
+    }
   }
 
   const exportToCSV = () => {

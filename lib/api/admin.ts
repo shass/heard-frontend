@@ -17,9 +17,8 @@ import type {
 // Admin Dashboard Stats
 export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => {
   try {
-    // TODO: Switch back to /admin/dashboard when authentication is working
     // Note: apiClient.get() already extracts response.data.data and returns it directly
-    const data = await apiClient.get<AdminDashboardStats>('/admin/dashboard-test')
+    const data = await apiClient.get<AdminDashboardStats>('/admin/dashboard')
     
     // Debug logging
     console.log('🔍 Admin dashboard data received:', data)
@@ -55,20 +54,26 @@ export const getAdminSurveys = async (params?: {
   search?: string
   status?: 'active' | 'inactive' | 'all'
 }): Promise<{ surveys: AdminSurveyListItem[]; meta: PaginationMeta }> => {
-  const response = await apiClient.get<ApiResponse<AdminSurveyListItem[]>>('/admin/surveys', {
+  const data = await apiClient.get<{
+    items: AdminSurveyListItem[]
+    pagination: PaginationMeta
+  }>('/admin/surveys', {
     params: {
       limit: params?.limit || 20,
       offset: params?.offset || 0,
       search: params?.search,
-      status: params?.status || 'all'
+      status: params?.status
     }
   })
+  
+  console.log('🔍 Admin surveys data received:', data)
+  
   return {
-    surveys: response.data.data,
-    meta: response.data.meta?.pagination || {
+    surveys: data.items || [],
+    meta: data.pagination || {
       limit: params?.limit || 20,
       offset: params?.offset || 0,
-      total: response.data.data.length,
+      total: data.items?.length || 0,
       hasMore: false
     }
   }
@@ -140,33 +145,41 @@ export const getWhitelistEntries = async (surveyId: string, params?: {
   offset?: number
   search?: string
 }): Promise<WhitelistManagementData> => {
-  const response = await apiClient.get<ApiResponse<WhitelistEntry[]>>(`/admin/surveys/${surveyId}/whitelist`, {
+  const data = await apiClient.get<{
+    addresses: string[]
+    total: number
+    entries: WhitelistEntry[]
+  }>(`/admin/surveys/${surveyId}/whitelist`, {
     params: {
-      limit: params?.limit || 50,
+      limit: params?.limit || 100,
       offset: params?.offset || 0,
       search: params?.search
     }
   })
+  
+  console.log('🔍 Whitelist data received for survey', surveyId, ':', data)
+  
   return {
     surveyId,
-    entries: response.data.data,
-    totalEntries: response.data.meta?.pagination?.total || 0
+    entries: data.entries || [],
+    totalEntries: data.total || 0
   }
 }
 
 export const addWhitelistEntry = async (surveyId: string, walletAddress: string): Promise<WhitelistEntry> => {
-  const response = await apiClient.post<ApiResponse<WhitelistEntry>>(`/admin/surveys/${surveyId}/whitelist`, {
+  const data = await apiClient.post<WhitelistEntry>(`/admin/surveys/${surveyId}/whitelist/add`, {
     walletAddress
   })
-  return response.data.data
+  
+  return data
 }
 
 export const bulkAddWhitelistEntries = async (request: BulkWhitelistRequest): Promise<WhitelistEntry[]> => {
-  const response = await apiClient.post<ApiResponse<WhitelistEntry[]>>(
-    `/admin/surveys/${request.surveyId}/whitelist/bulk`,
-    { walletAddresses: request.walletAddresses }
-  )
-  return response.data.data
+  const data = await apiClient.post<WhitelistEntry[]>(`/admin/surveys/${request.surveyId}/whitelist/bulk-add`, {
+    walletAddresses: request.walletAddresses
+  })
+  
+  return data
 }
 
 export const removeWhitelistEntry = async (surveyId: string, entryId: string): Promise<void> => {
@@ -174,11 +187,11 @@ export const removeWhitelistEntry = async (surveyId: string, entryId: string): P
 }
 
 export const toggleWhitelistEntry = async (surveyId: string, entryId: string, isActive: boolean): Promise<WhitelistEntry> => {
-  const response = await apiClient.patch<ApiResponse<WhitelistEntry>>(
-    `/admin/surveys/${surveyId}/whitelist/${entryId}`,
-    { isActive }
-  )
-  return response.data.data
+  const data = await apiClient.patch<WhitelistEntry>(`/admin/surveys/${surveyId}/whitelist/${entryId}/toggle`, {
+    isActive
+  })
+  
+  return data
 }
 
 export const clearWhitelist = async (surveyId: string): Promise<void> => {
@@ -186,19 +199,9 @@ export const clearWhitelist = async (surveyId: string): Promise<void> => {
 }
 
 export const importWhitelistFromCSV = async (surveyId: string, file: File): Promise<WhitelistEntry[]> => {
-  const formData = new FormData()
-  formData.append('file', file)
+  const data = await apiClient.uploadFile<WhitelistEntry[]>(`/admin/surveys/${surveyId}/whitelist/csv`, file)
   
-  const response = await apiClient.post<ApiResponse<WhitelistEntry[]>>(
-    `/admin/surveys/${surveyId}/whitelist/import`,
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    }
-  )
-  return response.data.data
+  return data
 }
 
 // User Management

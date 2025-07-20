@@ -105,6 +105,11 @@ class ApiClient {
     return response.data.data
   }
 
+  async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    const response: AxiosResponse<ApiResponse<T>> = await this.client.patch(url, data, config)
+    return response.data.data
+  }
+
   // Auth token management
   setToken(token: string): void {
     this.setAuthToken(token)
