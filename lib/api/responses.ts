@@ -38,7 +38,7 @@ export interface SubmitSurveyRequest {
 
 export interface SubmitSurveyResponse {
   completedAt: string
-  herdPointsAwarded: number
+  heardPointsAwarded: number
   rewardInfo: RewardInfo
 }
 

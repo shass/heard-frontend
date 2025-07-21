@@ -4,17 +4,17 @@ import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { LoadingState } from "@/components/ui/loading-states"
 import { X, TrendingUp, TrendingDown, Gift, Settings } from "lucide-react"
-import { useHerdPointsHistory } from "@/hooks/use-users"
+import { useHeardPointsHistory } from "@/hooks/use-users"
 import { useUser } from "@/lib/store"
-import type { HerdPointsTransaction } from "@/lib/types"
+import type { HeardPointsTransaction } from "@/lib/types"
 import { formatDistance } from 'date-fns'
 
-interface HerdPointsHistoryModalProps {
+interface HeardPointsHistoryModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
-export function HerdPointsHistoryModal({ isOpen, onClose }: HerdPointsHistoryModalProps) {
+export function HeardPointsHistoryModal({ isOpen, onClose }: HeardPointsHistoryModalProps) {
   const [filterType, setFilterType] = useState<'all' | 'earned' | 'spent' | 'bonus' | 'admin_adjustment'>('all')
   const user = useUser()
   
@@ -23,7 +23,7 @@ export function HerdPointsHistoryModal({ isOpen, onClose }: HerdPointsHistoryMod
     isLoading, 
     error,
     refetch
-  } = useHerdPointsHistory({ 
+  } = useHeardPointsHistory({ 
     limit: 50, 
     type: filterType === 'all' ? undefined : filterType 
   })
@@ -34,7 +34,7 @@ export function HerdPointsHistoryModal({ isOpen, onClose }: HerdPointsHistoryMod
     }
   }, [isOpen, refetch])
 
-  const getTransactionIcon = (type: HerdPointsTransaction['type']) => {
+  const getTransactionIcon = (type: HeardPointsTransaction['type']) => {
     switch (type) {
       case 'earned':
         return <TrendingUp className="w-4 h-4 text-green-600" />
@@ -49,7 +49,7 @@ export function HerdPointsHistoryModal({ isOpen, onClose }: HerdPointsHistoryMod
     }
   }
 
-  const getTransactionColor = (type: HerdPointsTransaction['type']) => {
+  const getTransactionColor = (type: HeardPointsTransaction['type']) => {
     switch (type) {
       case 'earned':
       case 'bonus':
@@ -63,7 +63,7 @@ export function HerdPointsHistoryModal({ isOpen, onClose }: HerdPointsHistoryMod
     }
   }
 
-  const formatAmount = (amount: number, type: HerdPointsTransaction['type']) => {
+  const formatAmount = (amount: number, type: HeardPointsTransaction['type']) => {
     const prefix = type === 'earned' || type === 'bonus' || (type === 'admin_adjustment' && amount > 0) ? '+' : ''
     return `${prefix}${amount.toLocaleString()}`
   }
@@ -76,9 +76,9 @@ export function HerdPointsHistoryModal({ isOpen, onClose }: HerdPointsHistoryMod
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-zinc-200">
           <div>
-            <h2 className="text-xl font-semibold text-zinc-900">HerdPoints History</h2>
+            <h2 className="text-xl font-semibold text-zinc-900">HeardPoints History</h2>
             <p className="text-sm text-zinc-600">
-              Current Balance: {user?.herdPointsBalance?.toLocaleString() || 0} HP
+              Current Balance: {user?.heardPointsBalance?.toLocaleString() || 0} HP
             </p>
           </div>
           <Button

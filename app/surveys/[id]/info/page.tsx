@@ -168,8 +168,8 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
                 <CardContent className="flex items-center p-4">
                   <Star className="w-5 h-5 text-zinc-500 mr-3" />
                   <div>
-                    <p className="text-sm font-medium text-zinc-900">{survey.herdPointsReward}</p>
-                    <p className="text-xs text-zinc-500">HerdPoints</p>
+                    <p className="text-sm font-medium text-zinc-900">{survey.heardPointsReward}</p>
+                    <p className="text-xs text-zinc-500">HeardPoints</p>
                   </div>
                 </CardContent>
               </Card>
@@ -246,7 +246,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
                       </div>
                       <div className="text-sm text-green-700">
                         <p>Token Reward: {userReward.survey?.rewardAmount} {userReward.survey?.rewardToken}</p>
-                        <p>HerdPoints Earned: {userReward.herdPointsAwarded} HP</p>
+                        <p>HeardPoints Earned: {userReward.heardPointsAwarded} HP</p>
                         {userReward.usedAt && (
                           <p>Reward given: {new Date(userReward.usedAt).toLocaleDateString()}</p>
                         )}

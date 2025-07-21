@@ -2,12 +2,12 @@
 
 import { lazy, Suspense } from 'react'
 import dynamic from 'next/dynamic'
-import { PageLoading, SurveyTableSkeleton, RewardPageSkeleton, HerdPointsHistorySkeleton } from '@/components/ui/loading-states'
+import { PageLoading, SurveyTableSkeleton, RewardPageSkeleton, HeardPointsHistorySkeleton } from '@/components/ui/loading-states'
 
 // Lazy load heavy components
-export const LazyHerdPointsHistoryModal = lazy(() => 
-  import('@/components/ui/herd-points-history-modal').then(module => ({
-    default: module.HerdPointsHistoryModal
+export const LazyHeardPointsHistoryModal = lazy(() => 
+  import('@/components/ui/heard-points-history-modal').then(module => ({
+    default: module.HeardPointsHistoryModal
   }))
 )
 
@@ -31,10 +31,10 @@ export const LazyNetworkStatus = dynamic(() =>
 )
 
 // Wrapper components with appropriate loading states
-export function HerdPointsHistoryModal(props: any) {
+export function HeardPointsHistoryModal(props: any) {
   return (
-    <Suspense fallback={<HerdPointsHistorySkeleton />}>
-      <LazyHerdPointsHistoryModal {...props} />
+    <Suspense fallback={<HeardPointsHistorySkeleton />}>
+      <LazyHeardPointsHistoryModal {...props} />
     </Suspense>
   )
 }

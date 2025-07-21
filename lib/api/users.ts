@@ -3,25 +3,25 @@
 import { apiClient } from './client'
 import type { 
   User, 
-  HerdPointsTransaction,
+  HeardPointsTransaction,
   PaginationMeta
 } from '@/lib/types'
 
-export interface GetHerdPointsResponse {
+export interface GetHeardPointsResponse {
   currentBalance: number
   totalEarned: number
   totalSpent: number
   transactionCount: number
 }
 
-export interface GetHerdPointsHistoryRequest {
+export interface GetHeardPointsHistoryRequest {
   limit?: number
   offset?: number
   type?: 'earned' | 'spent' | 'bonus' | 'admin_adjustment'
 }
 
-export interface GetHerdPointsHistoryResponse {
-  items: HerdPointsTransaction[]
+export interface GetHeardPointsHistoryResponse {
+  items: HeardPointsTransaction[]
   pagination: PaginationMeta
 }
 
@@ -30,13 +30,13 @@ export interface UpdateUserRequest {
   isActive?: boolean
 }
 
-export interface AdjustHerdPointsRequest {
+export interface AdjustHeardPointsRequest {
   amount: number
   description: string
 }
 
-export interface AdjustHerdPointsResponse {
-  transaction: HerdPointsTransaction
+export interface AdjustHeardPointsResponse {
+  transaction: HeardPointsTransaction
   newBalance: number
 }
 
@@ -58,24 +58,24 @@ export interface GetAllUsersResponse {
 
 export class UserApi {
   /**
-   * Get HerdPoints balance and statistics
+   * Get HeardPoints balance and statistics
    */
-  async getHerdPoints(): Promise<GetHerdPointsResponse> {
-    return await apiClient.get<GetHerdPointsResponse>('/users/me/herd-points')
+  async getHeardPoints(): Promise<GetHeardPointsResponse> {
+    return await apiClient.get<GetHeardPointsResponse>('/users/me/heard-points')
   }
 
   /**
-   * Get HerdPoints transaction history
+   * Get HeardPoints transaction history
    */
-  async getHerdPointsHistory(params: GetHerdPointsHistoryRequest = {}): Promise<GetHerdPointsHistoryResponse> {
+  async getHeardPointsHistory(params: GetHeardPointsHistoryRequest = {}): Promise<GetHeardPointsHistoryResponse> {
     const queryParams = new URLSearchParams()
     
     if (params.limit) queryParams.append('limit', params.limit.toString())
     if (params.offset) queryParams.append('offset', params.offset.toString())
     if (params.type) queryParams.append('type', params.type)
 
-    const url = `/users/me/herd-points/history${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-    return await apiClient.get<GetHerdPointsHistoryResponse>(url)
+    const url = `/users/me/heard-points/history${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+    return await apiClient.get<GetHeardPointsHistoryResponse>(url)
   }
 
   /**
@@ -86,10 +86,10 @@ export class UserApi {
   }
 
   /**
-   * Adjust HerdPoints balance (admin only)
+   * Adjust HeardPoints balance (admin only)
    */
-  async adjustHerdPoints(userId: string, request: AdjustHerdPointsRequest): Promise<AdjustHerdPointsResponse> {
-    return await apiClient.post<AdjustHerdPointsResponse>(`/users/${userId}/herd-points/adjust`, request)
+  async adjustHeardPoints(userId: string, request: AdjustHeardPointsRequest): Promise<AdjustHeardPointsResponse> {
+    return await apiClient.post<AdjustHeardPointsResponse>(`/users/${userId}/heard-points/adjust`, request)
   }
 
   /**
@@ -123,23 +123,23 @@ export class UserApi {
   }
 
   /**
-   * Get recent HerdPoints transactions (last 10)
+   * Get recent HeardPoints transactions (last 10)
    */
-  async getRecentTransactions(): Promise<HerdPointsTransaction[]> {
-    const response = await this.getHerdPointsHistory({ limit: 10, offset: 0 })
+  async getRecentTransactions(): Promise<HeardPointsTransaction[]> {
+    const response = await this.getHeardPointsHistory({ limit: 10, offset: 0 })
     return response.items
   }
 
   /**
-   * Get HerdPoints summary for dashboard
+   * Get HeardPoints summary for dashboard
    */
-  async getHerdPointsSummary(): Promise<{
+  async getHeardPointsSummary(): Promise<{
     balance: number
-    recentTransactions: HerdPointsTransaction[]
+    recentTransactions: HeardPointsTransaction[]
     monthlyEarned: number
   }> {
     const [pointsData, recentTransactions] = await Promise.all([
-      this.getHerdPoints(),
+      this.getHeardPoints(),
       this.getRecentTransactions()
     ])
 
@@ -162,14 +162,14 @@ export class UserApi {
   }
 
   /**
-   * Check if user has sufficient HerdPoints for action
+   * Check if user has sufficient HeardPoints for action
    */
   async hasEnoughPoints(requiredPoints: number): Promise<{ 
     hasEnough: boolean
     currentBalance: number
     required: number
   }> {
-    const { currentBalance } = await this.getHerdPoints()
+    const { currentBalance } = await this.getHeardPoints()
     
     return {
       hasEnough: currentBalance >= requiredPoints,

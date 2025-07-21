@@ -61,7 +61,7 @@ function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
 
   const formatReward = (survey: Survey) => {
     const tokenReward = `${survey.rewardAmount} ${survey.rewardToken}`
-    const pointsReward = survey.herdPointsReward > 0 ? ` + ${survey.herdPointsReward} HP` : ""
+    const pointsReward = survey.heardPointsReward > 0 ? ` + ${survey.heardPointsReward} HP` : ""
     return tokenReward + pointsReward
   }
 
@@ -151,7 +151,7 @@ function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
 
   const formatReward = (survey: Survey) => {
     const tokenReward = `${survey.rewardAmount} ${survey.rewardToken}`
-    const pointsReward = survey.herdPointsReward > 0 ? ` + ${survey.herdPointsReward} HP` : ""
+    const pointsReward = survey.heardPointsReward > 0 ? ` + ${survey.heardPointsReward} HP` : ""
     return tokenReward + pointsReward
   }
 

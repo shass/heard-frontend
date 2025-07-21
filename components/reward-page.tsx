@@ -6,7 +6,7 @@ import { LoadingState, InlineLoading } from "@/components/ui/loading-states"
 import { Copy, ExternalLink, Gift, CheckCircle2 } from "lucide-react"
 import { useSurveyResponseState } from "@/hooks/use-survey-response"
 import { useUserReward } from "@/hooks/use-reward"
-import { useHerdPoints } from "@/hooks/use-users"
+import { useHeardPoints } from "@/hooks/use-users"
 import { useIsAuthenticated, useUser } from "@/lib/store"
 import { useNotifications } from "@/components/ui/notifications"
 import type { Survey } from "@/lib/types"
@@ -32,12 +32,12 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
   const responseState = useSurveyResponseState(responseId || '')
 
   // Get updated user points
-  const { data: userPoints, refetch: refetchPoints } = useHerdPoints()
+  const { data: userPoints, refetch: refetchPoints } = useHeardPoints()
 
   // Determine reward information (prioritize new system)
   const claimLink = userReward?.claimLink
   const linkDropCode = userReward?.linkDropCode || responseState.response?.linkDropCode
-  const herdPointsAwarded = userReward?.herdPointsAwarded || responseState.response?.herdPointsAwarded || 0
+  const heardPointsAwarded = userReward?.heardPointsAwarded || responseState.response?.heardPointsAwarded || 0
   const rewardClaimed = !!userReward?.usedAt || responseState.response?.rewardClaimed || false
   const isNewLinkdropSystem = userReward?.type === 'linkdrop'
 
@@ -114,7 +114,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
 
   const formatReward = () => {
     const tokenReward = `${survey.rewardAmount} ${survey.rewardToken}`
-    const pointsReward = herdPointsAwarded > 0 ? ` + ${herdPointsAwarded} HP` : ""
+    const pointsReward = heardPointsAwarded > 0 ? ` + ${heardPointsAwarded} HP` : ""
     return tokenReward + pointsReward
   }
 
@@ -183,10 +183,10 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
               {formatReward()}
             </div>
 
-            {herdPointsAwarded > 0 && (
+            {heardPointsAwarded > 0 && (
               <div className="flex items-center justify-center space-x-2 text-sm text-zinc-600">
                 <CheckCircle2 className="w-4 h-4 text-green-600" />
-                <span>{herdPointsAwarded} HerdPoints have been added to your account</span>
+                <span>{heardPointsAwarded} HeardPoints have been added to your account</span>
               </div>
             )}
           </div>
@@ -281,7 +281,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
               Questions about your reward? Contact support at support@heardlabs.com
             </p>
             <p>
-              Current HerdPoints Balance: {userPoints?.balance || 0} HP
+              Current HeardPoints Balance: {userPoints?.balance || 0} HP
             </p>
           </div>
         </div>

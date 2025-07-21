@@ -282,7 +282,7 @@ export function RewardPageSkeleton({ className }: { className?: string }) {
   )
 }
 
-export function HerdPointsHistorySkeleton({ rows = 5, className }: { rows?: number, className?: string }) {
+export function HeardPointsHistorySkeleton({ rows = 5, className }: { rows?: number, className?: string }) {
   return (
     <div className={cn('space-y-4', className)}>
       {Array.from({ length: rows }).map((_, i) => (

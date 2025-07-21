@@ -1,11 +1,11 @@
-// React Query hooks for users and HerdPoints
+// React Query hooks for users and HeardPoints
 
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { userApi, type GetHerdPointsHistoryRequest, type UpdateUserRequest, type AdjustHerdPointsRequest } from '@/lib/api/users'
+import { userApi, type GetHeardPointsHistoryRequest, type UpdateUserRequest, type AdjustHeardPointsRequest } from '@/lib/api/users'
 import { useUIStore, useIsAuthenticated, useUser } from '@/lib/store'
-import type { User, HerdPointsTransaction } from '@/lib/types'
+import type { User, HeardPointsTransaction } from '@/lib/types'
 
 // Query keys for cache management
 export const userKeys = {
@@ -14,20 +14,20 @@ export const userKeys = {
   details: () => [...userKeys.all, 'detail'] as const,
   detail: (id: string) => [...userKeys.details(), id] as const,
   current: () => [...userKeys.all, 'current'] as const,
-  herdPoints: () => [...userKeys.all, 'herd-points'] as const,
-  herdPointsHistory: (params: GetHerdPointsHistoryRequest) => [...userKeys.herdPoints(), 'history', params] as const,
-  herdPointsSummary: () => [...userKeys.herdPoints(), 'summary'] as const,
+  heardPoints: () => [...userKeys.all, 'heard-points'] as const,
+  heardPointsHistory: (params: GetHeardPointsHistoryRequest) => [...userKeys.heardPoints(), 'history', params] as const,
+  heardPointsSummary: () => [...userKeys.heardPoints(), 'summary'] as const,
 }
 
 /**
- * Hook to get current user HerdPoints balance and stats
+ * Hook to get current user HeardPoints balance and stats
  */
-export function useHerdPoints() {
+export function useHeardPoints() {
   const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
-    queryKey: userKeys.herdPoints(),
-    queryFn: () => userApi.getHerdPoints(),
+    queryKey: userKeys.heardPoints(),
+    queryFn: () => userApi.getHeardPoints(),
     enabled: isAuthenticated,
     staleTime: 1 * 60 * 1000, // 1 minute
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -35,14 +35,14 @@ export function useHerdPoints() {
 }
 
 /**
- * Hook to get HerdPoints transaction history
+ * Hook to get HeardPoints transaction history
  */
-export function useHerdPointsHistory(params: GetHerdPointsHistoryRequest = {}) {
+export function useHeardPointsHistory(params: GetHeardPointsHistoryRequest = {}) {
   const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
-    queryKey: userKeys.herdPointsHistory(params),
-    queryFn: () => userApi.getHerdPointsHistory(params),
+    queryKey: userKeys.heardPointsHistory(params),
+    queryFn: () => userApi.getHeardPointsHistory(params),
     enabled: isAuthenticated,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -50,13 +50,13 @@ export function useHerdPointsHistory(params: GetHerdPointsHistoryRequest = {}) {
 }
 
 /**
- * Hook to get recent HerdPoints transactions (last 10)
+ * Hook to get recent HeardPoints transactions (last 10)
  */
 export function useRecentTransactions() {
   const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
-    queryKey: [...userKeys.herdPoints(), 'recent'],
+    queryKey: [...userKeys.heardPoints(), 'recent'],
     queryFn: () => userApi.getRecentTransactions(),
     enabled: isAuthenticated,
     staleTime: 1 * 60 * 1000, // 1 minute
@@ -65,14 +65,14 @@ export function useRecentTransactions() {
 }
 
 /**
- * Hook to get HerdPoints summary for dashboard
+ * Hook to get HeardPoints summary for dashboard
  */
-export function useHerdPointsSummary() {
+export function useHeardPointsSummary() {
   const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
-    queryKey: userKeys.herdPointsSummary(),
-    queryFn: () => userApi.getHerdPointsSummary(),
+    queryKey: userKeys.heardPointsSummary(),
+    queryFn: () => userApi.getHeardPointsSummary(),
     enabled: isAuthenticated,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -80,13 +80,13 @@ export function useHerdPointsSummary() {
 }
 
 /**
- * Hook to check if user has enough HerdPoints
+ * Hook to check if user has enough HeardPoints
  */
 export function useHasEnoughPoints(requiredPoints: number) {
   const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
-    queryKey: [...userKeys.herdPoints(), 'hasEnough', requiredPoints],
+    queryKey: [...userKeys.heardPoints(), 'hasEnough', requiredPoints],
     queryFn: () => userApi.hasEnoughPoints(requiredPoints),
     enabled: isAuthenticated && requiredPoints > 0,
     staleTime: 30 * 1000, // 30 seconds
@@ -192,26 +192,26 @@ export function useUpdateUser() {
 }
 
 /**
- * Mutation hook to adjust HerdPoints (admin only)
+ * Mutation hook to adjust HeardPoints (admin only)
  */
-export function useAdjustHerdPoints() {
+export function useAdjustHeardPoints() {
   const queryClient = useQueryClient()
   const { addNotification } = useUIStore()
   
   return useMutation({
-    mutationFn: ({ userId, data }: { userId: string; data: AdjustHerdPointsRequest }) => 
-      userApi.adjustHerdPoints(userId, data),
+    mutationFn: ({ userId, data }: { userId: string; data: AdjustHeardPointsRequest }) => 
+      userApi.adjustHeardPoints(userId, data),
     onSuccess: (result, variables) => {
-      // Invalidate HerdPoints caches
-      queryClient.invalidateQueries({ queryKey: userKeys.herdPoints() })
-      queryClient.invalidateQueries({ queryKey: userKeys.herdPointsSummary() })
+      // Invalidate HeardPoints caches
+      queryClient.invalidateQueries({ queryKey: userKeys.heardPoints() })
+      queryClient.invalidateQueries({ queryKey: userKeys.heardPointsSummary() })
       
       // Invalidate user cache
       queryClient.invalidateQueries({ queryKey: userKeys.detail(variables.userId) })
       
       addNotification({
         type: 'success',
-        title: 'HerdPoints adjusted',
+        title: 'HeardPoints adjusted',
         message: `New balance: ${result.newBalance}`,
         duration: 5000
       })
@@ -219,7 +219,7 @@ export function useAdjustHerdPoints() {
     onError: (error: any) => {
       addNotification({
         type: 'error',
-        title: 'Failed to adjust HerdPoints',
+        title: 'Failed to adjust HeardPoints',
         message: error.message,
         duration: 5000
       })
@@ -228,14 +228,14 @@ export function useAdjustHerdPoints() {
 }
 
 /**
- * Hook to auto-refresh HerdPoints balance
+ * Hook to auto-refresh HeardPoints balance
  */
-export function useAutoRefreshHerdPoints(intervalMs: number = 30000) {
+export function useAutoRefreshHeardPoints(intervalMs: number = 30000) {
   const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
-    queryKey: [...userKeys.herdPoints(), 'auto-refresh'],
-    queryFn: () => userApi.getHerdPoints(),
+    queryKey: [...userKeys.heardPoints(), 'auto-refresh'],
+    queryFn: () => userApi.getHeardPoints(),
     enabled: isAuthenticated,
     refetchInterval: intervalMs,
     staleTime: 10 * 1000, // 10 seconds
@@ -258,10 +258,10 @@ export function usePrefetchUser() {
       })
     },
     
-    prefetchHerdPoints: () => {
+    prefetchHeardPoints: () => {
       queryClient.prefetchQuery({
-        queryKey: userKeys.herdPoints(),
-        queryFn: () => userApi.getHerdPoints(),
+        queryKey: userKeys.heardPoints(),
+        queryFn: () => userApi.getHeardPoints(),
         staleTime: 1 * 60 * 1000,
       })
     }
@@ -276,7 +276,7 @@ export function useInvalidateUsers() {
   
   return {
     invalidateAll: () => queryClient.invalidateQueries({ queryKey: userKeys.all }),
-    invalidateHerdPoints: () => queryClient.invalidateQueries({ queryKey: userKeys.herdPoints() }),
+    invalidateHeardPoints: () => queryClient.invalidateQueries({ queryKey: userKeys.heardPoints() }),
     invalidateUser: (userId: string) => queryClient.invalidateQueries({ queryKey: userKeys.detail(userId) }),
     invalidateLists: () => queryClient.invalidateQueries({ queryKey: userKeys.lists() }),
   }

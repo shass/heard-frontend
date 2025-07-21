@@ -202,7 +202,7 @@ export function AdminDashboard() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-4 border-b">
                       <div>
-                        <h4 className="font-medium">Default HerdPoints Reward</h4>
+                        <h4 className="font-medium">Default HeardPoints Reward</h4>
                         <p className="text-sm text-gray-600">Default points awarded for survey completion</p>
                       </div>
                       <Button variant="outline" size="sm">Configure</Button>

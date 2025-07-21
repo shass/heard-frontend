@@ -240,10 +240,10 @@ function SurveyResponseDetails({ response, open, onOpenChange }: SurveyResponseD
                     <span className="font-medium text-gray-600">Progress:</span>
                     <div>{response.progress}%</div>
                   </div>
-                  {response.herdPointsAwarded && (
+                  {response.heardPointsAwarded && (
                     <div>
-                      <span className="font-medium text-gray-600">HerdPoints Awarded:</span>
-                      <div>{response.herdPointsAwarded} HP</div>
+                      <span className="font-medium text-gray-600">HeardPoints Awarded:</span>
+                      <div>{response.heardPointsAwarded} HP</div>
                     </div>
                   )}
                 </div>

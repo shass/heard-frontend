@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAutoRefreshHerdPoints } from '@/hooks/use-users'
+import { useAutoRefreshHeardPoints } from '@/hooks/use-users'
 import { useUser } from '@/lib/store'
-import { HerdPointsHistoryModal } from '@/components/lazy'
+import { HeardPointsHistoryModal } from '@/components/lazy'
 import { History } from 'lucide-react'
 
-interface HerdPointsBalanceProps {
+interface HeardPointsBalanceProps {
   className?: string
   showLabel?: boolean
   refreshInterval?: number
@@ -14,13 +14,13 @@ interface HerdPointsBalanceProps {
   onBalanceChange?: (newBalance: number, previousBalance: number) => void
 }
 
-export function HerdPointsBalance({ 
+export function HeardPointsBalance({ 
   className = "", 
   showLabel = true, 
   refreshInterval = 30000,
   clickable = true,
   onBalanceChange 
-}: HerdPointsBalanceProps) {
+}: HeardPointsBalanceProps) {
   const user = useUser()
   const [previousBalance, setPreviousBalance] = useState<number | null>(null)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -28,11 +28,11 @@ export function HerdPointsBalance({
   const [displayedBalance, setDisplayedBalance] = useState<number>(0)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   
-  // Get HerdPoints with auto-refresh
-  const { data: herdPoints, isLoading: pointsLoading } = useAutoRefreshHerdPoints(refreshInterval)
+  // Get HeardPoints with auto-refresh
+  const { data: heardPoints, isLoading: pointsLoading } = useAutoRefreshHeardPoints(refreshInterval)
   
   // Use fallback to user balance if API is not available
-  const currentBalance = herdPoints?.currentBalance ?? user?.herdPointsBalance ?? 0
+  const currentBalance = heardPoints?.currentBalance ?? user?.heardPointsBalance ?? 0
   
   // Initialize displayed balance
   useEffect(() => {
@@ -145,7 +145,7 @@ export function HerdPointsBalance({
         <BalanceContent />
       )}
       
-      <HerdPointsHistoryModal 
+      <HeardPointsHistoryModal 
         isOpen={showHistoryModal}
         onClose={() => setShowHistoryModal(false)}
       />

@@ -2,7 +2,7 @@
 
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Button } from "@/components/ui/button"
-import { HerdPointsBalance } from "@/components/ui/herd-points-balance"
+import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
 import { useAuthActions } from "@/components/providers/auth-provider"
 import { useIsAuthenticated, useUser, useAuthLoading } from "@/lib/store"
 import { useAccount } from 'wagmi'
@@ -38,8 +38,8 @@ export function AuthSection() {
     const difference = newBalance - previousBalance
     if (difference > 0) {
       notifications.success(
-        'HerdPoints Earned!',
-        `You earned ${difference} HerdPoints`,
+        'HeardPoints Earned!',
+        `You earned ${difference} HeardPoints`,
         { duration: 3000 }
       )
     }
@@ -63,7 +63,7 @@ export function AuthSection() {
           </span>
         </div>
         <div className="h-4 w-px bg-zinc-300"></div>
-        <HerdPointsBalance 
+        <HeardPointsBalance 
           onBalanceChange={handleBalanceChange}
           refreshInterval={30000}
           showLabel={true}

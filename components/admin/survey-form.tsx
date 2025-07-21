@@ -46,7 +46,7 @@ const surveySchema = z.object({
   criteria: z.string().min(1, 'Criteria is required'),
   rewardAmount: z.number().min(0, 'Reward amount must be positive'),
   rewardToken: z.string().min(1, 'Reward token is required'),
-  herdPointsReward: z.number().min(0, 'HerdPoints reward must be positive'),
+  heardPointsReward: z.number().min(0, 'HeardPoints reward must be positive'),
   questions: z.array(questionSchema).min(1, 'At least 1 question is required'),
   whitelist: z.array(z.string()).optional(),
   isActive: z.boolean().optional()
@@ -82,7 +82,7 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
       criteria: survey.criteria,
       rewardAmount: survey.rewardAmount,
       rewardToken: survey.rewardToken,
-      herdPointsReward: survey.herdPointsReward,
+      heardPointsReward: survey.heardPointsReward,
       questions: [],
       whitelist: [],
       isActive: survey.isActive
@@ -94,7 +94,7 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
       criteria: '',
       rewardAmount: 0,
       rewardToken: 'ETH',
-      herdPointsReward: 100,
+      heardPointsReward: 100,
       questions: [{
         questionText: '',
         questionType: 'single',
@@ -282,15 +282,15 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
             </div>
             
             <div>
-              <Label htmlFor="herdPointsReward">HerdPoints Reward *</Label>
+              <Label htmlFor="heardPointsReward">HeardPoints Reward *</Label>
               <Input
-                id="herdPointsReward"
+                id="heardPointsReward"
                 type="number"
-                {...register('herdPointsReward', { valueAsNumber: true })}
+                {...register('heardPointsReward', { valueAsNumber: true })}
                 placeholder="100"
               />
-              {errors.herdPointsReward && (
-                <p className="text-sm text-red-600 mt-1">{errors.herdPointsReward.message}</p>
+              {errors.heardPointsReward && (
+                <p className="text-sm text-red-600 mt-1">{errors.heardPointsReward.message}</p>
               )}
             </div>
           </div>

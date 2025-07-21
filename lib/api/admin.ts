@@ -283,8 +283,8 @@ export const toggleUserStatus = async (userId: string, isActive: boolean): Promi
   return data
 }
 
-export const adjustUserHerdPoints = async (userId: string, amount: number, reason: string): Promise<User> => {
-  const data = await apiClient.post<User>(`/admin/users/${userId}/herd-points/adjust`, {
+export const adjustUserHeardPoints = async (userId: string, amount: number, reason: string): Promise<User> => {
+  const data = await apiClient.post<User>(`/admin/users/${userId}/heard-points/adjust`, {
     amount,
     reason
   })

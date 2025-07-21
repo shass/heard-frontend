@@ -238,8 +238,8 @@ export function SurveyManagement() {
                   <div className="font-medium">{survey.rewardAmount} ETH</div>
                 </div>
                 <div>
-                  <span className="text-gray-500">HerdPoints:</span>
-                  <div className="font-medium">{survey.herdPointsReward} HP</div>
+                  <span className="text-gray-500">HeardPoints:</span>
+                  <div className="font-medium">{survey.heardPointsReward} HP</div>
                 </div>
                 <div>
                   <span className="text-gray-500">Whitelist:</span>

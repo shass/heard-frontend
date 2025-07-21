@@ -6,7 +6,7 @@ interface LinkdropReward {
   claimLink?: string
   linkDropCode?: string
   usedAt?: string
-  herdPointsAwarded: number
+  heardPointsAwarded: number
   survey: {
     name: string
     rewardAmount: number

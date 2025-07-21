@@ -117,14 +117,14 @@ export function useSubmitSurvey() {
       
       // Invalidate user points (they got rewarded)
       queryClient.invalidateQueries({ 
-        queryKey: ['users', 'herd-points'] 
+        queryKey: ['users', 'heard-points'] 
       })
       
       // Show success notification
       addNotification({
         type: 'success',
         title: 'Survey completed!',
-        message: `You earned ${data.herdPointsAwarded} HerdPoints`,
+        message: `You earned ${data.heardPointsAwarded} HeardPoints`,
         duration: 10000
       })
     },

@@ -5,7 +5,7 @@ export interface User {
   id: string
   walletAddress: string
   role: 'respondent' | 'admin'
-  herdPointsBalance: number
+  heardPointsBalance: number
   isActive: boolean
   lastLoginAt?: string
   createdAt: string
@@ -22,7 +22,7 @@ export interface Survey {
   criteria: string
   rewardAmount: number
   rewardToken: string
-  herdPointsReward: number
+  heardPointsReward: number
   totalQuestions: number
   responseCount: number
   isActive: boolean
@@ -55,7 +55,7 @@ export interface SurveyResponse {
   completedAt?: string
   rewardClaimed: boolean
   linkDropCode?: string
-  herdPointsAwarded: number
+  heardPointsAwarded: number
   createdAt: string
 }
 
@@ -64,8 +64,8 @@ export interface QuestionResponse {
   selectedAnswers: string[]
 }
 
-// HerdPoints Transaction types
-export interface HerdPointsTransaction {
+// HeardPoints Transaction types
+export interface HeardPointsTransaction {
   id: string
   type: 'earned' | 'spent' | 'bonus' | 'admin_adjustment'
   amount: number
@@ -258,7 +258,7 @@ export interface CreateSurveyRequest {
   criteria: string
   rewardAmount: number
   rewardToken: string
-  herdPointsReward: number
+  heardPointsReward: number
   questions: CreateQuestionRequest[]
   whitelist?: string[]
 }
