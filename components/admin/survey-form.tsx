@@ -271,19 +271,11 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
             
             <div>
               <Label htmlFor="rewardToken">Reward Token *</Label>
-              <Select 
-                value={watch('rewardToken')} 
-                onValueChange={(value) => setValue('rewardToken', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select token" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ETH">ETH</SelectItem>
-                  <SelectItem value="USDC">USDC</SelectItem>
-                  <SelectItem value="USDT">USDT</SelectItem>
-                </SelectContent>
-              </Select>
+              <Input
+                id="rewardToken"
+                placeholder="e.g. ETH, USDC, TokenName"
+                {...register('rewardToken')}
+              />
               {errors.rewardToken && (
                 <p className="text-sm text-red-600 mt-1">{errors.rewardToken.message}</p>
               )}
