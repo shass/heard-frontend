@@ -18,8 +18,7 @@ export function useUserReward(surveyId: string) {
   return useQuery<LinkdropReward>({
     queryKey: ['user-reward', surveyId],
     queryFn: async () => {
-      const response = await apiClient.get(`/surveys/${surveyId}/my-reward`)
-      return response.data
+      return await apiClient.get<LinkdropReward>(`/surveys/${surveyId}/my-reward`)
     },
     enabled: !!surveyId,
     retry: (failureCount, error: any) => {

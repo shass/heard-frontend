@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useSurvey, useSurveyEligibility } from "@/hooks/use-surveys"
+import { useUserReward } from "@/hooks/use-reward"
 import { useUser } from "@/lib/store"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, ArrowRight, Clock, Users, Gift, Star } from "lucide-react"
+import { ArrowLeft, ArrowRight, Clock, Users, Gift, Star, ExternalLink, Copy, CheckCircle2 } from "lucide-react"
 
 interface SurveyInfoPageProps {
   params: Promise<{
@@ -23,9 +24,10 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
   const user = useUser()
   const { id } = use(params)
-  
+
   const { data: survey, isLoading, error } = useSurvey(id)
   const { data: eligibility } = useSurveyEligibility(id, user?.walletAddress)
+  const { data: userReward } = useUserReward(id)
 
   const handleStartSurvey = () => {
     router.push(`/surveys/${id}`)
@@ -33,6 +35,19 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
   const handleBackToSurveys = () => {
     router.push("/")
+  }
+
+  const handleClaimReward = () => {
+    if (userReward?.claimLink) {
+      window.open(userReward.claimLink, '_blank')
+    }
+  }
+
+  const handleCopyClaimLink = () => {
+    if (userReward?.claimLink) {
+      navigator.clipboard.writeText(userReward.claimLink)
+      // TODO: Add notification
+    }
   }
 
   if (isLoading) {
@@ -60,15 +75,15 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
         <main className="flex-1 py-16">
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
             <div className="space-y-6">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={handleBackToSurveys}
                 className="mb-4"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Home
               </Button>
-              
+
               <Alert variant="destructive">
                 <AlertDescription>
                   {error?.message || "Survey not found. Please check the URL and try again."}
@@ -93,8 +108,8 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="space-y-8">
             {/* Back Button */}
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={handleBackToSurveys}
               className="mb-4"
             >
@@ -113,7 +128,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
                   {survey.isActive ? "Active" : "Inactive"}
                 </Badge>
               </div>
-              
+
               <p className="text-lg text-zinc-700">{survey.description}</p>
             </div>
 
@@ -128,7 +143,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="flex items-center p-4">
                   <Users className="w-5 h-5 text-zinc-500 mr-3" />
@@ -138,7 +153,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="flex items-center p-4">
                   <Gift className="w-5 h-5 text-zinc-500 mr-3" />
@@ -148,7 +163,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="flex items-center p-4">
                   <Star className="w-5 h-5 text-zinc-500 mr-3" />
@@ -212,6 +227,73 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
               </Card>
             )}
 
+            {/* Reward Section - Show if user has completed and received reward */}
+            {hasCompleted && userReward?.claimLink && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Reward</CardTitle>
+                  <CardDescription>
+                    Congratulations! You have completed this survey and earned your reward.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Reward Summary */}
+                    <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <CheckCircle2 className="w-5 h-5 text-green-600" />
+                        <span className="font-medium text-green-800">Survey Completed!</span>
+                      </div>
+                      <div className="text-sm text-green-700">
+                        <p>Token Reward: {userReward.survey?.rewardAmount} {userReward.survey?.rewardToken}</p>
+                        <p>HerdPoints Earned: {userReward.herdPointsAwarded} HP</p>
+                        {userReward.usedAt && (
+                          <p>Reward given: {new Date(userReward.usedAt).toLocaleDateString()}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Claim Actions */}
+                    <div className="space-y-3">
+                      <div className="text-sm text-zinc-600">
+                        Use the link below to claim your {userReward.survey?.rewardAmount} {userReward.survey?.rewardToken} tokens:
+                      </div>
+
+                      <div className="flex space-x-3">
+                        <Button
+                          onClick={handleClaimReward}
+                          className="bg-green-600 hover:bg-green-700 text-white flex-1"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Claim Reward
+                        </Button>
+
+                        <Button
+                          onClick={handleCopyClaimLink}
+                          variant="outline"
+                          className="border-green-300 text-green-700 hover:bg-green-50"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      {/* QR Code */}
+                      <div className="text-center">
+                        <div className="inline-block p-2 bg-white rounded-lg border">
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(userReward.claimLink)}`}
+                            alt="QR Code for reward claim"
+                            className="w-30 h-30"
+                          />
+                        </div>
+                        <p className="text-xs text-zinc-500 mt-1">Scan with your wallet app</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Action Button */}
             <div className="flex justify-center pt-4">
               {hasCompleted ? (
@@ -219,7 +301,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
                   Survey Completed
                 </Button>
               ) : canTakeSurvey ? (
-                <Button 
+                <Button
                   onClick={handleStartSurvey}
                   className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-3"
                 >

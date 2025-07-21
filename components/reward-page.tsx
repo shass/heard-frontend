@@ -20,31 +20,31 @@ interface RewardPageProps {
 export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPageProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null)
   const [claimStatus, setClaimStatus] = useState<'pending' | 'claimed' | 'error'>('pending')
-  
+
   const user = useUser()
   const isAuthenticated = useIsAuthenticated()
   const notifications = useNotifications()
-  
+
   // Get user's reward for this survey (new LinkDrop system)
   const { data: userReward, isLoading: rewardLoading, error: rewardError } = useUserReward(survey.id)
-  
+
   // Fallback: Get response data if responseId is provided (old system)
   const responseState = useSurveyResponseState(responseId || '')
-  
+
   // Get updated user points
   const { data: userPoints, refetch: refetchPoints } = useHerdPoints()
-  
+
   // Determine reward information (prioritize new system)
   const claimLink = userReward?.claimLink
   const linkDropCode = userReward?.linkDropCode || responseState.response?.linkDropCode
   const herdPointsAwarded = userReward?.herdPointsAwarded || responseState.response?.herdPointsAwarded || 0
   const rewardClaimed = !!userReward?.usedAt || responseState.response?.rewardClaimed || false
   const isNewLinkdropSystem = userReward?.type === 'linkdrop'
-  
+
   // Generate QR code for LinkDrop claim
   useEffect(() => {
     let claimUrl = ''
-    
+
     if (isNewLinkdropSystem && claimLink) {
       // New system: use direct claim link
       claimUrl = claimLink
@@ -52,72 +52,72 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
       // Old system: generate claim URL
       claimUrl = `${window.location.origin}/claim/${linkDropCode}`
     }
-    
+
     if (claimUrl) {
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(claimUrl)}`
       setQrCodeUrl(qrUrl)
     }
   }, [linkDropCode, claimLink, isNewLinkdropSystem])
-  
+
   // Update claim status based on response
   useEffect(() => {
     if (rewardClaimed) {
       setClaimStatus('claimed')
     }
   }, [rewardClaimed])
-  
+
   const handleClaimReward = async () => {
     let claimUrl = ''
-    
+
     if (isNewLinkdropSystem && claimLink) {
       claimUrl = claimLink
     } else if (linkDropCode) {
       claimUrl = `${window.location.origin}/claim/${linkDropCode}`
     }
-    
+
     if (!claimUrl) {
       notifications.error('No reward available', 'Claim link not found')
       return
     }
-    
+
     try {
       // Open LinkDrop claim URL in new tab
       window.open(claimUrl, '_blank')
-      
+
       // Mark as claimed (optimistically)
       setClaimStatus('claimed')
-      
+
       // Refresh user points
       await refetchPoints()
-      
+
       notifications.success('Reward claimed!', 'Your tokens have been transferred to your wallet')
     } catch (error: any) {
       setClaimStatus('error')
       notifications.error('Failed to claim reward', error.message)
     }
   }
-  
+
   const handleCopyClaimLink = () => {
     let claimUrl = ''
-    
+
     if (isNewLinkdropSystem && claimLink) {
       claimUrl = claimLink
     } else if (linkDropCode) {
       claimUrl = `${window.location.origin}/claim/${linkDropCode}`
     }
-    
+
     if (claimUrl) {
       navigator.clipboard.writeText(claimUrl)
       notifications.success('Link copied', 'Claim link copied to clipboard')
     }
   }
-  
+
   const formatReward = () => {
     const tokenReward = `${survey.rewardAmount} ${survey.rewardToken}`
     const pointsReward = herdPointsAwarded > 0 ? ` + ${herdPointsAwarded} HP` : ""
     return tokenReward + pointsReward
   }
-  
+
   if (!isAuthenticated) {
     return (
       <section className="w-full py-16">
@@ -129,7 +129,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
       </section>
     )
   }
-  
+
   if (rewardLoading || responseState.isLoading) {
     return (
       <section className="w-full py-16">
@@ -140,8 +140,12 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
     )
   }
 
-  // Show error state if survey not completed or no reward available
-  if (rewardError && !userReward && !responseState.response) {
+  // Show error state ONLY if there's an actual error and no data
+  // Note: responseState.response is always null (disabled in hook), so only check userReward
+  const hasRewardData = !!userReward
+  const shouldShowErrorState = !hasRewardData && !rewardLoading && rewardError
+
+  if (shouldShowErrorState) {
     return (
       <section className="w-full py-16">
         <div className="mx-auto max-w-lg px-4 sm:px-6 lg:px-8 text-center">
@@ -154,7 +158,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
       </section>
     )
   }
-  
+
   return (
     <section className="w-full py-16">
       <div className="mx-auto max-w-lg px-4 sm:px-6 lg:px-8">
@@ -178,7 +182,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
             <div className="text-2xl font-bold text-zinc-900">
               {formatReward()}
             </div>
-            
+
             {herdPointsAwarded > 0 && (
               <div className="flex items-center justify-center space-x-2 text-sm text-zinc-600">
                 <CheckCircle2 className="w-4 h-4 text-green-600" />
@@ -193,10 +197,10 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
               <h3 className="text-lg font-medium text-zinc-900">Claim Your Tokens</h3>
               <div className="flex justify-center">
                 <div className="w-48 h-48 bg-white rounded-lg border-2 border-zinc-200 flex items-center justify-center">
-                  <img 
-                    src={qrCodeUrl} 
-                    alt="QR Code for reward claim" 
-                    className="w-44 h-44" 
+                  <img
+                    src={qrCodeUrl}
+                    alt="QR Code for reward claim"
+                    className="w-44 h-44"
                   />
                 </div>
               </div>
@@ -210,7 +214,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
           <div className="space-y-4">
             {(claimLink || linkDropCode) && !rewardClaimed && (
               <>
-                <Button 
+                <Button
                   onClick={handleClaimReward}
                   disabled={claimStatus === 'claimed'}
                   className="w-full bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg py-3 text-base font-medium"
@@ -227,7 +231,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
                     </>
                   )}
                 </Button>
-                
+
                 <Button
                   onClick={handleCopyClaimLink}
                   variant="outline"
@@ -238,7 +242,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
                 </Button>
               </>
             )}
-            
+
             {rewardClaimed && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex items-center justify-center space-x-2 text-green-800">
@@ -250,7 +254,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
                 </p>
               </div>
             )}
-            
+
             {!claimLink && !linkDropCode && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <div className="text-yellow-800">
@@ -270,7 +274,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
               Back to Home
             </Button>
           </div>
-          
+
           {/* Additional Info */}
           <div className="text-xs text-zinc-500 space-y-2">
             <p>
