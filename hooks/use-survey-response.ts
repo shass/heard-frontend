@@ -226,9 +226,9 @@ export function useSurveyResponseState(responseId: string | null) {
     isLoading: responseLoading || progressLoading,
     
     // Actions
-    submitAnswer: submitAnswer.mutate,
-    submitSurvey: submitSurvey.mutate,
-    autoSave: autoSave.mutate,
+    submitAnswer: submitAnswer.mutateAsync,
+    submitSurvey: submitSurvey.mutateAsync,
+    autoSave: autoSave.mutateAsync,
     
     // Status
     isSubmittingAnswer: submitAnswer.isPending,

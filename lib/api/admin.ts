@@ -249,7 +249,7 @@ export const getUsers = async (params?: {
   limit?: number
   offset?: number
   search?: string
-  role?: 'all' | 'admin' | 'survey_creator' | 'respondent'
+  role?: 'all' | 'admin' | 'respondent'
 }): Promise<{ users: User[]; meta: PaginationMeta }> => {
   const data = await apiClient.get<{
     items: User[]

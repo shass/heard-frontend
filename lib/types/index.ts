@@ -4,7 +4,7 @@
 export interface User {
   id: string
   walletAddress: string
-  role: 'respondent' | 'admin' | 'survey_creator'
+  role: 'respondent' | 'admin'
   herdPointsBalance: number
   isActive: boolean
   lastLoginAt?: string

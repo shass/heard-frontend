@@ -55,47 +55,36 @@ interface AuthStore {
 
 export const useAuthStore = create<AuthStore>()(
   devtools(
-    persist(
-      (set) => ({
-        user: null,
-        isAuthenticated: false,
-        loading: false,
+    (set) => ({
+      user: null,
+      isAuthenticated: false,
+      loading: false,
+      error: null,
+
+      setUser: (user) => set((state) => ({
+        user,
+        isAuthenticated: !!user,
         error: null,
+      })),
 
-        setUser: (user) => set((state) => ({
-          user,
-          isAuthenticated: !!user,
+      setLoading: (loading) => set({ loading }),
+
+      setError: (error) => set({ error, loading: false }),
+
+      logout: () => {
+        // Clear auth state
+        set({
+          user: null,
+          isAuthenticated: false,
+          loading: false,
           error: null,
-        })),
-
-        setLoading: (loading) => set({ loading }),
-
-        setError: (error) => set({ error, loading: false }),
-
-        logout: () => {
-          // Clear auth state
-          set({
-            user: null,
-            isAuthenticated: false,
-            loading: false,
-            error: null,
-          })
-          
-          // Clear all survey state as well
-          const { clearAll } = useSurveyStore.getState()
-          clearAll()
-        },
-      }),
-      {
-        name: 'heard-auth-store',
-        storage: createJSONStorage(() => createSSRSafeStorage()),
-        partialize: (state) => ({ 
-          user: state.user,
-          isAuthenticated: state.isAuthenticated,
-        }),
-        skipHydration: true,
-      }
-    ),
+        })
+        
+        // Clear all survey state as well
+        const { clearAll } = useSurveyStore.getState()
+        clearAll()
+      },
+    }),
     { name: 'auth-store' }
   )
 )
@@ -184,48 +173,38 @@ interface Notification {
 
 export const useUIStore = create<UIStore>()(
   devtools(
-    persist(
-      (set, get) => ({
-        sidebarOpen: false,
-        theme: 'system',
-        notifications: [],
+    (set, get) => ({
+      sidebarOpen: false,
+      theme: 'system',
+      notifications: [],
 
-        toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+      toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
 
-        setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
+      setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
 
-        setTheme: (theme) => set({ theme }),
+      setTheme: (theme) => set({ theme }),
 
-        addNotification: (notification) => {
-          const id = Math.random().toString(36).slice(2)
-          const newNotification = { ...notification, id }
-          
-          set((state) => ({
-            notifications: [...state.notifications, newNotification]
-          }))
+      addNotification: (notification) => {
+        const id = Math.random().toString(36).slice(2)
+        const newNotification = { ...notification, id }
+        
+        set((state) => ({
+          notifications: [...state.notifications, newNotification]
+        }))
 
-          // Auto-remove after duration (default 5s)
-          const duration = notification.duration || 5000
-          if (typeof window !== 'undefined') {
-            setTimeout(() => {
-              get().removeNotification(id)
-            }, duration)
-          }
-        },
+        // Auto-remove after duration (default 5s)
+        const duration = notification.duration || 5000
+        if (typeof window !== 'undefined') {
+          setTimeout(() => {
+            get().removeNotification(id)
+          }, duration)
+        }
+      },
 
-        removeNotification: (id) => set((state) => ({
-          notifications: state.notifications.filter(n => n.id !== id)
-        })),
-      }),
-      {
-        name: 'heard-ui-store',
-        storage: createJSONStorage(() => createSSRSafeStorage()),
-        partialize: (state) => ({ 
-          theme: state.theme,
-        }),
-        skipHydration: true,
-      }
-    ),
+      removeNotification: (id) => set((state) => ({
+        notifications: state.notifications.filter(n => n.id !== id)
+      })),
+    }),
     { name: 'ui-store' }
   )
 )

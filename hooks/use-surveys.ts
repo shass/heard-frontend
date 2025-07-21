@@ -25,8 +25,8 @@ export function useSurveys(params: GetSurveysRequest = {}) {
   return useQuery({
     queryKey: surveyKeys.list(params),
     queryFn: () => surveyApi.getSurveys(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 2 * 60 * 1000, // 2 minutes
   })
 }
 
@@ -41,8 +41,8 @@ export function useActiveSurveys(params: {
   return useQuery({
     queryKey: surveyKeys.list({ ...params, status: 'active' }),
     queryFn: () => surveyApi.getActiveSurveys(params),
-    staleTime: 3 * 60 * 1000, // 3 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 2 * 60 * 1000, // 2 minutes
   })
 }
 
@@ -54,8 +54,8 @@ export function useSurvey(id: string) {
     queryKey: surveyKeys.detail(id),
     queryFn: () => surveyApi.getSurvey(id),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 2 * 60 * 1000, // 2 minutes
   })
 }
 
@@ -83,8 +83,8 @@ export function useSurveyEligibility(id: string, walletAddress?: string) {
     queryKey: surveyKeys.eligibility(id, walletAddress),
     queryFn: () => surveyApi.checkEligibility(id, { walletAddress }),
     enabled: !!id && !!walletAddress,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 30 * 1000, // 30 seconds
   })
 }
 

@@ -7,13 +7,11 @@ import { Spinner } from '@/components/ui/loading-states'
 
 interface AdminRouteProps {
   children: React.ReactNode
-  requiredRole?: 'admin' | 'survey_creator'
   fallbackPath?: string
 }
 
 export function AdminRoute({ 
   children, 
-  requiredRole = 'admin',
   fallbackPath = '/' 
 }: AdminRouteProps) {
   const user = useUser()
@@ -28,16 +26,12 @@ export function AdminRoute({
     }
 
     if (!loading && isAuthenticated && user) {
-      const hasRequiredRole = requiredRole === 'admin' 
-        ? user.role === 'admin'
-        : user.role === 'admin' || user.role === 'survey_creator'
-
-      if (!hasRequiredRole) {
+      if (user.role !== 'admin') {
         router.push(fallbackPath)
         return
       }
     }
-  }, [user, isAuthenticated, loading, router, requiredRole, fallbackPath])
+  }, [user, isAuthenticated, loading, router, fallbackPath])
 
   if (loading) {
     return (
@@ -58,18 +52,13 @@ export function AdminRoute({
     )
   }
 
-  const hasRequiredRole = requiredRole === 'admin' 
-    ? user.role === 'admin'
-    : user.role === 'admin' || user.role === 'survey_creator'
-
-  if (!hasRequiredRole) {
+  if (user.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
           <p className="text-gray-600">
-            You don't have permission to access this page. 
-            {requiredRole === 'admin' ? ' Admin access required.' : ' Survey creator access required.'}
+            You don't have permission to access this page. Admin access required.
           </p>
         </div>
       </div>

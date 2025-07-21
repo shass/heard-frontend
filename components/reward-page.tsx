@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { LoadingState, InlineLoading } from "@/components/ui/loading-states"
 import { Copy, ExternalLink, Gift, CheckCircle2 } from "lucide-react"
 import { useSurveyResponseState } from "@/hooks/use-survey-response"
+import { useUserReward } from "@/hooks/use-reward"
 import { useHerdPoints } from "@/hooks/use-users"
 import { useIsAuthenticated, useUser } from "@/lib/store"
 import { useNotifications } from "@/components/ui/notifications"
@@ -24,27 +25,39 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
   const isAuthenticated = useIsAuthenticated()
   const notifications = useNotifications()
   
-  // Get response data if responseId is provided
+  // Get user's reward for this survey (new LinkDrop system)
+  const { data: userReward, isLoading: rewardLoading, error: rewardError } = useUserReward(survey.id)
+  
+  // Fallback: Get response data if responseId is provided (old system)
   const responseState = useSurveyResponseState(responseId || '')
   
   // Get updated user points
   const { data: userPoints, refetch: refetchPoints } = useHerdPoints()
   
-  // Get reward information from response
-  const response = responseState.response
-  const linkDropCode = response?.linkDropCode
-  const herdPointsAwarded = response?.herdPointsAwarded || 0
-  const rewardClaimed = response?.rewardClaimed || false
+  // Determine reward information (prioritize new system)
+  const claimLink = userReward?.claimLink
+  const linkDropCode = userReward?.linkDropCode || responseState.response?.linkDropCode
+  const herdPointsAwarded = userReward?.herdPointsAwarded || responseState.response?.herdPointsAwarded || 0
+  const rewardClaimed = !!userReward?.usedAt || responseState.response?.rewardClaimed || false
+  const isNewLinkdropSystem = userReward?.type === 'linkdrop'
   
   // Generate QR code for LinkDrop claim
   useEffect(() => {
-    if (linkDropCode) {
-      // Generate QR code URL for the LinkDrop claim
-      const claimUrl = `${window.location.origin}/claim/${linkDropCode}`
+    let claimUrl = ''
+    
+    if (isNewLinkdropSystem && claimLink) {
+      // New system: use direct claim link
+      claimUrl = claimLink
+    } else if (linkDropCode) {
+      // Old system: generate claim URL
+      claimUrl = `${window.location.origin}/claim/${linkDropCode}`
+    }
+    
+    if (claimUrl) {
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(claimUrl)}`
       setQrCodeUrl(qrUrl)
     }
-  }, [linkDropCode])
+  }, [linkDropCode, claimLink, isNewLinkdropSystem])
   
   // Update claim status based on response
   useEffect(() => {
@@ -54,14 +67,21 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
   }, [rewardClaimed])
   
   const handleClaimReward = async () => {
-    if (!linkDropCode) {
-      notifications.error('No reward available', 'LinkDrop code not found')
+    let claimUrl = ''
+    
+    if (isNewLinkdropSystem && claimLink) {
+      claimUrl = claimLink
+    } else if (linkDropCode) {
+      claimUrl = `${window.location.origin}/claim/${linkDropCode}`
+    }
+    
+    if (!claimUrl) {
+      notifications.error('No reward available', 'Claim link not found')
       return
     }
     
     try {
       // Open LinkDrop claim URL in new tab
-      const claimUrl = `${window.location.origin}/claim/${linkDropCode}`
       window.open(claimUrl, '_blank')
       
       // Mark as claimed (optimistically)
@@ -78,8 +98,15 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
   }
   
   const handleCopyClaimLink = () => {
-    if (linkDropCode) {
-      const claimUrl = `${window.location.origin}/claim/${linkDropCode}`
+    let claimUrl = ''
+    
+    if (isNewLinkdropSystem && claimLink) {
+      claimUrl = claimLink
+    } else if (linkDropCode) {
+      claimUrl = `${window.location.origin}/claim/${linkDropCode}`
+    }
+    
+    if (claimUrl) {
       navigator.clipboard.writeText(claimUrl)
       notifications.success('Link copied', 'Claim link copied to clipboard')
     }
@@ -103,11 +130,26 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
     )
   }
   
-  if (responseState.isLoading) {
+  if (rewardLoading || responseState.isLoading) {
     return (
       <section className="w-full py-16">
         <div className="mx-auto max-w-lg px-4 sm:px-6 lg:px-8">
           <LoadingState loading={true} />
+        </div>
+      </section>
+    )
+  }
+
+  // Show error state if survey not completed or no reward available
+  if (rewardError && !userReward && !responseState.response) {
+    return (
+      <section className="w-full py-16">
+        <div className="mx-auto max-w-lg px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-xl font-semibold text-zinc-900 mb-4">No Reward Available</h2>
+          <p className="text-zinc-600 mb-4">
+            You need to complete this survey first to receive your reward.
+          </p>
+          <Button onClick={onBackToSurveys}>Back to Home</Button>
         </div>
       </section>
     )
@@ -146,7 +188,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
           </div>
 
           {/* QR Code */}
-          {qrCodeUrl && linkDropCode && (
+          {qrCodeUrl && (claimLink || linkDropCode) && (
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-zinc-900">Claim Your Tokens</h3>
               <div className="flex justify-center">
@@ -166,7 +208,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
 
           {/* Action Buttons */}
           <div className="space-y-4">
-            {linkDropCode && !rewardClaimed && (
+            {(claimLink || linkDropCode) && !rewardClaimed && (
               <>
                 <Button 
                   onClick={handleClaimReward}
@@ -209,7 +251,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
               </div>
             )}
             
-            {!linkDropCode && (
+            {!claimLink && !linkDropCode && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <div className="text-yellow-800">
                   <strong>Processing Reward...</strong>

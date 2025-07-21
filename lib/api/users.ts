@@ -26,7 +26,7 @@ export interface GetHerdPointsHistoryResponse {
 }
 
 export interface UpdateUserRequest {
-  role?: 'respondent' | 'admin' | 'survey_creator'
+  role?: 'respondent' | 'admin'
   isActive?: boolean
 }
 
@@ -43,7 +43,7 @@ export interface AdjustHerdPointsResponse {
 export interface GetAllUsersRequest {
   limit?: number
   offset?: number
-  role?: 'respondent' | 'admin' | 'survey_creator'
+  role?: 'respondent' | 'admin'
   isActive?: boolean
   search?: string
 }
