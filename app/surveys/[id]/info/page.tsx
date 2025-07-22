@@ -4,6 +4,7 @@ import { use } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { SurveyPageWrapper } from "@/components/cache-warming-wrapper"
 import { useSurvey, useSurveyEligibility } from "@/hooks/use-surveys"
 import { useUserReward } from "@/hooks/use-reward"
 import { useUser } from "@/lib/store"
@@ -101,8 +102,9 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const hasCompleted = eligibility?.hasCompleted
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <Header />
+    <SurveyPageWrapper surveyId={id}>
+      <div className="min-h-screen bg-white flex flex-col">
+        <Header />
 
       <main className="flex-1 py-16">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
@@ -318,7 +320,8 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
         </div>
       </main>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </SurveyPageWrapper>
   )
 }

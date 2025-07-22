@@ -5,6 +5,7 @@ import { useAccount, useConfig } from 'wagmi'
 import { useAuthStore } from '@/lib/store'
 import { authApi } from '@/lib/api/auth'
 import { useAuthCleanup } from '@/hooks/use-auth-cleanup'
+import { useCacheWarmer } from '@/hooks/use-cache-warmer'
 
 // Создаем контекст для auth actions
 interface AuthContextType {
@@ -42,6 +43,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Enable global authentication cleanup
   useAuthCleanup()
+  
+  // Cache warming functionality
+  const { warmAuthenticated, clearAuthCache } = useCacheWarmer()
 
   /**
    * Check authentication status
@@ -68,6 +72,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (userData && userData.walletAddress.toLowerCase() === address.toLowerCase()) {
         console.log('Auth check successful, user found:', userData.walletAddress)
         setUser(userData)
+        
+        // Warm cache for authenticated user
+        warmAuthenticated().catch(error => 
+          console.warn('Failed to warm cache for authenticated user:', error)
+        )
       } else {
         console.log('Auth check failed: user not found or address mismatch', { userData, address })
         if (userData) {
@@ -127,6 +136,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(userData)
       console.log('Login successful! Token stored as HttpOnly cookie by backend.')
       
+      // Step 5: Warm cache for new authenticated user
+      console.log('Step 5: Warming cache for authenticated user')
+      warmAuthenticated().catch(error => 
+        console.warn('Failed to warm cache after login:', error)
+      )
+      
     } catch (error: any) {
       console.error('Login failed at step:', error)
       setError(error.message || 'Login failed')
@@ -154,6 +169,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Clear local state
     storeLogout()
     
+    // Clear auth-specific cache
+    clearAuthCache()
+    
     // Disconnect wallet
     try {
       const { disconnect } = await import('wagmi/actions')
@@ -179,6 +197,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (userData) {
           console.log('✅ Initial auth check successful:', userData.walletAddress)
           setUser(userData)
+          
+          // Warm cache for existing authenticated session
+          warmAuthenticated().catch(error => 
+            console.warn('Failed to warm cache on app load:', error)
+          )
         } else {
           console.log('❌ No user data returned from checkAuth')
         }

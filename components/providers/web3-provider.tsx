@@ -5,7 +5,8 @@ import { WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { mainnet, polygon, bsc } from 'wagmi/chains'
 import { env } from '@/lib/env'
-import React from 'react';
+import { createCacheWarmer } from '@/lib/cache-warmer'
+import React, { useEffect, useState } from 'react';
 
 import '@rainbow-me/rainbowkit/styles.css'
 
@@ -20,11 +21,13 @@ const config = getDefaultConfig({
   },
 })
 
-// Create a client for React Query
+// Create a client for React Query with aggressive caching settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
+      refetchOnMount: false, // Default to not refetch on mount - use cache
+      refetchOnReconnect: false, // Don't automatically refetch on reconnect
       retry: (failureCount, error) => {
         // Import error handler dynamically
         const { parseApiError } = require('@/lib/error-handler')
@@ -34,8 +37,11 @@ const queryClient = new QueryClient({
         return appError.retryable && failureCount < 3
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 5 * 60 * 1000, // 5 minutes - keep data fresh longer
+      gcTime: 30 * 60 * 1000, // 30 minutes - keep in memory much longer
+      // Prioritize showing cached data over loading states
+      notifyOnChangeProps: ['data', 'error'], // Don't notify loading state changes by default
+      networkMode: 'online',
     },
     mutations: {
       retry: (failureCount, error) => {
@@ -46,6 +52,7 @@ const queryClient = new QueryClient({
         return appError.code === 'NETWORK_ERROR' && failureCount < 2
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+      networkMode: 'online',
     },
   },
   logger: {
@@ -55,11 +62,50 @@ const queryClient = new QueryClient({
   },
 })
 
+// Initialize cache warmer
+const cacheWarmer = createCacheWarmer(queryClient)
+
 interface Web3ProviderProps {
   children: React.ReactNode
 }
 
 export function Web3Provider({ children }: Web3ProviderProps) {
+  const [cacheWarmed, setCacheWarmed] = useState(false)
+
+  // Warm cache on app initialization
+  useEffect(() => {
+    let mounted = true
+
+    const warmCache = async () => {
+      try {
+        // Small delay to ensure React is ready, but not too long
+        await new Promise(resolve => setTimeout(resolve, 50))
+        
+        if (mounted) {
+          // Start cache warming in background
+          cacheWarmer.warmCache()
+            .then(() => {
+              if (mounted) setCacheWarmed(true)
+            })
+            .catch((error) => {
+              console.warn('Cache warming failed:', error)
+              if (mounted) setCacheWarmed(true) // Still mark as complete
+            })
+        }
+      } catch (error) {
+        console.warn('Cache warming setup failed:', error)
+        if (mounted) setCacheWarmed(true)
+      }
+    }
+
+    // Start immediately, don't wait
+    warmCache()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
@@ -74,3 +120,6 @@ export function Web3Provider({ children }: Web3ProviderProps) {
     </WagmiProvider>
   )
 }
+
+// Export cache warmer instance for use in other components
+export { cacheWarmer, queryClient }

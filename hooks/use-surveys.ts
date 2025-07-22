@@ -25,8 +25,14 @@ export function useSurveys(params: GetSurveysRequest = {}) {
   return useQuery({
     queryKey: surveyKeys.list(params),
     queryFn: () => surveyApi.getSurveys(params),
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes - surveys don't change frequently
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in memory longer
+    // Aggressive caching to prevent loading states
+    refetchOnMount: false, // Never refetch on mount if we have data
+    refetchOnReconnect: false, // Don't refetch on reconnect automatically
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    // Show cached data immediately while updating in background
+    notifyOnChangeProps: ['data', 'error'], // Only notify on data/error changes, not loading
   })
 }
 
@@ -41,8 +47,14 @@ export function useActiveSurveys(params: {
   return useQuery({
     queryKey: surveyKeys.list({ ...params, status: 'active' }),
     queryFn: () => surveyApi.getActiveSurveys(params),
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes - surveys don't change frequently  
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in memory longer
+    // Aggressive caching to prevent loading states
+    refetchOnMount: false, // Never refetch on mount if we have data
+    refetchOnReconnect: false, // Don't refetch on reconnect automatically
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    // Show cached data immediately while updating in background
+    notifyOnChangeProps: ['data', 'error'], // Only notify on data/error changes, not loading
   })
 }
 
@@ -54,8 +66,14 @@ export function useSurvey(id: string) {
     queryKey: surveyKeys.detail(id),
     queryFn: () => surveyApi.getSurvey(id),
     enabled: !!id,
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes - survey details are stable
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in memory longer
+    // Aggressive caching to prevent loading states
+    refetchOnMount: false, // Never refetch on mount if we have data
+    refetchOnReconnect: false, // Don't refetch on reconnect automatically
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    // Show cached data immediately while updating in background
+    notifyOnChangeProps: ['data', 'error'], // Only notify on data/error changes, not loading
   })
 }
 
