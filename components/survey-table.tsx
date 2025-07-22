@@ -100,15 +100,9 @@ function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
           className="flex items-center gap-2"
         >
           {copiedSurveyId === survey.id ? (
-            <>
-              <Check className="w-4 h-4" />
-              Copied
-            </>
+            <Check className="w-4 h-4 text-green-600" />
           ) : (
-            <>
-              <Copy className="w-4 h-4" />
-              Copy Link
-            </>
+            <Copy className="w-4 h-4" />
           )}
         </Button>
       </td>
@@ -179,7 +173,7 @@ function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
             >
               {copiedSurveyId === survey.id ? (
                 <>
-                  <Check className="w-4 h-4" />
+                  <Check className="w-4 h-4 text-green-600" />
                   Copied
                 </>
               ) : (
@@ -285,8 +279,8 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
       const url = `${window.location.origin}/surveys/${surveyId}/info`
       await navigator.clipboard.writeText(url)
       setCopiedSurveyId(surveyId)
-      notifications.success("Link copied!", "Survey link has been copied to clipboard")
-      
+      notifications.success("Link copied", "")
+
       // Reset the copied state after 2 seconds
       setTimeout(() => {
         setCopiedSurveyId(null)

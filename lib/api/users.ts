@@ -61,7 +61,20 @@ export class UserApi {
    * Get HeardPoints balance and statistics
    */
   async getHeardPoints(): Promise<GetHeardPointsResponse> {
-    return await apiClient.get<GetHeardPointsResponse>('/users/me/heard-points')
+    const response = await apiClient.get<{
+      balance: number
+      totalEarned: number
+      totalSpent: number
+      recentTransactions: any[]
+    }>('/users/me/heard-points')
+    
+    // Transform backend response to frontend format
+    return {
+      currentBalance: response.balance,
+      totalEarned: response.totalEarned,
+      totalSpent: response.totalSpent,
+      transactionCount: response.recentTransactions?.length || 0
+    }
   }
 
   /**

@@ -60,8 +60,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     // Skip if already authenticated with same address
-    if (isAuthenticated && user && user.walletAddress.toLowerCase() === address.toLowerCase()) {
+    if (isAuthenticated && user && user.walletAddress && user.walletAddress.toLowerCase() === address.toLowerCase()) {
       console.log('Already authenticated with same address, skipping check')
+      return
+    }
+    
+    // Also skip if we just loaded user data and addresses match
+    if (user && user.walletAddress && user.walletAddress.toLowerCase() === address.toLowerCase()) {
+      console.log('User already loaded with matching address, skipping check')
       return
     }
 
@@ -69,20 +75,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(true)
     try {
       const userData = await authApi.checkAuth()
-      if (userData && userData.walletAddress.toLowerCase() === address.toLowerCase()) {
-        console.log('Auth check successful, user found:', userData.walletAddress)
-        setUser(userData)
-        
-        // Warm cache for authenticated user
-        warmAuthenticated().catch(error => 
-          console.warn('Failed to warm cache for authenticated user:', error)
-        )
-      } else {
-        console.log('Auth check failed: user not found or address mismatch', { userData, address })
-        if (userData) {
-          console.log('Address mismatch - expected:', address, 'got:', userData.walletAddress)
+      if (userData) {
+        if (userData.walletAddress && userData.walletAddress.toLowerCase() === address.toLowerCase()) {
+          // Perfect match - user authenticated with current wallet address
+          console.log('Auth check successful, user authenticated with current address:', userData.walletAddress)
+          setUser(userData)
+          
+          // Warm cache for authenticated user
+          warmAuthenticated().catch(error => 
+            console.warn('Failed to warm cache for authenticated user:', error)
+          )
+        } else {
+          // User has valid session but with different wallet address
+          console.log('Valid session found but for different address. Current:', address, 'Session:', userData.walletAddress)
+          console.log('User needs to re-authenticate with current wallet')
+          
+          // Don't set user data, but don't logout either - let user re-authenticate
+          // The UI will show "Connect Wallet" button since user state will be null
         }
-        storeLogout()
+      } else {
+        console.log('No valid session found')
+        // No valid session - user will see "Connect Wallet" button
       }
     } catch (error: any) {
       // 401 errors are expected when not authenticated - don't spam console
@@ -196,6 +209,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const userData = await authApi.checkAuth()
         if (userData) {
           console.log('✅ Initial auth check successful:', userData.walletAddress)
+          console.log('Note: User will need to re-authenticate if wallet address differs from session')
           setUser(userData)
           
           // Warm cache for existing authenticated session
@@ -220,21 +234,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
    * Auto-check auth when wallet connection changes
    */
   useEffect(() => {
+    console.log('🔄 Wallet connection changed:', { isConnected, address, isAuthenticated })
+    
     if (isConnected && address) {
+      console.log('🔄 Wallet connected, running checkAuth for:', address)
       checkAuth()
     } else if (!isConnected && isAuthenticated) {
+      console.log('🔄 Wallet disconnected but user authenticated, logging out')
       storeLogout()
+    } else {
+      console.log('🔄 No action needed')
     }
   }, [isConnected, address])
 
   /**
-   * Auto-logout if wallet address changes
+   * Handle wallet address changes
    */
   useEffect(() => {
-    if (isAuthenticated && user && address && 
+    if (isAuthenticated && user && user.walletAddress && address && 
         user.walletAddress.toLowerCase() !== address.toLowerCase()) {
-      console.log('Wallet address changed, logging out')
-      storeLogout()
+      console.log('Wallet address changed - user needs to re-authenticate')
+      console.log('Previous:', user.walletAddress, 'Current:', address)
+      
+      // Clear user state but don't call logout API since session might be valid for original address
+      setUser(null)
+      // The UI will show "Connect Wallet" button for the new address
     }
   }, [address, user, isAuthenticated])
 

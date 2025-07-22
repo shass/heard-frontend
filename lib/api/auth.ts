@@ -46,9 +46,9 @@ export class AuthApi {
    */
   async getMe(): Promise<User> {
     console.log('🔍 Making /auth/me request')
-    const result = await apiClient.get<User>('/auth/me')
+    const result = await apiClient.get<{ user: User }>('/auth/me')
     console.log('✅ /auth/me response:', result)
-    return result
+    return result.user
   }
 
   /**
