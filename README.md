@@ -93,7 +93,6 @@ NEXT_PUBLIC_API_URL=http://localhost:3000/api
 
 # Web3
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
-NEXT_PUBLIC_CHAIN_ID=1
 
 # App
 NEXT_PUBLIC_APP_NAME=Heard Labs
@@ -197,12 +196,6 @@ React 19 warnings можно игнорировать - совместимост
 
 **WalletConnect не работает**
 Проверьте `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` в `.env.local`.
-
-### Логи
-```bash
-# Включить debug режим
-NEXT_PUBLIC_ENABLE_DEBUG=true pnpm dev
-```
 
 ## Contributing
 
