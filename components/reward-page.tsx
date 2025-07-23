@@ -130,7 +130,9 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
     return (
       <section className="w-full py-16">
         <div className="mx-auto max-w-lg px-4 sm:px-6 lg:px-8">
-          <LoadingState loading={true} />
+          <LoadingState loading={true}>
+            Loading reward information...
+          </LoadingState>
         </div>
       </section>
     )
