@@ -1,8 +1,8 @@
 // Users API endpoints
 
 import { apiClient } from './client'
-import type { 
-  User, 
+import type {
+  User,
   HeardPointsTransaction,
   PaginationMeta
 } from '@/lib/types'
@@ -67,7 +67,7 @@ export class UserApi {
       totalSpent: number
       recentTransactions: any[]
     }>('/users/me/heard-points')
-    
+
     // Transform backend response to frontend format
     return {
       currentBalance: response.balance,
@@ -82,7 +82,7 @@ export class UserApi {
    */
   async getHeardPointsHistory(params: GetHeardPointsHistoryRequest = {}): Promise<GetHeardPointsHistoryResponse> {
     const queryParams = new URLSearchParams()
-    
+
     if (params.limit) queryParams.append('limit', params.limit.toString())
     if (params.offset) queryParams.append('offset', params.offset.toString())
     if (params.type) queryParams.append('type', params.type)
@@ -110,7 +110,7 @@ export class UserApi {
    */
   async getAllUsers(params: GetAllUsersRequest = {}): Promise<GetAllUsersResponse> {
     const queryParams = new URLSearchParams()
-    
+
     if (params.limit) queryParams.append('limit', params.limit.toString())
     if (params.offset) queryParams.append('offset', params.offset.toString())
     if (params.role) queryParams.append('role', params.role)
@@ -125,7 +125,8 @@ export class UserApi {
    * Get current user profile (same as auth.getMe but in user context)
    */
   async getCurrentUser(): Promise<User> {
-    return await apiClient.get<User>('/auth/me')
+    const result = await apiClient.get<{ user: User }>('/auth/me')
+    return result.user
   }
 
   /**
@@ -159,10 +160,10 @@ export class UserApi {
     // Calculate monthly earned (rough estimate from recent transactions)
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    
+
     const monthlyEarned = recentTransactions
-      .filter(tx => 
-        tx.type === 'earned' && 
+      .filter(tx =>
+        tx.type === 'earned' &&
         new Date(tx.createdAt) >= thirtyDaysAgo
       )
       .reduce((sum, tx) => sum + tx.amount, 0)
@@ -177,13 +178,13 @@ export class UserApi {
   /**
    * Check if user has sufficient HeardPoints for action
    */
-  async hasEnoughPoints(requiredPoints: number): Promise<{ 
+  async hasEnoughPoints(requiredPoints: number): Promise<{
     hasEnough: boolean
     currentBalance: number
     required: number
   }> {
     const { currentBalance } = await this.getHeardPoints()
-    
+
     return {
       hasEnough: currentBalance >= requiredPoints,
       currentBalance: currentBalance,
@@ -195,9 +196,9 @@ export class UserApi {
    * Search users by wallet address or partial match (admin only)
    */
   async searchUsers(query: string, params: GetAllUsersRequest = {}): Promise<User[]> {
-    const response = await this.getAllUsers({ 
-      ...params, 
-      search: query 
+    const response = await this.getAllUsers({
+      ...params,
+      search: query
     })
     return response.users
   }

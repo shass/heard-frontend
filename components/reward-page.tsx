@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { LoadingState, InlineLoading } from "@/components/ui/loading-states"
 import { Copy, ExternalLink, Gift, CheckCircle2 } from "lucide-react"
-import { useSurveyResponseState } from "@/hooks/use-survey-response"
 import { useUserReward } from "@/hooks/use-reward"
 import { useHeardPoints } from "@/hooks/use-users"
 import { useIsAuthenticated, useUser } from "@/lib/store"
@@ -28,17 +27,14 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
   // Get user's reward for this survey (new LinkDrop system)
   const { data: userReward, isLoading: rewardLoading, error: rewardError } = useUserReward(survey.id)
 
-  // Fallback: Get response data if responseId is provided (old system)
-  const responseState = useSurveyResponseState(responseId || '')
-
   // Get updated user points
   const { data: userPoints, refetch: refetchPoints } = useHeardPoints()
 
   // Determine reward information (prioritize new system)
   const claimLink = userReward?.claimLink
-  const linkDropCode = userReward?.linkDropCode || responseState.response?.linkDropCode
-  const heardPointsAwarded = userReward?.heardPointsAwarded || responseState.response?.heardPointsAwarded || 0
-  const rewardClaimed = !!userReward?.usedAt || responseState.response?.rewardClaimed || false
+  const linkDropCode = userReward?.linkDropCode
+  const heardPointsAwarded = userReward?.heardPointsAwarded || 0
+  const rewardClaimed = !!userReward?.usedAt
   const isNewLinkdropSystem = userReward?.type === 'linkdrop'
 
   // Generate QR code for LinkDrop claim
@@ -130,7 +126,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
     )
   }
 
-  if (rewardLoading || responseState.isLoading) {
+  if (rewardLoading) {
     return (
       <section className="w-full py-16">
         <div className="mx-auto max-w-lg px-4 sm:px-6 lg:px-8">
@@ -207,6 +203,34 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
               <p className="text-sm text-zinc-600">
                 Scan this QR code or use the buttons below to claim your {survey.rewardAmount} {survey.rewardToken}
               </p>
+              
+              {/* Direct claim link */}
+              {(claimLink || linkDropCode) && (
+                <div className="bg-gray-50 rounded-lg p-4 border">
+                  <p className="text-sm font-medium text-zinc-700 mb-2">Direct Claim Link:</p>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={claimLink || `${window.location.origin}/claim/${linkDropCode}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-xs text-blue-600 hover:text-blue-800 underline break-all bg-white p-2 rounded border flex-1"
+                    >
+                      {claimLink || `${window.location.origin}/claim/${linkDropCode}`}
+                    </a>
+                    <button
+                      onClick={() => {
+                        const claimUrl = claimLink || `${window.location.origin}/claim/${linkDropCode}`
+                        navigator.clipboard.writeText(claimUrl)
+                        notifications.success('Link copied', 'Claim link copied to clipboard')
+                      }}
+                      className="p-2 bg-white border rounded hover:bg-gray-50 flex-shrink-0"
+                      title="Copy link"
+                    >
+                      <Copy className="w-4 h-4 text-zinc-600" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -281,7 +305,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
               Questions about your reward? Contact support at support@heardlabs.com
             </p>
             <p>
-              Current HeardPoints Balance: {userPoints?.balance || 0} HP
+              Current HeardPoints Balance: {userPoints?.currentBalance || 0} HP
             </p>
           </div>
         </div>
