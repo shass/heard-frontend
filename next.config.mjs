@@ -25,12 +25,21 @@ const nextConfig = {
     },
   },
   async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:3001/api/:path*',
-      },
-    ]
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    
+    // В development проксируем к локальному бэкенду
+    // В production DigitalOcean App Platform роутит /api напрямую к backend сервису
+    if (isDevelopment) {
+      return [
+        {
+          source: '/api/:path*',
+          destination: 'http://localhost:3001/api/:path*',
+        },
+      ]
+    }
+    
+    // В production rewrites не нужны - DO роутит по HTTP Routes
+    return []
   },
   eslint: {
     ignoreDuringBuilds: true,
