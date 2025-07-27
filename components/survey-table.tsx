@@ -78,17 +78,6 @@ function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
 }
 
 function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, onCopyLink, copiedSurveyId, eligibility }: SurveyRowProps) {
-  const isAuthenticated = useIsAuthenticated()
-  const { isConnected } = useAccount()
-
-  // Only use batch eligibility data - no fallback to avoid duplicate requests
-  const isEligible = eligibility?.isEligible ?? true
-  const alreadyCompleted = eligibility?.hasCompleted ?? false
-
-  const getButtonText = () => {
-    return "Take"
-  }
-
   const getButtonStyle = () => {
     return "bg-zinc-900 hover:bg-zinc-800"
   }
@@ -142,7 +131,7 @@ function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
               className={`text-white rounded-lg px-4 py-2 text-sm font-medium ${getButtonStyle()}`}
               title="View survey information"
             >
-              {getButtonText()}
+              Take
             </Button>
           </div>
         </div>
@@ -165,16 +154,14 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
 
   const notifications = useNotifications()
   const { login } = useAuthActions()
-  const isAuthenticated = useIsAuthenticated()
-  const user = useUser()
-  const { isConnected } = useAccount()
+  const { address } = useAccount()
   const { openConnectModal } = useConnectModal()
 
   // Batch eligibility check for all surveys
-  // Only make request if user is authenticated and has a wallet address
+  // Shows eligibility status when wallet is connected
   const { data: batchEligibility } = useBatchSurveyEligibility(
     surveys.map(s => s.id),
-    isAuthenticated && user?.walletAddress ? user.walletAddress : undefined
+    address
   )
 
   // Filter surveys based on search and company
