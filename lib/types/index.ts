@@ -53,7 +53,7 @@ export interface SurveyResponse {
   walletAddress: string
   responses: QuestionResponse[]
   completedAt?: string
-  rewardClaimed: boolean
+  rewardIssued: boolean
   linkDropCode?: string
   heardPointsAwarded: number
   createdAt: string

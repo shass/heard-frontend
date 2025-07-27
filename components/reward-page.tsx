@@ -34,7 +34,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
   const claimLink = userReward?.claimLink
   const linkDropCode = userReward?.linkDropCode
   const heardPointsAwarded = userReward?.heardPointsAwarded || 0
-  const rewardClaimed = !!userReward?.usedAt
+  const rewardIssued = !!userReward?.usedAt
   const isNewLinkdropSystem = userReward?.type === 'linkdrop'
 
   // Generate QR code for LinkDrop claim
@@ -57,10 +57,10 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
 
   // Update claim status based on response
   useEffect(() => {
-    if (rewardClaimed) {
+    if (rewardIssued) {
       setClaimStatus('claimed')
     }
-  }, [rewardClaimed])
+  }, [rewardIssued])
 
   const handleClaimReward = async () => {
     let claimUrl = ''
@@ -238,7 +238,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
 
           {/* Action Buttons */}
           <div className="space-y-4">
-            {(claimLink || linkDropCode) && !rewardClaimed && (
+            {(claimLink || linkDropCode) && !rewardIssued && (
               <>
                 <Button
                   onClick={handleClaimReward}
