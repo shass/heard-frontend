@@ -168,7 +168,6 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
                   <h1 className="text-3xl font-bold text-zinc-900">{survey.name}</h1>
-                  <p className="text-xl text-zinc-600">{survey.company}</p>
                 </div>
                 <Badge variant={survey.isActive ? "default" : "secondary"}>
                   {survey.isActive ? "Active" : "Inactive"}
