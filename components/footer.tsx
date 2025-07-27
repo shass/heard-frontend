@@ -1,4 +1,4 @@
-import { X } from 'lucide-react'
+import { XIcon } from '@/components/ui/icons'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -16,7 +16,7 @@ export function Footer() {
               className="text-zinc-500 hover:text-zinc-700 transition-colors order-1 sm:order-2"
               aria-label="Follow us on X (formerly Twitter)"
             >
-              <X className="w-5 h-5" />
+              <XIcon className="w-5 h-5" />
             </a>
           </div>
         </div>
