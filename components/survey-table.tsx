@@ -27,36 +27,8 @@ interface SurveyRowProps {
 }
 
 function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, onCopyLink, copiedSurveyId, eligibility }: SurveyRowProps) {
-  const isAuthenticated = useIsAuthenticated()
-  const { isConnected } = useAccount()
-
-  // Only use batch eligibility data - no fallback to avoid duplicate requests
-  const isEligible = eligibility?.isEligible ?? true
-  const alreadyCompleted = eligibility?.hasCompleted ?? false
-
-  // Anyone can click "Take" to view survey info after connecting wallet and authenticating
-  const canTake = isAuthenticated
-  const canInteract = isConnected && (!isAuthenticated || canTake)
-
-  const getButtonText = () => {
-    if (!isConnected) return "Connect Wallet"
-    if (!isAuthenticated) return "Authenticate"
-    return "Take"
-  }
-
-  const getButtonStyle = () => {
-    if (!canInteract) return "bg-zinc-400 cursor-not-allowed"
-    return "bg-zinc-900 hover:bg-zinc-800"
-  }
-
   const handleButtonClick = () => {
-    if (!isConnected && onConnectWallet) {
-      onConnectWallet()
-    } else if (isConnected && !isAuthenticated && onAuthenticate) {
-      onAuthenticate()
-    } else if (canTake) {
-      onTakeSurvey(survey)
-    }
+    onTakeSurvey(survey)
   }
 
   const formatReward = (survey: Survey) => {
@@ -81,15 +53,10 @@ function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
       <td className="px-6 py-4">
         <Button
           onClick={handleButtonClick}
-          disabled={!canInteract}
-          className={`text-white rounded-lg px-4 py-2 text-sm font-medium ${getButtonStyle()}`}
-          title={
-            !isConnected ? "Connect your wallet to participate" :
-            !isAuthenticated ? "Sign a message to prove wallet ownership (free, no gas)" :
-            "View survey information"
-          }
+          className="text-white rounded-lg px-4 py-2 text-sm font-medium bg-zinc-900 hover:bg-zinc-800"
+          title="View survey information"
         >
-          {getButtonText()}
+          Take
         </Button>
       </td>
       <td className="px-6 py-4">
@@ -118,29 +85,16 @@ function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
   const isEligible = eligibility?.isEligible ?? true
   const alreadyCompleted = eligibility?.hasCompleted ?? false
 
-  // Anyone can click "Take" to view survey info after connecting wallet and authenticating
-  const canTake = isAuthenticated
-  const canInteract = isConnected && (!isAuthenticated || canTake)
-
   const getButtonText = () => {
-    if (!isConnected) return "Connect Wallet"
-    if (!isAuthenticated) return "Authenticate"
     return "Take"
   }
 
   const getButtonStyle = () => {
-    if (!canInteract) return "bg-zinc-400 cursor-not-allowed"
     return "bg-zinc-900 hover:bg-zinc-800"
   }
 
   const handleButtonClick = () => {
-    if (!isConnected && onConnectWallet) {
-      onConnectWallet()
-    } else if (isConnected && !isAuthenticated && onAuthenticate) {
-      onAuthenticate()
-    } else if (canTake) {
-      onTakeSurvey(survey)
-    }
+    onTakeSurvey(survey)
   }
 
   const formatReward = (survey: Survey) => {
@@ -185,13 +139,8 @@ function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
             </Button>
             <Button
               onClick={handleButtonClick}
-              disabled={!canInteract}
               className={`text-white rounded-lg px-4 py-2 text-sm font-medium ${getButtonStyle()}`}
-              title={
-                !isConnected ? "Connect your wallet to participate" :
-                !isAuthenticated ? "Sign a message to prove wallet ownership (free, no gas)" :
-                "View survey information"
-              }
+              title="View survey information"
             >
               {getButtonText()}
             </Button>

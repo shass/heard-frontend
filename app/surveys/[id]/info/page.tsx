@@ -7,7 +7,10 @@ import { Footer } from "@/components/footer"
 import { SurveyPageWrapper } from "@/components/cache-warming-wrapper"
 import { useSurvey, useSurveyEligibility } from "@/hooks/use-surveys"
 import { useUserReward } from "@/hooks/use-reward"
-import { useUser } from "@/lib/store"
+import { useUser, useIsAuthenticated } from "@/lib/store"
+import { useAuthActions } from "@/components/providers/auth-provider"
+import { useAccount } from 'wagmi'
+import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -24,6 +27,10 @@ interface SurveyInfoPageProps {
 export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
   const user = useUser()
+  const isAuthenticated = useIsAuthenticated()
+  const { isConnected } = useAccount()
+  const { openConnectModal } = useConnectModal()
+  const { login } = useAuthActions()
   const { id } = use(params)
 
   const { data: survey, isLoading, error } = useSurvey(id)
@@ -32,6 +39,20 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
   const handleStartSurvey = () => {
     router.push(`/surveys/${id}`)
+  }
+
+  const handleConnectWallet = () => {
+    if (openConnectModal) {
+      openConnectModal()
+    }
+  }
+
+  const handleAuthenticate = async () => {
+    try {
+      await login()
+    } catch (error) {
+      console.error('Authentication failed:', error)
+    }
   }
 
   const handleBackToSurveys = () => {
@@ -98,8 +119,31 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
     )
   }
 
-  const canTakeSurvey = eligibility?.isEligible && !eligibility?.hasCompleted
   const hasCompleted = eligibility?.hasCompleted
+  const isEligible = eligibility?.isEligible ?? true
+
+  // Determine button state based on wallet connection and authentication
+  const getButtonState = () => {
+    if (hasCompleted) {
+      return { text: "Survey Completed", disabled: true, handler: () => {} }
+    }
+
+    if (!isConnected) {
+      return { text: "Connect Wallet", disabled: false, handler: handleConnectWallet }
+    }
+
+    if (!isAuthenticated) {
+      return { text: "Authenticate", disabled: false, handler: handleAuthenticate }
+    }
+
+    if (!isEligible) {
+      return { text: "Not Eligible", disabled: true, handler: () => {} }
+    }
+
+    return { text: "Start Survey", disabled: false, handler: handleStartSurvey }
+  }
+
+  const buttonState = getButtonState()
 
   return (
     <SurveyPageWrapper surveyId={id}>
@@ -298,23 +342,14 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
             {/* Action Button */}
             <div className="flex justify-center pt-4">
-              {hasCompleted ? (
-                <Button disabled className="px-8 py-3">
-                  Survey Completed
-                </Button>
-              ) : canTakeSurvey ? (
-                <Button
-                  onClick={handleStartSurvey}
-                  className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-3"
-                >
-                  Start Survey
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              ) : (
-                <Button disabled className="px-8 py-3">
-                  Not Eligible
-                </Button>
-              )}
+              <Button
+                onClick={buttonState.handler}
+                disabled={buttonState.disabled}
+                className={`px-8 py-3 ${buttonState.disabled ? 'bg-zinc-400 cursor-not-allowed' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
+              >
+                {buttonState.text}
+                {buttonState.text === "Start Survey" && <ArrowRight className="w-4 h-4 ml-2" />}
+              </Button>
             </div>
           </div>
         </div>
