@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { InlineLoading } from "@/components/ui/loading-states"
 import { ArrowLeft, Save } from "lucide-react"
 import type { Survey } from "@/lib/types"
@@ -9,11 +10,43 @@ export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 interface SurveyHeaderProps {
   survey: Survey
-  saveStatus: SaveStatus
+  saveStatus?: SaveStatus
   onBack: () => void
+  variant?: 'default' | 'info' // 'info' for survey info page
 }
 
-export function SurveyHeader({ survey, saveStatus, onBack }: SurveyHeaderProps) {
+export function SurveyHeader({ survey, saveStatus, onBack, variant = 'default' }: SurveyHeaderProps) {
+  if (variant === 'info') {
+    return (
+      <div className="space-y-8">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={onBack}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Surveys
+        </Button>
+
+        {/* Header */}
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-zinc-900">{survey.name}</h1>
+            </div>
+            <Badge variant={survey.isActive ? "default" : "secondary"}>
+              {survey.isActive ? "Active" : "Inactive"}
+            </Badge>
+          </div>
+
+          <p className="text-lg text-zinc-700">{survey.description}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Default variant for survey taking
   return (
     <div className="mb-8">
       <Button
@@ -27,7 +60,6 @@ export function SurveyHeader({ survey, saveStatus, onBack }: SurveyHeaderProps) 
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-zinc-900">{survey.name}</h2>
-          <p className="text-base text-zinc-600 mt-1">{survey.company}</p>
         </div>
         <div className="flex items-center space-x-2 text-sm">
           {saveStatus === 'saving' && (

@@ -7,3 +7,7 @@ export {
   SurveyLoadingState, 
   AuthRequiredState 
 } from './survey-loading-states'
+export { SurveyStats } from './survey-stats'
+export { SurveyInfo } from './survey-info'
+export { SurveyActionButton } from './survey-action-button'
+export { SurveyReward } from './survey-reward'

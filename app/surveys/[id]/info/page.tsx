@@ -13,10 +13,13 @@ import { useAccount } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, ArrowRight, Clock, Users, Gift, Star, ExternalLink, Copy, CheckCircle2 } from "lucide-react"
+import {
+  SurveyHeader,
+  SurveyStats,
+  SurveyInfo,
+  SurveyActionButton,
+  SurveyReward
+} from "@/components/survey"
 
 interface SurveyInfoPageProps {
   params: Promise<{
@@ -97,14 +100,11 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
         <main className="flex-1 py-16">
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
             <div className="space-y-6">
-              <Button
-                variant="ghost"
-                onClick={handleBackToSurveys}
-                className="mb-4"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
-              </Button>
+              <SurveyHeader
+                survey={{ name: 'Survey', company: '', description: '', isActive: false } as any}
+                onBack={handleBackToSurveys}
+                variant="info"
+              />
 
               <Alert variant="destructive">
                 <AlertDescription>
@@ -150,209 +150,36 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
       <div className="min-h-screen bg-white flex flex-col">
         <Header />
 
-      <main className="flex-1 py-16">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="space-y-8">
-            {/* Back Button */}
-            <Button
-              variant="ghost"
-              onClick={handleBackToSurveys}
-              className="mb-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Surveys
-            </Button>
+        <main className="flex-1 py-16">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div className="space-y-8">
+              {/* Header with Back Button */}
+              <SurveyHeader
+                survey={survey}
+                onBack={handleBackToSurveys}
+                variant="info"
+              />
 
-            {/* Header */}
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-bold text-zinc-900">{survey.name}</h1>
-                </div>
-                <Badge variant={survey.isActive ? "default" : "secondary"}>
-                  {survey.isActive ? "Active" : "Inactive"}
-                </Badge>
-              </div>
+              {/* Survey Stats */}
+              <SurveyStats survey={survey} />
 
-              <p className="text-lg text-zinc-700">{survey.description}</p>
-            </div>
+              {/* Survey Information */}
+              <SurveyInfo survey={survey} eligibility={eligibility} />
 
-            {/* Survey Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="flex items-center p-4">
-                  <Clock className="w-5 h-5 text-zinc-500 mr-3" />
-                  <div>
-                    <p className="text-sm font-medium text-zinc-900">{survey.totalQuestions}</p>
-                    <p className="text-xs text-zinc-500">Questions</p>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Reward Section */}
+              {hasCompleted && userReward?.claimLink && (
+                <SurveyReward
+                  userReward={userReward}
+                  onClaimReward={handleClaimReward}
+                  onCopyClaimLink={handleCopyClaimLink}
+                />
+              )}
 
-              <Card>
-                <CardContent className="flex items-center p-4">
-                  <Users className="w-5 h-5 text-zinc-500 mr-3" />
-                  <div>
-                    <p className="text-sm font-medium text-zinc-900">{survey.responseCount}</p>
-                    <p className="text-xs text-zinc-500">Responses</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="flex items-center p-4">
-                  <Gift className="w-5 h-5 text-zinc-500 mr-3" />
-                  <div>
-                    <p className="text-sm font-medium text-zinc-900">{survey.rewardAmount} {survey.rewardToken}</p>
-                    <p className="text-xs text-zinc-500">Token Reward</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="flex items-center p-4">
-                  <Star className="w-5 h-5 text-zinc-500 mr-3" />
-                  <div>
-                    <p className="text-sm font-medium text-zinc-900">{survey.heardPointsReward}</p>
-                    <p className="text-xs text-zinc-500">HeardPoints</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Detailed Description */}
-            <Card>
-              <CardHeader>
-                <CardTitle>About This Survey</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-zinc-700 whitespace-pre-wrap">{survey.detailedDescription}</p>
-              </CardContent>
-            </Card>
-
-            {/* Criteria */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Eligibility Criteria</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-zinc-700 whitespace-pre-wrap">{survey.criteria}</p>
-              </CardContent>
-            </Card>
-
-            {/* Eligibility Status */}
-            {eligibility && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your Eligibility Status</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {hasCompleted ? (
-                      <Alert>
-                        <AlertDescription>
-                          You have already completed this survey. Thank you for your participation!
-                        </AlertDescription>
-                      </Alert>
-                    ) : eligibility.isEligible ? (
-                      <Alert>
-                        <AlertDescription>
-                          You are eligible to take this survey.
-                        </AlertDescription>
-                      </Alert>
-                    ) : (
-                      <Alert variant="destructive">
-                        <AlertDescription>
-                          {eligibility.reason || "You are not eligible for this survey."}
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Reward Section - Show if user has completed and received reward */}
-            {hasCompleted && userReward?.claimLink && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your Reward</CardTitle>
-                  <CardDescription>
-                    Congratulations! You have completed this survey and earned your reward.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {/* Reward Summary */}
-                    <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <CheckCircle2 className="w-5 h-5 text-green-600" />
-                        <span className="font-medium text-green-800">Survey Completed!</span>
-                      </div>
-                      <div className="text-sm text-green-700">
-                        <p>Token Reward: {userReward.survey?.rewardAmount} {userReward.survey?.rewardToken}</p>
-                        <p>HeardPoints Earned: {userReward.heardPointsAwarded} HP</p>
-                        {userReward.usedAt && (
-                          <p>Reward given: {new Date(userReward.usedAt).toLocaleDateString()}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Claim Actions */}
-                    <div className="space-y-3">
-                      <div className="text-sm text-zinc-600">
-                        Use the link below to claim your {userReward.survey?.rewardAmount} {userReward.survey?.rewardToken} tokens:
-                      </div>
-
-                      <div className="flex space-x-3">
-                        <Button
-                          onClick={handleClaimReward}
-                          className="bg-green-600 hover:bg-green-700 text-white flex-1"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Claim Reward
-                        </Button>
-
-                        <Button
-                          onClick={handleCopyClaimLink}
-                          variant="outline"
-                          className="border-green-300 text-green-700 hover:bg-green-50"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                      </div>
-
-                      {/* QR Code */}
-                      <div className="text-center">
-                        <div className="inline-block p-2 bg-white rounded-lg border">
-                          <img
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(userReward.claimLink)}`}
-                            alt="QR Code for reward claim"
-                            className="w-30 h-30"
-                          />
-                        </div>
-                        <p className="text-xs text-zinc-500 mt-1">Scan with your wallet app</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Action Button */}
-            <div className="flex justify-center pt-4">
-              <Button
-                onClick={buttonState.handler}
-                disabled={buttonState.disabled}
-                className={`px-8 py-3 ${buttonState.disabled ? 'bg-zinc-400 cursor-not-allowed' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
-              >
-                {buttonState.text}
-                {buttonState.text === "Start Survey" && <ArrowRight className="w-4 h-4 ml-2" />}
-              </Button>
+              {/* Action Button */}
+              <SurveyActionButton buttonState={buttonState} />
             </div>
           </div>
-        </div>
-      </main>
+        </main>
 
         <Footer />
       </div>
