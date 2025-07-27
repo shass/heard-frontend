@@ -124,7 +124,6 @@ export function useSubmitSurvey() {
       addNotification({
         type: 'success',
         title: 'Survey completed!',
-        message: `You earned ${data.heardPointsAwarded} HeardPoints`,
         duration: 10000
       })
     },
@@ -201,16 +200,9 @@ export function useSurveyResponseState(responseId: string | null) {
     }
   }, [isAuthenticated, responseId, queryClient])
   
-  // Temporarily disable response queries that require missing backend endpoints
-  // const { data: response, isLoading: responseLoading } = useSurveyResponse(responseId || '')
-  // const { data: progress, isLoading: progressLoading } = useSurveyProgress(responseId || '')
-  // const { data: canContinue } = useCanContinueSurvey(responseId || '')
-  
-  const response = null
-  const progress = null
-  const canContinue = null
-  const responseLoading = false
-  const progressLoading = false
+  const { data: response, isLoading: responseLoading } = useSurveyResponse(responseId || '')
+  const { data: progress, isLoading: progressLoading } = useSurveyProgress(responseId || '')
+  const { data: canContinue } = useCanContinueSurvey(responseId || '')
   
   const submitAnswer = useSubmitAnswer()
   const submitSurvey = useSubmitSurvey()
