@@ -1,6 +1,10 @@
 // SSR-safe Header component
 import dynamic from 'next/dynamic'
 
+interface HeaderClientProps {
+  onCreateSurvey?: () => void
+}
+
 // Dynamically import the client component to avoid SSR issues
 const HeaderClient = dynamic(
   () => import('./header-client').then(mod => ({ default: mod.HeaderClient })),
@@ -22,8 +26,12 @@ const HeaderClient = dynamic(
       </header>
     )
   }
-)
+) as React.ComponentType<HeaderClientProps>
 
-export function Header() {
-  return <HeaderClient />
+interface HeaderProps {
+  onCreateSurvey?: () => void
+}
+
+export function Header({ onCreateSurvey }: HeaderProps) {
+  return <HeaderClient onCreateSurvey={onCreateSurvey} />
 }
