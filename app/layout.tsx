@@ -2,8 +2,7 @@ import type { Metadata } from 'next'
 import { Web3Provider } from '@/components/providers/web3-provider'
 import { AuthProvider } from '@/components/providers/auth-provider'
 import { NotificationContainer } from '@/components/ui/notifications'
-import { NetworkStatus, AccessibilityPanel } from '@/components/lazy'
-import { SkipToMain } from '@/components/ui/accessibility'
+import { NetworkStatus } from '@/components/lazy'
 import ErrorBoundary from '@/components/ui/error-boundary'
 import { StoreHydration } from '@/lib/store/hydration'
 import './globals.css'
@@ -31,11 +30,9 @@ export default function RootLayout({
           <Web3Provider>
             <AuthProvider>
               <StoreHydration />
-              <SkipToMain />
               <NetworkStatus />
               {children}
               <NotificationContainer />
-              <AccessibilityPanel />
             </AuthProvider>
           </Web3Provider>
         </ErrorBoundary>

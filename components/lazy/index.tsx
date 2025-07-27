@@ -12,14 +12,6 @@ export const LazyHeardPointsHistoryModal = lazy(() =>
 )
 
 // Components with browser APIs need dynamic imports with SSR disabled
-export const LazyAccessibilityPanel = dynamic(() => 
-  import('@/components/ui/accessibility').then(module => ({
-    default: module.AccessibilityPanel
-  })), {
-    ssr: false,
-    loading: () => null
-  }
-)
 
 export const LazyNetworkStatus = dynamic(() => 
   import('@/components/ui/network-status').then(module => ({
@@ -40,9 +32,6 @@ export function HeardPointsHistoryModal(props: any) {
 }
 
 // These components already handle their own loading states via dynamic imports
-export function AccessibilityPanel(props: any) {
-  return <LazyAccessibilityPanel {...props} />
-}
 
 export function NetworkStatus(props: any) {
   return <LazyNetworkStatus {...props} />
@@ -64,7 +53,7 @@ function DiagnosticSurveyPage(props: any) {
     return <SurveyPage {...props} />
   } catch (error) {
     console.error('DiagnosticSurveyPage error:', error)
-    return <div>Error in SurveyPage: {error.message}</div>
+    return <div>Error in SurveyPage: {error instanceof Error ? error.message : 'Unknown error'}</div>
   }
 }
 

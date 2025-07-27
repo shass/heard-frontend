@@ -38,7 +38,7 @@ export function HeaderClient() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center h-40">
             <Link href="/">
-              <Image src="/logo.png" alt="Heard Labs" width={160} height={160} className="h-40 w-auto" />
+              <Image src="/logo.png" alt="Heard Labs" width={160} height={160} className="h-40 w-40 min-w-40" />
             </Link>
           </div>
 
