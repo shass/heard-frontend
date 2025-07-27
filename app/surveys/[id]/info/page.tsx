@@ -31,13 +31,13 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
   const user = useUser()
   const isAuthenticated = useIsAuthenticated()
-  const { isConnected } = useAccount()
+  const { isConnected, address } = useAccount()
   const { openConnectModal } = useConnectModal()
   const { login } = useAuthActions()
   const { id } = use(params)
 
   const { data: survey, isLoading, error } = useSurvey(id)
-  const { data: eligibility } = useSurveyEligibility(id, user?.walletAddress)
+  const { data: eligibility } = useSurveyEligibility(id, address)
   const { data: userReward } = useUserReward(id)
 
   const handleStartSurvey = () => {
