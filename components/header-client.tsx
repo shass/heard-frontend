@@ -9,11 +9,6 @@ import { useUser, useIsAuthenticated } from "@/lib/store"
 import { Settings } from "lucide-react"
 
 // Dynamically import Web3 components to avoid SSR issues
-const ConnectButton = dynamic(
-  () => import('@rainbow-me/rainbowkit').then((mod) => ({ default: mod.ConnectButton })),
-  { ssr: false }
-)
-
 const AuthSection = dynamic(
   () => import('./auth/auth-section').then((mod) => ({ default: mod.AuthSection })),
   {

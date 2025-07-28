@@ -1,6 +1,6 @@
 'use client'
 
-import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Button } from "@/components/ui/button"
 import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
 import { useAuthActions } from "@/components/providers/auth-provider"
@@ -8,7 +8,7 @@ import { useIsAuthenticated, useUser, useAuthLoading } from "@/lib/store"
 import { useAccount, useDisconnect } from 'wagmi'
 import { useNotifications } from "@/components/ui/notifications"
 import { formatAddress } from "@/lib/web3"
-import { LogOut, ChevronDown } from 'lucide-react'
+import { LogOut, ChevronDown, Wallet } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +22,7 @@ export function AuthSection() {
   const user = useUser()
   const { isConnected, address } = useAccount()
   const { disconnect } = useDisconnect()
+  const { openConnectModal } = useConnectModal()
   const notifications = useNotifications()
 
   const handleLogout = async () => {
@@ -48,7 +49,15 @@ export function AuthSection() {
   }
 
   if (!isConnected) {
-    return <ConnectButton />
+    return (
+      <Button 
+        onClick={() => openConnectModal?.()}
+        className="bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg px-4 py-2 font-medium flex items-center space-x-2"
+      >
+        <Wallet className="w-4 h-4" />
+        <span>Connect Wallet</span>
+      </Button>
+    )
   }
 
   if (isAuthenticated && user) {
