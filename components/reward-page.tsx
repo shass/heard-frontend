@@ -286,16 +286,6 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
               Back to Home
             </Button>
           </div>
-
-          {/* Additional Info */}
-          <div className="text-xs text-zinc-500 space-y-2">
-            <p>
-              Questions about your reward? Contact support at support@heardlabs.com
-            </p>
-            <p>
-              Current HeardPoints Balance: {userPoints?.currentBalance || 0} HP
-            </p>
-          </div>
         </div>
       </div>
     </section>
