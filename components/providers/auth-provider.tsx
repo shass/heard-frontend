@@ -16,6 +16,12 @@ interface AuthContextType {
   checkAuth: () => Promise<void>
   isWaitingForSignature: boolean
   isMobileAndroid: boolean
+  isMobileIOS: boolean
+  isMobile: boolean
+  platformInfo: {
+    walletType: 'metamask' | 'trust' | 'coinbase' | 'unknown'
+    connectionMethod: 'injected' | 'walletconnect' | 'unknown'
+  }
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -59,6 +65,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkAuth: handleCheckAuth,
     isWaitingForSignature: mobileWallet.isWaitingForSignature,
     isMobileAndroid: mobileWallet.isAndroid,
+    isMobileIOS: mobileWallet.isIOS,
+    isMobile: mobileWallet.isMobile,
+    platformInfo: {
+      walletType: mobileWallet.platformInfo.walletType,
+      connectionMethod: mobileWallet.platformInfo.connectionMethod,
+    }
   }
 
   return (

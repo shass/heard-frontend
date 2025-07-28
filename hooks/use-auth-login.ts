@@ -39,9 +39,10 @@ export function useAuthLogin() {
       let signature: string
       
       try {
-        // For Android mobile, start polling as backup
-        if (mobileWallet.isAndroid) {
-          console.log('🔄 Android detected, starting backup polling')
+        // For mobile devices, start polling as backup
+        if (mobileWallet.isMobile) {
+          const platform = mobileWallet.isIOS ? 'iOS' : mobileWallet.isAndroid ? 'Android' : 'Mobile'
+          console.log(`🔄 ${platform} detected, starting backup polling`)
           mobileWallet.startAuthPolling(() => {
             // Warm cache for new authenticated user
             warmAuthenticated().catch(error => 
@@ -50,11 +51,11 @@ export function useAuthLogin() {
           })
         }
         
-        // Add timeout for mobile browsers (especially Android MetaMask)
+        // Add shorter timeout for mobile browsers with better messaging
         signature = await Promise.race([
           signMessage(config, { message }),
           new Promise<never>((_, reject) => 
-            setTimeout(() => reject(new Error('Signing timeout - if you signed in your wallet, please wait or refresh the page')), 60000)
+            setTimeout(() => reject(new Error('Signing timeout - please check your wallet app and try again. If you already signed, the app will detect it automatically.')), 30000)
           )
         ])
         
@@ -64,25 +65,30 @@ export function useAuthLogin() {
         
       } catch (error: any) {
         // If signing failed but we're polling on mobile, let polling handle it
-        if (mobileWallet.isAndroid) {
-          console.log('⏳ Signature failed but polling active - user may have signed in wallet')
+        if (mobileWallet.isMobile) {
+          const platform = mobileWallet.isIOS ? 'iOS' : mobileWallet.isAndroid ? 'Android' : 'Mobile'
+          console.log(`📱 Signature failed on ${platform} - attempting mobile polling fallback`)
+          console.log('Error details:', error.message)
+          
           // Use the mobile polling promise
           try {
             await mobileWallet.startMobileAuthPolling()
             // If we reach here, auth succeeded via polling
-            console.log('✅ Authentication completed via polling')
+            console.log(`✅ Authentication completed via ${platform} polling fallback`)
             
             // Warm cache for new authenticated user
             warmAuthenticated().catch(error => 
               console.warn('Failed to warm cache after polling auth:', error)
             )
             return // Skip the rest of the normal flow
-          } catch (pollError) {
-            throw pollError
+          } catch (pollError: any) {
+            console.error('❌ Mobile polling also failed:', pollError.message)
+            throw new Error(`Authentication failed: ${pollError.message}`)
           }
         } else {
           mobileWallet.stopAuthPolling()
           mobileWallet.setIsWaitingForSignature(false)
+          console.error('❌ Signature failed on desktop device:', error.message)
           throw error
         }
       }

@@ -80,6 +80,7 @@ export function useAuthSession() {
 
   /**
    * Check auth on app load using HttpOnly cookie
+   * Now validates against persisted state for better mobile experience
    */
   const checkInitialAuth = async () => {
     console.log('🚀 Running initial auth check on app load')
@@ -88,19 +89,35 @@ export function useAuthSession() {
       const userData = await authApi.checkAuth()
       if (userData) {
         console.log('✅ Initial auth check successful:', userData.walletAddress)
-        console.log('Note: User will need to re-authenticate if wallet address differs from session')
-        setUser(userData)
+        
+        // Validate against persisted state to ensure consistency
+        if (user && user.walletAddress && user.walletAddress.toLowerCase() === userData.walletAddress.toLowerCase()) {
+          console.log('📱 Persisted state matches server session - user already authenticated')
+        } else {
+          console.log('🔄 Updating user state with server session data')
+          setUser(userData)
+        }
         
         // Warm cache for existing authenticated session
         warmAuthenticated().catch(error => 
           console.warn('Failed to warm cache on app load:', error)
         )
       } else {
-        console.log('❌ No user data returned from checkAuth')
+        console.log('❌ No valid session found on server')
+        // Clear persisted state if server has no session
+        if (user) {
+          console.log('🧹 Clearing stale persisted auth state')
+          storeLogout()
+        }
       }
     } catch (error: any) {
-      // No valid session - this is normal
-      console.log('🔍 No existing session found:', error?.status || error?.message || 'Unknown error')
+      // No valid session - clear stale persisted state if exists
+      if (error?.status === 401 && user) {
+        console.log('🧹 Server session expired, clearing persisted state')
+        storeLogout()
+      } else {
+        console.log('🔍 No existing session found:', error?.status || error?.message || 'Unknown error')
+      }
     } finally {
       setLoading(false)
     }
