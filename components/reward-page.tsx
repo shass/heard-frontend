@@ -109,9 +109,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
   }
 
   const formatReward = () => {
-    const tokenReward = `${survey.rewardAmount} ${survey.rewardToken}`
-    const pointsReward = heardPointsAwarded > 0 ? ` + ${heardPointsAwarded} HP` : ""
-    return tokenReward + pointsReward
+    return `${survey.rewardAmount} ${survey.rewardToken}`
   }
 
   if (!isAuthenticated) {
