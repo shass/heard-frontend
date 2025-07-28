@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { LoadingState, InlineLoading } from "@/components/ui/loading-states"
-import { Copy, ExternalLink, Gift, CheckCircle2 } from "lucide-react"
+import { Copy, ExternalLink, Gift, CheckCircle2, Check } from "lucide-react"
 import { useUserReward } from "@/hooks/use-reward"
 import { useHeardPoints } from "@/hooks/use-users"
 import { useIsAuthenticated, useUser } from "@/lib/store"
@@ -19,6 +19,7 @@ interface RewardPageProps {
 export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPageProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null)
   const [claimStatus, setClaimStatus] = useState<'pending' | 'claimed' | 'error'>('pending')
+  const [linkCopied, setLinkCopied] = useState(false)
 
   const user = useUser()
   const isAuthenticated = useIsAuthenticated()
@@ -105,6 +106,11 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
     if (claimUrl) {
       navigator.clipboard.writeText(claimUrl)
       notifications.success('Link copied', 'Claim link copied to clipboard')
+      setLinkCopied(true)
+      // Reset after 1.5 seconds
+      setTimeout(() => {
+        setLinkCopied(false)
+      }, 1500)
     }
   }
 
@@ -222,11 +228,19 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
                         const claimUrl = claimLink || `${window.location.origin}/claim/${linkDropCode}`
                         navigator.clipboard.writeText(claimUrl)
                         notifications.success('Link copied', 'Claim link copied to clipboard')
+                        setLinkCopied(true)
+                        setTimeout(() => {
+                          setLinkCopied(false)
+                        }, 1500)
                       }}
                       className="p-2 bg-white border rounded hover:bg-gray-50 flex-shrink-0"
                       title="Copy link"
                     >
-                      <Copy className="w-4 h-4 text-zinc-600" />
+                      {linkCopied ? (
+                        <Check className="w-4 h-4 text-zinc-900" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-zinc-600" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -261,8 +275,11 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
                   variant="outline"
                   className="w-full border-zinc-300 text-zinc-700 hover:bg-zinc-50 rounded-lg py-3 text-base font-medium bg-transparent"
                 >
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copy Claim Link
+                  {linkCopied ? (
+                    <Check className="w-4 h-4 mr-2 text-zinc-900" />
+                  ) : (
+                    <Copy className="w-4 h-4 mr-2" />
+                  )}
                 </Button>
               </>
             )}

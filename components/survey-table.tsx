@@ -67,7 +67,7 @@ function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
           className="flex items-center gap-2"
         >
           {copiedSurveyId === survey.id ? (
-            <Check className="w-4 h-4 text-green-600" />
+            <Check className="w-4 h-4 text-zinc-900" />
           ) : (
             <Copy className="w-4 h-4" />
           )}
@@ -115,15 +115,9 @@ function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
               className="flex items-center gap-1"
             >
               {copiedSurveyId === survey.id ? (
-                <>
-                  <Check className="w-4 h-4 text-green-600" />
-                  Copied
-                </>
+                <Check className="w-4 h-4 text-zinc-900" />
               ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  Copy
-                </>
+                <Copy className="w-4 h-4" />
               )}
             </Button>
             <Button
@@ -220,7 +214,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
       // Reset the copied state after 2 seconds
       setTimeout(() => {
         setCopiedSurveyId(null)
-      }, 2000)
+      }, 1500)
     } catch (error) {
       notifications.error("Failed to copy link", "Please try again")
     }
