@@ -82,12 +82,6 @@ export function useSubmitAnswer() {
         queryKey: responseKeys.detail(variables.responseId) 
       })
       
-      // Show success notification for auto-save
-      addNotification({
-        type: 'success',
-        title: 'Answer saved',
-        duration: 2000
-      })
     },
     onError: (error: any) => {
       addNotification({
