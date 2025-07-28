@@ -317,6 +317,34 @@ export interface BulkWhitelistRequest {
   walletAddresses: string[]
 }
 
+// Reward Links Types
+export interface RewardLink {
+  id: string
+  claimLink: string
+  createdAt: string
+}
+
+export interface UsedRewardLink extends RewardLink {
+  usedBy: string
+  usedAt: string
+}
+
+export interface RewardLinksData {
+  unused: RewardLink[]
+  used: UsedRewardLink[]
+  stats: {
+    total: number
+    unused: number
+    used: number
+  }
+}
+
+// Removed single reward link addition - only bulk import supported
+
+export interface ImportRewardLinksRequest {
+  txtData: string
+}
+
 export interface AdminSurveyListItem extends Survey {
   whitelistCount: number
   eligibleUsers: number

@@ -72,7 +72,8 @@ export function WhitelistManagement() {
       notifications.success('Address Added', 'Wallet address has been added to whitelist')
     },
     onError: (error: any) => {
-      notifications.error('Failed to Add', error.message || 'Failed to add address to whitelist')
+      const errorMessage = error.error?.message || error.message || 'Failed to add address to whitelist'
+      notifications.error('Failed to Add', errorMessage)
     }
   })
 
@@ -85,7 +86,8 @@ export function WhitelistManagement() {
       notifications.success('Bulk Import Complete', `${data.length} addresses added to whitelist`)
     },
     onError: (error: any) => {
-      notifications.error('Bulk Import Failed', error.message || 'Failed to import addresses')
+      const errorMessage = error.error?.message || error.message || 'Failed to import addresses'
+      notifications.error('Bulk Import Failed', errorMessage)
     }
   })
 
@@ -97,7 +99,8 @@ export function WhitelistManagement() {
       notifications.success('Address Removed', 'Address has been removed from whitelist')
     },
     onError: (error: any) => {
-      notifications.error('Removal Failed', error.message || 'Failed to remove address')
+      const errorMessage = error.error?.message || error.message || 'Failed to remove address'
+      notifications.error('Removal Failed', errorMessage)
     }
   })
 
@@ -108,7 +111,8 @@ export function WhitelistManagement() {
       queryClient.invalidateQueries({ queryKey: ['whitelist-entries', selectedSurveyId] })
     },
     onError: (error: any) => {
-      notifications.error('Toggle Failed', error.message || 'Failed to toggle address status')
+      const errorMessage = error.error?.message || error.message || 'Failed to toggle address status'
+      notifications.error('Toggle Failed', errorMessage)
     }
   })
 
@@ -119,7 +123,8 @@ export function WhitelistManagement() {
       notifications.success('Whitelist Cleared', 'All addresses have been removed from whitelist')
     },
     onError: (error: any) => {
-      notifications.error('Clear Failed', error.message || 'Failed to clear whitelist')
+      const errorMessage = error.error?.message || error.message || 'Failed to clear whitelist'
+      notifications.error('Clear Failed', errorMessage)
     }
   })
 
@@ -134,7 +139,8 @@ export function WhitelistManagement() {
       }
     },
     onError: (error: any) => {
-      notifications.error('CSV Import Failed', error.message || 'Failed to import CSV file')
+      const errorMessage = error.error?.message || error.message || 'Failed to import CSV file'
+      notifications.error('CSV Import Failed', errorMessage)
     }
   })
 

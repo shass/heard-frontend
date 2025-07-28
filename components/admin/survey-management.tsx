@@ -28,11 +28,13 @@ import {
   Search,
   Filter,
   Users,
-  List
+  List,
+  Gift
 } from 'lucide-react'
 import { SurveyForm } from './survey-form'
 import { SurveyResponses } from './survey-responses'
 import { WhitelistModal } from './whitelist-modal'
+import { RewardLinksModal } from './reward-links-modal'
 import type { AdminSurveyListItem, CreateSurveyRequest, UpdateSurveyRequest } from '@/lib/types'
 
 export function SurveyManagement() {
@@ -43,6 +45,7 @@ export function SurveyManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isResponsesDialogOpen, setIsResponsesDialogOpen] = useState(false)
   const [isWhitelistModalOpen, setIsWhitelistModalOpen] = useState(false)
+  const [isRewardLinksModalOpen, setIsRewardLinksModalOpen] = useState(false)
 
   const notifications = useNotifications()
   const queryClient = useQueryClient()
@@ -66,7 +69,8 @@ export function SurveyManagement() {
       notifications.success('Survey Created', 'Survey has been created successfully')
     },
     onError: (error: any) => {
-      notifications.error('Creation Failed', error.message || 'Failed to create survey')
+      const errorMessage = error.error?.message || error.message || 'Failed to create survey'
+      notifications.error('Creation Failed', errorMessage)
     }
   })
 
@@ -79,7 +83,8 @@ export function SurveyManagement() {
       notifications.success('Survey Updated', 'Survey has been updated successfully')
     },
     onError: (error: any) => {
-      notifications.error('Update Failed', error.message || 'Failed to update survey')
+      const errorMessage = error.error?.message || error.message || 'Failed to update survey'
+      notifications.error('Update Failed', errorMessage)
     }
   })
 
@@ -91,7 +96,8 @@ export function SurveyManagement() {
       notifications.success('Survey Deleted', 'Survey has been deleted successfully')
     },
     onError: (error: any) => {
-      notifications.error('Deletion Failed', error.message || 'Failed to delete survey')
+      const errorMessage = error.error?.message || error.message || 'Failed to delete survey'
+      notifications.error('Deletion Failed', errorMessage)
     }
   })
 
@@ -103,7 +109,8 @@ export function SurveyManagement() {
       queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] })
     },
     onError: (error: any) => {
-      notifications.error('Status Update Failed', error.message || 'Failed to update survey status')
+      const errorMessage = error.error?.message || error.message || 'Failed to update survey status'
+      notifications.error('Status Update Failed', errorMessage)
     }
   })
 
@@ -115,7 +122,8 @@ export function SurveyManagement() {
       notifications.success('Survey Duplicated', 'Survey has been duplicated successfully')
     },
     onError: (error: any) => {
-      notifications.error('Duplication Failed', error.message || 'Failed to duplicate survey')
+      const errorMessage = error.error?.message || error.message || 'Failed to duplicate survey'
+      notifications.error('Duplication Failed', errorMessage)
     }
   })
 
@@ -287,6 +295,18 @@ export function SurveyManagement() {
                   size="sm"
                   onClick={() => {
                     setSelectedSurvey(survey)
+                    setIsRewardLinksModalOpen(true)
+                  }}
+                  title="Manage Reward Links"
+                >
+                  <Gift className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedSurvey(survey)
                     setIsEditDialogOpen(true)
                   }}
                 >
@@ -373,6 +393,16 @@ export function SurveyManagement() {
         isOpen={isWhitelistModalOpen}
         onClose={() => {
           setIsWhitelistModalOpen(false)
+          setSelectedSurvey(null)
+        }}
+      />
+
+      {/* Reward Links Management Modal */}
+      <RewardLinksModal
+        survey={selectedSurvey}
+        isOpen={isRewardLinksModalOpen}
+        onClose={() => {
+          setIsRewardLinksModalOpen(false)
           setSelectedSurvey(null)
         }}
       />

@@ -7,6 +7,9 @@ import type {
   WhitelistEntry,
   WhitelistManagementData,
   BulkWhitelistRequest,
+  RewardLink,
+  RewardLinksData,
+  ImportRewardLinksRequest,
   Survey,
   SurveyResponse,
   AdminSurveyResponse,
@@ -295,5 +298,40 @@ export const adjustUserHeardPoints = async (userId: string, amount: number, reas
     amount,
     reason
   })
+  return data
+}
+
+// Reward Links Management
+export const getRewardLinks = async (surveyId: string): Promise<RewardLinksData> => {
+  const data = await apiClient.get<{ rewards: RewardLinksData, stats: any }>(`/admin/surveys/${surveyId}/rewards`)
+  return {
+    unused: data.rewards.unused,
+    used: data.rewards.used,
+    stats: data.stats
+  }
+}
+
+// Removed single reward link addition - only bulk import supported
+
+export const deleteRewardLink = async (surveyId: string, rewardId: string): Promise<void> => {
+  await apiClient.delete(`/admin/surveys/${surveyId}/rewards/${rewardId}`)
+}
+
+export const clearAllRewardLinks = async (surveyId: string): Promise<void> => {
+  await apiClient.delete(`/admin/surveys/${surveyId}/rewards`)
+}
+
+export const importRewardLinks = async (surveyId: string, request: ImportRewardLinksRequest): Promise<{ 
+  imported: number, 
+  skipped: number,
+  failedLinks: string[],
+  message: string
+}> => {
+  const data = await apiClient.post<{ 
+    imported: number, 
+    skipped: number,
+    failedLinks: string[],
+    message: string
+  }>(`/admin/surveys/${surveyId}/rewards/import`, request)
   return data
 }
