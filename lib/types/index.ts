@@ -64,6 +64,22 @@ export interface QuestionResponse {
   selectedAnswers: string[]
 }
 
+// Extended interface for admin panel with full question and answer details
+export interface AdminQuestionResponse {
+  questionId: string
+  questionText: string
+  questionOrder: number
+  selectedAnswers: Array<{
+    id: string
+    text: string
+  }> | string[] // Support both formats for backward compatibility
+}
+
+// Admin survey response with enriched question and answer data
+export interface AdminSurveyResponse extends Omit<SurveyResponse, 'responses'> {
+  responses: AdminQuestionResponse[]
+}
+
 // HeardPoints Transaction types
 export interface HeardPointsTransaction {
   id: string

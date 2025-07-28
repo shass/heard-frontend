@@ -9,6 +9,7 @@ import type {
   BulkWhitelistRequest,
   Survey,
   SurveyResponse,
+  AdminSurveyResponse,
   User,
   ApiResponse,
   PaginationMeta
@@ -113,9 +114,9 @@ export const getSurveyResponses = async (surveyId: string, params?: {
   offset?: number
   status?: 'completed' | 'in_progress' | 'all'
   search?: string
-}): Promise<{ responses: SurveyResponse[]; meta: PaginationMeta }> => {
+}): Promise<{ responses: AdminSurveyResponse[]; meta: PaginationMeta }> => {
   const data = await apiClient.get<{
-    items: SurveyResponse[]
+    items: AdminSurveyResponse[]
     pagination: PaginationMeta
   }>(`/admin/surveys/${surveyId}/responses`, {
     params: {

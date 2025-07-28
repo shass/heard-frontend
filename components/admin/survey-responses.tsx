@@ -18,7 +18,7 @@ import {
   Calendar,
   Clock
 } from 'lucide-react'
-import type { SurveyResponse, AdminSurveyListItem } from '@/lib/types'
+import type { SurveyResponse, AdminSurveyResponse, AdminSurveyListItem } from '@/lib/types'
 
 interface SurveyResponsesProps {
   survey: AdminSurveyListItem
@@ -28,7 +28,7 @@ interface SurveyResponsesProps {
 
 export function SurveyResponses({ survey, open, onOpenChange }: SurveyResponsesProps) {
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedResponse, setSelectedResponse] = useState<SurveyResponse | null>(null)
+  const [selectedResponse, setSelectedResponse] = useState<AdminSurveyResponse | null>(null)
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
 
   const { data: responsesData, isLoading, error } = useQuery({
@@ -39,7 +39,7 @@ export function SurveyResponses({ survey, open, onOpenChange }: SurveyResponsesP
 
   const responses = responsesData?.responses || []
 
-  const handleViewDetails = (response: SurveyResponse) => {
+  const handleViewDetails = (response: AdminSurveyResponse) => {
     setSelectedResponse(response)
     setIsDetailDialogOpen(true)
   }
@@ -93,7 +93,7 @@ export function SurveyResponses({ survey, open, onOpenChange }: SurveyResponsesP
               <Card>
                 <CardContent className="p-4">
                   <div className="text-2xl font-bold">
-                    {responses.filter(r => r.isCompleted).length}
+                    {responses.filter(r => r.completedAt).length}
                   </div>
                   <p className="text-sm text-muted-foreground">Completed</p>
                 </CardContent>
@@ -101,7 +101,7 @@ export function SurveyResponses({ survey, open, onOpenChange }: SurveyResponsesP
               <Card>
                 <CardContent className="p-4">
                   <div className="text-2xl font-bold">
-                    {responses.filter(r => !r.isCompleted).length}
+                    {responses.filter(r => !r.completedAt).length}
                   </div>
                   <p className="text-sm text-muted-foreground">In Progress</p>
                 </CardContent>
@@ -134,16 +134,16 @@ export function SurveyResponses({ survey, open, onOpenChange }: SurveyResponsesP
                                 {response.walletAddress}
                               </div>
                               <Badge 
-                                variant={response.isCompleted ? "default" : "secondary"}
+                                variant={response.completedAt ? "default" : "secondary"}
                               >
-                                {response.isCompleted ? 'Completed' : 'In Progress'}
+                                {response.completedAt ? 'Completed' : 'In Progress'}
                               </Badge>
                             </div>
                             
                             <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
                               <div className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
-                                {new Date(response.startedAt).toLocaleDateString()}
+                                Started: {new Date(response.createdAt).toLocaleDateString()}
                               </div>
                               {response.completedAt && (
                                 <div className="flex items-center gap-1">
@@ -152,7 +152,7 @@ export function SurveyResponses({ survey, open, onOpenChange }: SurveyResponsesP
                                 </div>
                               )}
                               <div>
-                                Progress: {response.progress}%
+                                Questions answered: {response.responses?.length || 0}
                               </div>
                             </div>
                           </div>
@@ -187,7 +187,7 @@ export function SurveyResponses({ survey, open, onOpenChange }: SurveyResponsesP
 }
 
 interface SurveyResponseDetailsProps {
-  response: SurveyResponse | null
+  response: AdminSurveyResponse | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -221,14 +221,14 @@ function SurveyResponseDetails({ response, open, onOpenChange }: SurveyResponseD
                   <div>
                     <span className="font-medium text-gray-600">Status:</span>
                     <div>
-                      <Badge variant={response.isCompleted ? "default" : "secondary"}>
-                        {response.isCompleted ? 'Completed' : 'In Progress'}
+                      <Badge variant={response.completedAt ? "default" : "secondary"}>
+                        {response.completedAt ? 'Completed' : 'In Progress'}
                       </Badge>
                     </div>
                   </div>
                   <div>
                     <span className="font-medium text-gray-600">Started:</span>
-                    <div>{new Date(response.startedAt).toLocaleString()}</div>
+                    <div>{new Date(response.createdAt).toLocaleString()}</div>
                   </div>
                   {response.completedAt && (
                     <div>
@@ -237,8 +237,8 @@ function SurveyResponseDetails({ response, open, onOpenChange }: SurveyResponseD
                     </div>
                   )}
                   <div>
-                    <span className="font-medium text-gray-600">Progress:</span>
-                    <div>{response.progress}%</div>
+                    <span className="font-medium text-gray-600">Questions Answered:</span>
+                    <div>{response.responses?.length || 0}</div>
                   </div>
                   {response.heardPointsAwarded && (
                     <div>
@@ -261,16 +261,24 @@ function SurveyResponseDetails({ response, open, onOpenChange }: SurveyResponseD
                     {response.responses.map((answer, index) => (
                       <div key={answer.questionId} className="p-4 border rounded-lg">
                         <div className="font-medium mb-2">
-                          Question {index + 1}: {answer.questionText || 'Question text not available'}
+                          {answer.questionOrder || index + 1}. {answer.questionText || 'Question text not available'} 
+                          <span className="text-xs text-gray-400 ml-2">({answer.questionId})</span>
                         </div>
                         <div className="text-sm text-gray-600">
-                          <strong>Answers:</strong> {answer.selectedAnswers.join(', ')}
+                          <strong>Selected answers:</strong>{' '}
+                          {Array.isArray(answer.selectedAnswers) && answer.selectedAnswers.length > 0
+                            ? answer.selectedAnswers.map((ans, idx) => (
+                                <span key={idx}>
+                                  {typeof ans === 'object' && ans !== null ? ans.text : String(ans)}
+                                  {typeof ans === 'object' && ans !== null && (
+                                    <span className="text-xs text-gray-400 ml-1">({ans.id})</span>
+                                  )}
+                                  {idx < answer.selectedAnswers.length - 1 && ', '}
+                                </span>
+                              ))
+                            : 'No answers selected'
+                          }
                         </div>
-                        {answer.answeredAt && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            Answered: {new Date(answer.answeredAt).toLocaleString()}
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>
