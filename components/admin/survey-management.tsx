@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { 
-  getAdminSurveys, 
-  createSurvey, 
-  updateSurvey, 
-  deleteSurvey, 
+import {
+  getAdminSurveys,
+  createSurvey,
+  updateSurvey,
+  deleteSurvey,
   toggleSurveyStatus,
-  duplicateSurvey 
+  duplicateSurvey
 } from '@/lib/api/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,21 +18,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/loading-states'
 import { useNotifications } from '@/components/ui/notifications'
-import { 
-  PlusCircle, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Copy, 
-  Play, 
+import {
+  PlusCircle,
+  Edit,
+  Trash2,
+  Copy,
+  Play,
   Pause,
   Search,
   Filter,
-  Download,
-  Users
+  Users,
+  List
 } from 'lucide-react'
 import { SurveyForm } from './survey-form'
 import { SurveyResponses } from './survey-responses'
+import { WhitelistModal } from './whitelist-modal'
 import type { AdminSurveyListItem, CreateSurveyRequest, UpdateSurveyRequest } from '@/lib/types'
 
 export function SurveyManagement() {
@@ -42,16 +42,17 @@ export function SurveyManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isResponsesDialogOpen, setIsResponsesDialogOpen] = useState(false)
+  const [isWhitelistModalOpen, setIsWhitelistModalOpen] = useState(false)
 
   const notifications = useNotifications()
   const queryClient = useQueryClient()
 
   const { data: surveysData, isLoading, error } = useQuery({
     queryKey: ['admin-surveys', { search: searchTerm, status: statusFilter }],
-    queryFn: () => getAdminSurveys({ 
-      search: searchTerm || undefined, 
+    queryFn: () => getAdminSurveys({
+      search: searchTerm || undefined,
       status: statusFilter === 'all' ? undefined : statusFilter,
-      limit: 50 
+      limit: 50
     }),
     refetchInterval: 30000
   })
@@ -95,7 +96,7 @@ export function SurveyManagement() {
   })
 
   const toggleStatusMutation = useMutation({
-    mutationFn: ({ surveyId, isActive }: { surveyId: string, isActive: boolean }) => 
+    mutationFn: ({ surveyId, isActive }: { surveyId: string, isActive: boolean }) =>
       toggleSurveyStatus(surveyId, isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-surveys'] })
@@ -107,7 +108,7 @@ export function SurveyManagement() {
   })
 
   const duplicateSurveyMutation = useMutation({
-    mutationFn: ({ surveyId, newName }: { surveyId: string, newName: string }) => 
+    mutationFn: ({ surveyId, newName }: { surveyId: string, newName: string }) =>
       duplicateSurvey(surveyId, newName),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-surveys'] })
@@ -118,12 +119,12 @@ export function SurveyManagement() {
     }
   })
 
-  const handleCreateSurvey = (data: CreateSurveyRequest) => {
-    createSurveyMutation.mutate(data)
+  const handleCreateSurvey = (data: CreateSurveyRequest | UpdateSurveyRequest) => {
+    createSurveyMutation.mutate(data as CreateSurveyRequest)
   }
 
-  const handleUpdateSurvey = (data: UpdateSurveyRequest) => {
-    updateSurveyMutation.mutate(data)
+  const handleUpdateSurvey = (data: CreateSurveyRequest | UpdateSurveyRequest) => {
+    updateSurveyMutation.mutate(data as UpdateSurveyRequest)
   }
 
   const handleDeleteSurvey = (surveyId: string) => {
@@ -188,7 +189,7 @@ export function SurveyManagement() {
             </SelectContent>
           </Select>
         </div>
-        
+
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -200,7 +201,7 @@ export function SurveyManagement() {
             <DialogHeader>
               <DialogTitle>Create New Survey</DialogTitle>
             </DialogHeader>
-            <SurveyForm 
+            <SurveyForm
               onSubmit={handleCreateSurvey}
               isLoading={createSurveyMutation.isPending}
               onCancel={() => setIsCreateDialogOpen(false)}
@@ -224,10 +225,10 @@ export function SurveyManagement() {
                 </Badge>
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-4">
               <p className="text-sm text-gray-700 line-clamp-3">{survey.description}</p>
-              
+
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-500">Responses:</span>
@@ -248,17 +249,17 @@ export function SurveyManagement() {
               </div>
 
               <div className="flex gap-2 pt-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => handleToggleStatus(survey.id, survey.isActive)}
                   disabled={toggleStatusMutation.isPending}
                 >
                   {survey.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </Button>
-                
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => {
                     setSelectedSurvey(survey)
@@ -268,9 +269,21 @@ export function SurveyManagement() {
                 >
                   <Users className="w-4 h-4" />
                 </Button>
-                
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedSurvey(survey)
+                    setIsWhitelistModalOpen(true)
+                  }}
+                  title="Manage Whitelist"
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => {
                     setSelectedSurvey(survey)
@@ -279,18 +292,18 @@ export function SurveyManagement() {
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
-                
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => handleDuplicateSurvey(survey.id, survey.name)}
                   disabled={duplicateSurveyMutation.isPending}
                 >
                   <Copy className="w-4 h-4" />
                 </Button>
-                
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => handleDeleteSurvey(survey.id)}
                   disabled={deleteSurveyMutation.isPending}
@@ -308,7 +321,7 @@ export function SurveyManagement() {
         <div className="text-center py-12">
           <h3 className="text-lg font-medium text-gray-900 mb-2">No surveys found</h3>
           <p className="text-gray-600 mb-4">
-            {searchTerm || statusFilter !== 'all' 
+            {searchTerm || statusFilter !== 'all'
               ? 'Try adjusting your search or filter criteria.'
               : 'Create your first survey to get started.'
             }
@@ -327,7 +340,7 @@ export function SurveyManagement() {
             <DialogTitle>Edit Survey</DialogTitle>
           </DialogHeader>
           {selectedSurvey && (
-            <SurveyForm 
+            <SurveyForm
               survey={selectedSurvey}
               onSubmit={handleUpdateSurvey}
               isLoading={updateSurveyMutation.isPending}
@@ -353,6 +366,16 @@ export function SurveyManagement() {
           }}
         />
       )}
+
+      {/* Whitelist Management Modal */}
+      <WhitelistModal
+        survey={selectedSurvey}
+        isOpen={isWhitelistModalOpen}
+        onClose={() => {
+          setIsWhitelistModalOpen(false)
+          setSelectedSurvey(null)
+        }}
+      />
     </div>
   )
 }

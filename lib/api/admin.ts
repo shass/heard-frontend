@@ -81,12 +81,12 @@ export const getAdminSurveys = async (params?: {
 }
 
 export const createSurvey = async (surveyData: CreateSurveyRequest): Promise<Survey> => {
-  const data = await apiClient.post<Survey>('/admin/surveys', surveyData)
+  const data = await apiClient.post<Survey>('/admin/surveys/create', surveyData)
   return data
 }
 
 export const updateSurvey = async (surveyData: UpdateSurveyRequest): Promise<Survey> => {
-  const data = await apiClient.put<Survey>(`/admin/surveys/${surveyData.id}`, surveyData)
+  const data = await apiClient.put<Survey>(`/admin/surveys/${surveyData.id}/update`, surveyData)
   return data
 }
 
@@ -152,9 +152,7 @@ export const getWhitelistEntries = async (surveyId: string, params?: {
   search?: string
 }): Promise<WhitelistManagementData> => {
   const data = await apiClient.get<{
-    addresses: string[]
-    total: number
-    entries: WhitelistEntry[]
+    whitelist: string[]
   }>(`/admin/surveys/${surveyId}/whitelist`, {
     params: {
       limit: params?.limit || 100,
@@ -167,8 +165,8 @@ export const getWhitelistEntries = async (surveyId: string, params?: {
   
   return {
     surveyId,
-    entries: data.entries || [],
-    totalEntries: data.total || 0
+    entries: data.whitelist || [],
+    totalEntries: data.whitelist?.length || 0
   }
 }
 
@@ -180,8 +178,16 @@ export const addWhitelistEntry = async (surveyId: string, walletAddress: string)
   return data
 }
 
-export const bulkAddWhitelistEntries = async (request: BulkWhitelistRequest): Promise<WhitelistEntry[]> => {
-  const data = await apiClient.post<WhitelistEntry[]>(`/admin/surveys/${request.surveyId}/whitelist/bulk-add`, {
+export const bulkAddWhitelistEntries = async (request: BulkWhitelistRequest): Promise<{
+  message: string
+  addedCount: number
+  skippedCount: number
+}> => {
+  const data = await apiClient.post<{
+    message: string
+    addedCount: number
+    skippedCount: number
+  }>(`/admin/surveys/${request.surveyId}/whitelist/bulk-add`, {
     walletAddresses: request.walletAddresses
   })
   

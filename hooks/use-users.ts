@@ -3,9 +3,28 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { userApi, type GetHeardPointsHistoryRequest, type UpdateUserRequest, type AdjustHeardPointsRequest } from '@/lib/api/users'
+import { userApi, type GetHeardPointsHistoryRequest } from '@/lib/api/users'
+import { getUsers, updateUserRole, toggleUserStatus, adjustUserHeardPoints } from '@/lib/api/admin'
 import { useUIStore, useIsAuthenticated, useUser } from '@/lib/store'
-import type { User, HeardPointsTransaction } from '@/lib/types'
+
+// Admin interfaces for user management
+export interface UpdateUserRequest {
+  role?: 'respondent' | 'admin'
+  isActive?: boolean
+}
+
+export interface AdjustHeardPointsRequest {
+  amount: number
+  description: string
+}
+
+export interface GetAllUsersRequest {
+  limit?: number
+  offset?: number
+  role?: 'respondent' | 'admin'
+  isActive?: boolean
+  search?: string
+}
 
 // Query keys for cache management
 export const userKeys = {
@@ -24,7 +43,7 @@ export const userKeys = {
  */
 export function useHeardPoints() {
   const isAuthenticated = useIsAuthenticated()
-  
+
   return useQuery({
     queryKey: userKeys.heardPoints(),
     queryFn: () => userApi.getHeardPoints(),
@@ -39,7 +58,7 @@ export function useHeardPoints() {
  */
 export function useHeardPointsHistory(params: GetHeardPointsHistoryRequest = {}) {
   const isAuthenticated = useIsAuthenticated()
-  
+
   return useQuery({
     queryKey: userKeys.heardPointsHistory(params),
     queryFn: () => userApi.getHeardPointsHistory(params),
@@ -54,7 +73,7 @@ export function useHeardPointsHistory(params: GetHeardPointsHistoryRequest = {})
  */
 export function useRecentTransactions() {
   const isAuthenticated = useIsAuthenticated()
-  
+
   return useQuery({
     queryKey: [...userKeys.heardPoints(), 'recent'],
     queryFn: () => userApi.getRecentTransactions(),
@@ -69,7 +88,7 @@ export function useRecentTransactions() {
  */
 export function useHeardPointsSummary() {
   const isAuthenticated = useIsAuthenticated()
-  
+
   return useQuery({
     queryKey: userKeys.heardPointsSummary(),
     queryFn: () => userApi.getHeardPointsSummary(),
@@ -84,7 +103,7 @@ export function useHeardPointsSummary() {
  */
 export function useHasEnoughPoints(requiredPoints: number) {
   const isAuthenticated = useIsAuthenticated()
-  
+
   return useQuery({
     queryKey: [...userKeys.heardPoints(), 'hasEnough', requiredPoints],
     queryFn: () => userApi.hasEnoughPoints(requiredPoints),
@@ -99,7 +118,7 @@ export function useHasEnoughPoints(requiredPoints: number) {
  */
 export function useCurrentUser() {
   const isAuthenticated = useIsAuthenticated()
-  
+
   return useQuery({
     queryKey: userKeys.current(),
     queryFn: () => userApi.getCurrentUser(),
@@ -115,7 +134,7 @@ export function useCurrentUser() {
 export function useUserById(userId: string) {
   const currentUser = useUser()
   const isAdmin = currentUser?.role === 'admin'
-  
+
   return useQuery({
     queryKey: userKeys.detail(userId),
     queryFn: () => userApi.getUser(userId),
@@ -128,13 +147,18 @@ export function useUserById(userId: string) {
 /**
  * Hook to get all users with filtering (admin only)
  */
-export function useAllUsers(params: Parameters<typeof userApi.getAllUsers>[0] = {}) {
+export function useAllUsers(params: GetAllUsersRequest = {}) {
   const user = useUser()
   const isAdmin = user?.role === 'admin'
-  
+
   return useQuery({
     queryKey: [...userKeys.lists(), params],
-    queryFn: () => userApi.getAllUsers(params),
+    queryFn: () => getUsers({
+      limit: params.limit,
+      offset: params.offset,
+      search: params.search,
+      role: params.role === 'respondent' ? 'respondent' : params.role === 'admin' ? 'admin' : 'all'
+    }),
     enabled: isAdmin,
     staleTime: 3 * 60 * 1000, // 3 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -144,13 +168,20 @@ export function useAllUsers(params: Parameters<typeof userApi.getAllUsers>[0] = 
 /**
  * Hook to search users (admin only)
  */
-export function useSearchUsers(query: string, params: Parameters<typeof userApi.getAllUsers>[0] = {}) {
+export function useSearchUsers(query: string, params: GetAllUsersRequest = {}) {
   const user = useUser()
   const isAdmin = user?.role === 'admin'
-  
+
   return useQuery({
     queryKey: [...userKeys.lists(), 'search', query, params],
-    queryFn: () => userApi.searchUsers(query, params),
+    queryFn: async () => {
+      const result = await getUsers({
+        ...params,
+        search: query,
+        role: params.role === 'respondent' ? 'respondent' : params.role === 'admin' ? 'admin' : 'all'
+      })
+      return result.users
+    },
     enabled: isAdmin && query.length > 2,
     staleTime: 1 * 60 * 1000, // 1 minute
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -163,17 +194,25 @@ export function useSearchUsers(query: string, params: Parameters<typeof userApi.
 export function useUpdateUser() {
   const queryClient = useQueryClient()
   const { addNotification } = useUIStore()
-  
+
   return useMutation({
-    mutationFn: ({ userId, data }: { userId: string; data: UpdateUserRequest }) => 
-      userApi.updateUser(userId, data),
+    mutationFn: async ({ userId, data }: { userId: string; data: UpdateUserRequest }) => {
+      if (data.role !== undefined) {
+        await updateUserRole(userId, data.role)
+      }
+      if (data.isActive !== undefined) {
+        await toggleUserStatus(userId, data.isActive)
+      }
+      // Return the updated user by fetching from the API
+      return userApi.getUser(userId)
+    },
     onSuccess: (updatedUser, variables) => {
       // Update user cache
       queryClient.setQueryData(userKeys.detail(variables.userId), updatedUser)
-      
+
       // Invalidate users list
       queryClient.invalidateQueries({ queryKey: userKeys.lists() })
-      
+
       addNotification({
         type: 'success',
         title: 'User updated successfully',
@@ -197,22 +236,22 @@ export function useUpdateUser() {
 export function useAdjustHeardPoints() {
   const queryClient = useQueryClient()
   const { addNotification } = useUIStore()
-  
+
   return useMutation({
-    mutationFn: ({ userId, data }: { userId: string; data: AdjustHeardPointsRequest }) => 
-      userApi.adjustHeardPoints(userId, data),
+    mutationFn: ({ userId, data }: { userId: string; data: AdjustHeardPointsRequest }) =>
+      adjustUserHeardPoints(userId, data.amount, data.description),
     onSuccess: (result, variables) => {
       // Invalidate HeardPoints caches
       queryClient.invalidateQueries({ queryKey: userKeys.heardPoints() })
       queryClient.invalidateQueries({ queryKey: userKeys.heardPointsSummary() })
-      
+
       // Invalidate user cache
       queryClient.invalidateQueries({ queryKey: userKeys.detail(variables.userId) })
-      
+
       addNotification({
         type: 'success',
         title: 'HeardPoints adjusted',
-        message: `New balance: ${result.newBalance}`,
+        message: 'HeardPoints adjustment completed',
         duration: 5000
       })
     },
@@ -232,7 +271,7 @@ export function useAdjustHeardPoints() {
  */
 export function useAutoRefreshHeardPoints(intervalMs: number = 30000) {
   const isAuthenticated = useIsAuthenticated()
-  
+
   return useQuery({
     queryKey: [...userKeys.heardPoints(), 'auto-refresh'],
     queryFn: () => userApi.getHeardPoints(),
@@ -248,7 +287,7 @@ export function useAutoRefreshHeardPoints(intervalMs: number = 30000) {
  */
 export function usePrefetchUser() {
   const queryClient = useQueryClient()
-  
+
   return {
     prefetchUser: (userId: string) => {
       queryClient.prefetchQuery({
@@ -257,7 +296,7 @@ export function usePrefetchUser() {
         staleTime: 5 * 60 * 1000,
       })
     },
-    
+
     prefetchHeardPoints: () => {
       queryClient.prefetchQuery({
         queryKey: userKeys.heardPoints(),
@@ -268,16 +307,3 @@ export function usePrefetchUser() {
   }
 }
 
-/**
- * Hook to invalidate user caches
- */
-export function useInvalidateUsers() {
-  const queryClient = useQueryClient()
-  
-  return {
-    invalidateAll: () => queryClient.invalidateQueries({ queryKey: userKeys.all }),
-    invalidateHeardPoints: () => queryClient.invalidateQueries({ queryKey: userKeys.heardPoints() }),
-    invalidateUser: (userId: string) => queryClient.invalidateQueries({ queryKey: userKeys.detail(userId) }),
-    invalidateLists: () => queryClient.invalidateQueries({ queryKey: userKeys.lists() }),
-  }
-}

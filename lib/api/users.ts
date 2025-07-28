@@ -25,36 +25,6 @@ export interface GetHeardPointsHistoryResponse {
   pagination: PaginationMeta
 }
 
-export interface UpdateUserRequest {
-  role?: 'respondent' | 'admin'
-  isActive?: boolean
-}
-
-export interface AdjustHeardPointsRequest {
-  amount: number
-  description: string
-}
-
-export interface AdjustHeardPointsResponse {
-  transaction: HeardPointsTransaction
-  newBalance: number
-}
-
-export interface GetAllUsersRequest {
-  limit?: number
-  offset?: number
-  role?: 'respondent' | 'admin'
-  isActive?: boolean
-  search?: string
-}
-
-export interface GetAllUsersResponse {
-  users: User[]
-  total: number
-  meta: {
-    pagination: PaginationMeta
-  }
-}
 
 export class UserApi {
   /**
@@ -91,35 +61,6 @@ export class UserApi {
     return await apiClient.get<GetHeardPointsHistoryResponse>(url)
   }
 
-  /**
-   * Update user profile (admin only)
-   */
-  async updateUser(userId: string, request: UpdateUserRequest): Promise<User> {
-    return await apiClient.put<User>(`/users/${userId}`, request)
-  }
-
-  /**
-   * Adjust HeardPoints balance (admin only)
-   */
-  async adjustHeardPoints(userId: string, request: AdjustHeardPointsRequest): Promise<AdjustHeardPointsResponse> {
-    return await apiClient.post<AdjustHeardPointsResponse>(`/users/${userId}/heard-points/adjust`, request)
-  }
-
-  /**
-   * Get all users with filtering (admin only)
-   */
-  async getAllUsers(params: GetAllUsersRequest = {}): Promise<GetAllUsersResponse> {
-    const queryParams = new URLSearchParams()
-
-    if (params.limit) queryParams.append('limit', params.limit.toString())
-    if (params.offset) queryParams.append('offset', params.offset.toString())
-    if (params.role) queryParams.append('role', params.role)
-    if (params.isActive !== undefined) queryParams.append('isActive', params.isActive.toString())
-    if (params.search) queryParams.append('search', params.search)
-
-    const url = `/users/all${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-    return await apiClient.get<GetAllUsersResponse>(url)
-  }
 
   /**
    * Get current user profile (same as auth.getMe but in user context)
@@ -192,16 +133,6 @@ export class UserApi {
     }
   }
 
-  /**
-   * Search users by wallet address or partial match (admin only)
-   */
-  async searchUsers(query: string, params: GetAllUsersRequest = {}): Promise<User[]> {
-    const response = await this.getAllUsers({
-      ...params,
-      search: query
-    })
-    return response.users
-  }
 }
 
 // Export singleton instance

@@ -18,13 +18,12 @@ import {
   Settings
 } from 'lucide-react'
 import { SurveyManagement } from './survey-management'
-import { WhitelistManagement } from './whitelist-management'
 import { AdminRoute } from '@/components/auth/admin-route'
 
 export function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState('surveys')
 
-  const { data: stats, loading, error } = useQuery({
+  const { data: stats, isLoading: loading, error } = useQuery({
     queryKey: ['admin-dashboard-stats'],
     queryFn: getAdminDashboardStats,
     refetchInterval: 60000 // Refresh every minute
@@ -79,18 +78,14 @@ export function AdminDashboard() {
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Overview
-              </TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="surveys">
                 <FileText className="w-4 h-4 mr-2" />
                 Surveys
               </TabsTrigger>
-              <TabsTrigger value="whitelists">
-                <Users className="w-4 h-4 mr-2" />
-                Whitelists
+              <TabsTrigger value="overview">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Overview
               </TabsTrigger>
               <TabsTrigger value="settings">
                 <Settings className="w-4 h-4 mr-2" />
@@ -185,11 +180,6 @@ export function AdminDashboard() {
             {/* Surveys Tab */}
             <TabsContent value="surveys">
               <SurveyManagement />
-            </TabsContent>
-
-            {/* Whitelists Tab */}
-            <TabsContent value="whitelists">
-              <WhitelistManagement />
             </TabsContent>
 
             {/* Settings Tab */}

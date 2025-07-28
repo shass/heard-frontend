@@ -308,7 +308,7 @@ export interface WhitelistEntry {
 
 export interface WhitelistManagementData {
   surveyId: string
-  entries: WhitelistEntry[]
+  entries: string[]  // Array of wallet addresses
   totalEntries: number
 }
 
