@@ -1,4 +1,6 @@
-// SSR-safe Header component
+"use client"
+
+// Client-side Header component 
 import dynamic from 'next/dynamic'
 
 interface HeaderClientProps {
