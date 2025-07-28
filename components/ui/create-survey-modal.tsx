@@ -12,8 +12,11 @@ export function CreateSurveyModal({ isOpen, onClose }: CreateSurveyModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
         <h3 className="text-xl font-semibold text-zinc-900 mb-4">Create Survey Request</h3>
+
+        <p className="mb-4">The dashboard is currently in development. For now, please submit a survey request and we’ll get in touch with you</p>
+
         <form className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-zinc-700 mb-1">
