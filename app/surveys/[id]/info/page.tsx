@@ -1,6 +1,6 @@
 "use client"
 
-import { use } from "react"
+import { use, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -35,6 +35,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const { openConnectModal } = useConnectModal()
   const { login } = useAuthActions()
   const { id } = use(params)
+  const [isAuthenticating, setIsAuthenticating] = useState(false)
 
   const { data: survey, isLoading, error } = useSurvey(id)
   const { data: eligibility } = useSurveyEligibility(id, address)
@@ -52,9 +53,13 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
   const handleAuthenticate = async () => {
     try {
+      setIsAuthenticating(true)
       await login()
+      // After successful authentication, immediately redirect to survey
+      router.push(`/surveys/${id}`)
     } catch (error) {
       console.error('Authentication failed:', error)
+      setIsAuthenticating(false)
     }
   }
 
@@ -125,22 +130,27 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   // Determine button state based on wallet connection and authentication
   const getButtonState = () => {
     if (hasCompleted) {
-      return { text: "Survey Completed", disabled: true, handler: () => {} }
+      return { text: "Survey Completed", disabled: true, handler: () => {}, loading: false }
     }
 
     if (!isConnected) {
-      return { text: "Connect Wallet", disabled: false, handler: handleConnectWallet }
+      return { text: "Connect Wallet", disabled: false, handler: handleConnectWallet, loading: false }
     }
 
     if (!isAuthenticated) {
-      return { text: "Authenticate", disabled: false, handler: handleAuthenticate }
+      return { 
+        text: isAuthenticating ? "Authenticating..." : "Authenticate & Start Survey", 
+        disabled: isAuthenticating, 
+        handler: handleAuthenticate,
+        loading: isAuthenticating
+      }
     }
 
     if (!isEligible) {
-      return { text: "Not Eligible", disabled: true, handler: () => {} }
+      return { text: "Not Eligible", disabled: true, handler: () => {}, loading: false }
     }
 
-    return { text: "Start Survey", disabled: false, handler: handleStartSurvey }
+    return { text: "Start Survey", disabled: false, handler: handleStartSurvey, loading: false }
   }
 
   const buttonState = getButtonState()
