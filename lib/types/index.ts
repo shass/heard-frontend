@@ -297,7 +297,8 @@ export interface UpdateSurveyRequest extends Partial<CreateSurveyRequest> {
   isActive?: boolean
 }
 
-export interface WhitelistEntry {
+// Legacy WhitelistEntry for old components (if needed)
+export interface LegacyWhitelistEntry {
   id: string
   surveyId: string
   walletAddress: string
@@ -306,15 +307,34 @@ export interface WhitelistEntry {
   createdBy: string
 }
 
+// New WhitelistEntry for paginated view with completion status
+export interface WhitelistEntry {
+  address: string
+  hasCompleted: boolean
+  completedAt: string | null
+}
+
 export interface WhitelistManagementData {
   surveyId: string
-  entries: string[]  // Array of wallet addresses
+  entries: string[]  // For backward compatibility with simple view
   totalEntries: number
+}
+
+export interface WhitelistPagedData {
+  addresses: WhitelistEntry[]
+  pagination: {
+    limit: number
+    offset: number
+    total: number
+    filtered: number
+    hasMore: boolean
+  }
 }
 
 export interface BulkWhitelistRequest {
   surveyId: string
   walletAddresses: string[]
+  replaceMode?: boolean
 }
 
 // Reward Links Types
