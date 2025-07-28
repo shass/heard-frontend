@@ -25,21 +25,21 @@ function NotificationItem({ notification, onClose }: NotificationItemProps) {
   }, [id, duration, onClose])
 
   const icons = {
-    success: <CheckCircle className="h-5 w-5 text-green-500" />,
+    success: <CheckCircle className="h-5 w-5 text-zinc-900" />,
     error: <XCircle className="h-5 w-5 text-red-500" />,
     warning: <AlertTriangle className="h-5 w-5 text-yellow-500" />,
     info: <Info className="h-5 w-5 text-blue-500" />
   }
 
   const borderColors = {
-    success: 'border-l-green-500',
+    success: 'border-l-zinc-900',
     error: 'border-l-red-500',
     warning: 'border-l-yellow-500',
     info: 'border-l-blue-500'
   }
 
   const bgColors = {
-    success: 'bg-green-50',
+    success: 'bg-zinc-50',
     error: 'bg-red-50',
     warning: 'bg-yellow-50',
     info: 'bg-blue-50'
