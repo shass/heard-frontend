@@ -151,7 +151,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
           <p className="text-zinc-600 mb-4">
             You need to complete this survey first to receive your reward.
           </p>
-          <Button onClick={onBackToSurveys}>Back to Home</Button>
+          <Button onClick={onBackToSurveys}>Back to Surveys</Button>
         </div>
       </section>
     )

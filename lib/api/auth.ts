@@ -34,12 +34,6 @@ export class AuthApi {
     return response
   }
 
-  /**
-   * Verify signature without creating session
-   */
-  async verifySignature(request: ConnectWalletRequest): Promise<{ valid: boolean; walletAddress: string }> {
-    return await apiClient.post<{ valid: boolean; walletAddress: string }>('/auth/verify-signature', request)
-  }
 
   /**
    * Get current user profile

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function AuthSection() {
-  const { logout } = useAuthActions()
+  const { logout, isWaitingForSignature, isMobileAndroid, checkAuth } = useAuthActions()
   const isAuthenticated = useIsAuthenticated()
   const user = useUser()
   const { isConnected, address } = useAccount()
@@ -87,7 +87,7 @@ export function AuthSection() {
     )
   }
 
-  // Connected but not authenticated - show only wallet dropdown
+  // Connected but not authenticated - show wallet dropdown
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -98,7 +98,7 @@ export function AuthSection() {
             </svg>
           </div>
           <span className="text-sm font-medium text-zinc-700">
-            {address ? formatAddress(address) : 'Wallet'}
+            {isWaitingForSignature ? 'Signing...' : (address ? formatAddress(address) : 'Wallet')}
           </span>
           <ChevronDown className="w-4 h-4 text-zinc-500" />
         </Button>
