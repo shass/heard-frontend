@@ -55,8 +55,13 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
     try {
       setIsAuthenticating(true)
       await login()
-      // After successful authentication, immediately redirect to survey
-      router.push(`/surveys/${id}`)
+
+      if (eligibility?.isEligible) {
+        router.push(`/surveys/${id}`)
+      } else {
+        setIsAuthenticating(false)
+      }
+
     } catch (error) {
       console.error('Authentication failed:', error)
       setIsAuthenticating(false)
@@ -137,17 +142,17 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
       return { text: "Connect Wallet", disabled: false, handler: handleConnectWallet, loading: false }
     }
 
+    if (!isEligible) {
+      return { text: "Not Eligible", disabled: true, handler: () => {}, loading: false }
+    }
+
     if (!isAuthenticated) {
-      return { 
-        text: isAuthenticating ? "Authenticating..." : "Authenticate & Start Survey", 
-        disabled: isAuthenticating, 
+      return {
+        text: isAuthenticating ? "Authenticating..." : "Authenticate & Start Survey",
+        disabled: isAuthenticating,
         handler: handleAuthenticate,
         loading: isAuthenticating
       }
-    }
-
-    if (!isEligible) {
-      return { text: "Not Eligible", disabled: true, handler: () => {}, loading: false }
     }
 
     return { text: "Start Survey", disabled: false, handler: handleStartSurvey, loading: false }
