@@ -103,31 +103,30 @@ function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
           </p>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-base font-medium text-zinc-900">{formatReward(survey)}</div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onCopyLink(survey.id)}
-              className="flex items-center gap-1"
-            >
-              {copiedSurveyId === survey.id ? (
-                <Check className="w-4 h-4 text-zinc-900" />
-              ) : (
-                <Copy className="w-4 h-4" />
-              )}
-            </Button>
-            <Button
-              onClick={handleButtonClick}
-              className={`text-white rounded-lg px-4 py-2 text-sm font-medium ${getButtonStyle()}`}
-              title="View survey information"
-            >
-              Take
-            </Button>
-          </div>
+        <div>
+          <div className="text-base font-medium text-zinc-900">{formatReward(survey)}</div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleButtonClick}
+            className={`text-white rounded-lg px-4 py-2 text-sm font-medium ${getButtonStyle()}`}
+            title="View survey information"
+          >
+            Take
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onCopyLink(survey.id)}
+            className="flex items-center gap-1"
+          >
+            {copiedSurveyId === survey.id ? (
+              <Check className="w-4 h-4 text-zinc-900" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
+          </Button>
         </div>
       </div>
     </div>
