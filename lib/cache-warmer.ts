@@ -96,7 +96,7 @@ export class CacheWarmer {
       })
 
       console.log('✅ User cache warmed')
-    } catch (error) {
+    } catch (error: any) {
       // Auth failures are expected when not logged in, don't spam console
       if (error?.status !== 401) {
         console.warn('⚠️ Failed to warm user cache:', error)
@@ -114,14 +114,14 @@ export class CacheWarmer {
       // Pre-load survey details
       await this.queryClient.prefetchQuery({
         queryKey: ['surveys', 'detail', surveyId],
-        queryFn: () => surveyApi.getSurveyById(surveyId),
+        queryFn: () => surveyApi.getSurvey(surveyId),
         staleTime: 2 * 60 * 1000, // 2 minutes
       })
 
       // Pre-load survey questions
       await this.queryClient.prefetchQuery({
         queryKey: ['surveys', surveyId, 'questions'],
-        queryFn: () => surveyApi.getSurveyQuestions(surveyId),
+        queryFn: () => surveyApi.getQuestions(surveyId),
         staleTime: 2 * 60 * 1000, // 2 minutes
       })
 
