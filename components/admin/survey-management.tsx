@@ -34,12 +34,14 @@ import {
   Upload,
   FileText,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Crown
 } from 'lucide-react'
 import { SurveyForm } from './survey-form'
 import { SurveyResponses } from './survey-responses'
 import { WhitelistModal } from './whitelist-modal'
 import { RewardLinksModal } from './reward-links-modal'
+import { SurveyClientsModal } from './survey-clients-modal'
 import type { AdminSurveyListItem, CreateSurveyRequest, UpdateSurveyRequest } from '@/lib/types'
 
 export function SurveyManagement() {
@@ -51,6 +53,7 @@ export function SurveyManagement() {
   const [isResponsesDialogOpen, setIsResponsesDialogOpen] = useState(false)
   const [isWhitelistModalOpen, setIsWhitelistModalOpen] = useState(false)
   const [isRewardLinksModalOpen, setIsRewardLinksModalOpen] = useState(false)
+  const [isSurveyClientsModalOpen, setIsSurveyClientsModalOpen] = useState(false)
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importResults, setImportResults] = useState<{
@@ -404,6 +407,18 @@ export function SurveyManagement() {
                   size="sm"
                   onClick={() => {
                     setSelectedSurvey(survey)
+                    setIsSurveyClientsModalOpen(true)
+                  }}
+                  title="Manage Survey Clients"
+                >
+                  <Crown className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedSurvey(survey)
                     setIsEditDialogOpen(true)
                   }}
                 >
@@ -500,6 +515,16 @@ export function SurveyManagement() {
         isOpen={isRewardLinksModalOpen}
         onClose={() => {
           setIsRewardLinksModalOpen(false)
+          setSelectedSurvey(null)
+        }}
+      />
+
+      {/* Survey Clients Management Modal */}
+      <SurveyClientsModal
+        survey={selectedSurvey}
+        isOpen={isSurveyClientsModalOpen}
+        onClose={() => {
+          setIsSurveyClientsModalOpen(false)
           setSelectedSurvey(null)
         }}
       />
