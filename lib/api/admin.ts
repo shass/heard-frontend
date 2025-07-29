@@ -110,6 +110,21 @@ export const duplicateSurvey = async (surveyId: string, newName: string): Promis
   return data
 }
 
+export const importSurveys = async (surveysData: any): Promise<{
+  message: string
+  imported: number
+  failed: number
+  errors?: Array<{ survey: string, error: string }>
+}> => {
+  const data = await apiClient.post<{
+    message: string
+    imported: number
+    failed: number
+    errors?: Array<{ survey: string, error: string }>
+  }>('/admin/surveys/import', surveysData)
+  return data
+}
+
 // Survey Responses Management
 export const getSurveyResponses = async (surveyId: string, params?: {
   limit?: number

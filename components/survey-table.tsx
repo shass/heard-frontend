@@ -48,7 +48,6 @@ function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
       <td className="px-6 py-4 text-base text-zinc-600">{survey.company}</td>
       <td className="px-6 py-4">
         <div className="text-base font-medium text-zinc-900">{formatReward(survey)}</div>
-        <div className="text-sm text-zinc-500">{survey.responseCount} responses</div>
       </td>
       <td className="px-6 py-4">
         <Button
