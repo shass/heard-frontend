@@ -126,7 +126,7 @@ export const surveyResultsApi = {
 
   // Helper to get survey questions for results processing
   async getSurveyQuestions(surveyId: string): Promise<QuestionWithAnswers[]> {
-    const response = await apiClient.get(`/surveys/${surveyId}/questions`)
+    const response = await apiClient.get(`/surveys/${surveyId}/questions`) as any
     return response.questions || []
   },
 }

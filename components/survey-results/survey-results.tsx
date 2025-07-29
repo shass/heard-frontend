@@ -4,10 +4,9 @@ import React from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Share2, Users, TrendingUp, Clock, Eye, EyeOff } from 'lucide-react'
+import { Users, TrendingUp, Clock, Eye, EyeOff } from 'lucide-react'
 import { useSurveyResultsWithQuestions, useCanViewResults } from '@/hooks/use-survey-clients'
 import { resultsUtils } from '@/lib/api/survey-clients'
 import { QuestionChart } from './question-chart'
@@ -19,21 +18,21 @@ interface SurveyResultsProps {
   surveyCompany?: string
 }
 
-export function SurveyResults({ 
-  surveyId, 
+export function SurveyResults({
+  surveyId,
   surveyName = 'Survey Results',
-  surveyCompany 
+  surveyCompany
 }: SurveyResultsProps) {
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
-  
+
   const { canView, visibilityMode, isLoading: accessLoading } = useCanViewResults(surveyId, token || undefined)
-  const { 
-    results, 
-    questions, 
-    isLoading, 
+  const {
+    results,
+    questions,
+    isLoading,
     error,
-    isError 
+    isError
   } = useSurveyResultsWithQuestions(surveyId, token || undefined)
 
   // Access denied
@@ -93,7 +92,7 @@ export function SurveyResults({
           {visibilityMode && (
             <Badge variant={visibilityMode === 'public' ? 'default' : 'secondary'}>
               <Eye className="w-3 h-3 mr-1" />
-              {visibilityMode === 'public' ? 'Public' : 
+              {visibilityMode === 'public' ? 'Public' :
                visibilityMode === 'link' ? 'Link Access' : 'Private'}
             </Badge>
           )}
@@ -123,7 +122,7 @@ export function SurveyResults({
           <CardContent>
             <div className="text-2xl font-bold">{stats.completedResponses}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.totalResponses > 0 
+              {stats.totalResponses > 0
                 ? Math.round((stats.completedResponses / stats.totalResponses) * 100)
                 : 0}% completion rate
             </p>
@@ -147,7 +146,7 @@ export function SurveyResults({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.averageCompletionTime 
+              {stats.averageCompletionTime
                 ? `${Math.round(stats.averageCompletionTime)}min`
                 : 'N/A'
               }
@@ -160,7 +159,7 @@ export function SurveyResults({
       {stats.completedResponses > 0 ? (
         <div className="space-y-6">
           <h2 className="text-xl font-semibold">Question Results</h2>
-          
+
           {(Array.isArray(questions) ? questions : [])
             .sort((a, b) => (a.order || 0) - (b.order || 0))
             .map((question) => {

@@ -165,7 +165,6 @@ export function useSurveyResultsWithQuestions(surveyId: string, token?: string) 
     queryKey: surveyClientKeys.questions(surveyId),
     queryFn: async () => {
       const data = await surveyResultsApi.getSurveyQuestions(surveyId)
-      console.log('Questions data received:', data)
       // Ensure we always return an array
       return Array.isArray(data) ? data : []
     },
