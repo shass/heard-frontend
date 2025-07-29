@@ -8,7 +8,8 @@ import {
   updateSurvey,
   deleteSurvey,
   toggleSurveyStatus,
-  duplicateSurvey
+  duplicateSurvey,
+  importSurveys
 } from '@/lib/api/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -29,7 +30,11 @@ import {
   Filter,
   Users,
   List,
-  Gift
+  Gift,
+  Upload,
+  FileText,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react'
 import { SurveyForm } from './survey-form'
 import { SurveyResponses } from './survey-responses'
@@ -46,6 +51,13 @@ export function SurveyManagement() {
   const [isResponsesDialogOpen, setIsResponsesDialogOpen] = useState(false)
   const [isWhitelistModalOpen, setIsWhitelistModalOpen] = useState(false)
   const [isRewardLinksModalOpen, setIsRewardLinksModalOpen] = useState(false)
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importResults, setImportResults] = useState<{
+    imported: number
+    failed: number
+    errors?: Array<{ survey: string, error: string }>
+  } | null>(null)
 
   const notifications = useNotifications()
   const queryClient = useQueryClient()
@@ -127,6 +139,21 @@ export function SurveyManagement() {
     }
   })
 
+  const importSurveysMutation = useMutation({
+    mutationFn: importSurveys,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-surveys'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] })
+      setImportResults(data)
+      notifications.success('Import Completed', `Successfully imported ${data.imported} surveys`)
+    },
+    onError: (error: any) => {
+      const errorMessage = error.error?.message || error.message || 'Failed to import surveys'
+      notifications.error('Import Failed', errorMessage)
+      setImportResults(null)
+    }
+  })
+
   const handleCreateSurvey = (data: CreateSurveyRequest | UpdateSurveyRequest) => {
     createSurveyMutation.mutate(data as CreateSurveyRequest)
   }
@@ -150,6 +177,43 @@ export function SurveyManagement() {
     if (newName) {
       duplicateSurveyMutation.mutate({ surveyId, newName })
     }
+  }
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file && file.type === 'application/json') {
+      setImportFile(file)
+      setImportResults(null)
+    } else {
+      notifications.error('Invalid File', 'Please select a valid JSON file')
+    }
+  }
+
+  const handleImport = async () => {
+    if (!importFile) {
+      notifications.error('No File Selected', 'Please select a JSON file to import')
+      return
+    }
+
+    try {
+      const fileContent = await importFile.text()
+      const jsonData = JSON.parse(fileContent)
+      
+      if (!jsonData.surveys || !Array.isArray(jsonData.surveys)) {
+        notifications.error('Invalid Format', 'JSON file must contain a "surveys" array')
+        return
+      }
+
+      importSurveysMutation.mutate(jsonData)
+    } catch (error) {
+      notifications.error('File Error', 'Failed to read or parse the JSON file')
+    }
+  }
+
+  const resetImport = () => {
+    setImportFile(null)
+    setImportResults(null)
+    setIsImportDialogOpen(false)
   }
 
   if (isLoading) {
@@ -198,24 +262,35 @@ export function SurveyManagement() {
           </Select>
         </div>
 
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="w-4 h-4 mr-2" />
-              Create Survey
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create New Survey</DialogTitle>
-            </DialogHeader>
-            <SurveyForm
-              onSubmit={handleCreateSurvey}
-              isLoading={createSurveyMutation.isPending}
-              onCancel={() => setIsCreateDialogOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Upload className="w-4 h-4 mr-2" />
+                Import Surveys
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="w-4 h-4 mr-2" />
+                Create Survey
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Create New Survey</DialogTitle>
+              </DialogHeader>
+              <SurveyForm
+                onSubmit={handleCreateSurvey}
+                isLoading={createSurveyMutation.isPending}
+                onCancel={() => setIsCreateDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Surveys Grid */}
@@ -428,6 +503,152 @@ export function SurveyManagement() {
           setSelectedSurvey(null)
         }}
       />
+
+      {/* Import Surveys Dialog */}
+      <Dialog open={isImportDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          resetImport()
+        }
+        setIsImportDialogOpen(open)
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Import Surveys</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {!importResults ? (
+              <>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Select JSON File
+                    </label>
+                    <input
+                      type="file"
+                      accept=".json"
+                      onChange={handleFileSelect}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                  </div>
+                  
+                  {importFile && (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 rounded-md">
+                      <FileText className="w-4 h-4 text-green-600" />
+                      <span className="text-sm text-green-700">
+                        Selected: {importFile.name}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="p-4 bg-gray-50 rounded-md">
+                    <h4 className="text-sm font-medium mb-2">Expected Format:</h4>
+                    <pre className="text-xs text-gray-600 overflow-x-auto">
+{`{
+  "surveys": [
+    {
+      "name": "Survey Name",
+      "company": "Company Name", 
+      "description": "Description",
+      "detailedDescription": "Detailed description",
+      "criteria": "Criteria",
+      "rewardAmount": 0.01,
+      "rewardToken": "ETH",
+      "heardPointsReward": 50,
+      "questions": [...],
+      "whitelist": [...]
+    }
+  ]
+}`}
+                    </pre>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={resetImport}
+                    disabled={importSurveysMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleImport}
+                    disabled={!importFile || importSurveysMutation.isPending}
+                  >
+                    {importSurveysMutation.isPending ? (
+                      <>
+                        <Spinner size="sm" className="mr-2" />
+                        Importing...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Import Surveys
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <h3 className="text-lg font-medium">Import Results</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-green-50 rounded-md">
+                      <div className="text-2xl font-bold text-green-700">
+                        {importResults.imported}
+                      </div>
+                      <div className="text-sm text-green-600">
+                        Successfully Imported
+                      </div>
+                    </div>
+                    
+                    {importResults.failed > 0 && (
+                      <div className="p-3 bg-red-50 rounded-md">
+                        <div className="text-2xl font-bold text-red-700">
+                          {importResults.failed}
+                        </div>
+                        <div className="text-sm text-red-600">
+                          Failed to Import
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {importResults.errors && importResults.errors.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-red-700">Errors:</h4>
+                      <div className="max-h-40 overflow-y-auto space-y-1">
+                        {importResults.errors.map((error, index) => (
+                          <div key={index} className="p-2 bg-red-50 rounded text-sm">
+                            <div className="font-medium text-red-700">
+                              {error.survey}
+                            </div>
+                            <div className="text-red-600">
+                              {error.error}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button onClick={resetImport}>
+                    Close
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
