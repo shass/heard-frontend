@@ -165,7 +165,7 @@ export function AdminDashboard() {
                         </div>
                         <div className="text-right">
                           <Badge variant="secondary">
-                            {survey.rewardAmount} ETH
+                            {survey.rewardAmount} {survey.rewardToken}
                           </Badge>
                         </div>
                       </div>

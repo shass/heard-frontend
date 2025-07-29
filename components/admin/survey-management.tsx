@@ -237,22 +237,44 @@ export function SurveyManagement() {
             <CardContent className="space-y-4">
               <p className="text-sm text-gray-700 line-clamp-3">{survey.description}</p>
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-500">Responses:</span>
-                  <div className="font-medium">{survey.responseCount}</div>
+              <div className="space-y-3 text-sm">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-gray-500">Responses:</span>
+                    <div className="font-medium">{survey.responseCount}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Reward:</span>
+                    <div className="font-medium">{survey.rewardAmount} {survey.rewardToken}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">HeardPoints:</span>
+                    <div className="font-medium">{survey.heardPointsReward} HP</div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-gray-500">Reward:</span>
-                  <div className="font-medium">{survey.rewardAmount} ETH</div>
-                </div>
-                <div>
-                  <span className="text-gray-500">HeardPoints:</span>
-                  <div className="font-medium">{survey.heardPointsReward} HP</div>
-                </div>
+
                 <div>
                   <span className="text-gray-500">Whitelist:</span>
-                  <div className="font-medium">{survey.whitelistCount || 0} users</div>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="font-medium">{survey.whitelistCount || 0}</span>
+                    <span className="text-gray-400">/</span>
+                    <span className="font-medium text-green-600">{survey.whitelistCompleted || 0}</span>
+                    <span className="text-gray-400">/</span>
+                    <span className="font-medium text-gray-500">{survey.whitelistPending || 0}</span>
+                    <span className="text-xs text-gray-400 ml-1">(total/completed/pending)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-gray-500">Reward Links:</span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="font-medium">{survey.rewardLinksTotal || 0}</span>
+                    <span className="text-gray-400">/</span>
+                    <span className="font-medium text-green-600">{survey.rewardLinksAvailable || 0}</span>
+                    <span className="text-gray-400">/</span>
+                    <span className="font-medium text-gray-500">{survey.rewardLinksUsed || 0}</span>
+                    <span className="text-xs text-gray-400 ml-1">(total/available/used)</span>
+                  </div>
                 </div>
               </div>
 

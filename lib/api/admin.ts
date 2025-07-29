@@ -71,8 +71,6 @@ export const getAdminSurveys = async (params?: {
     }
   })
   
-  console.log('🔍 Admin surveys data received:', data)
-  
   return {
     surveys: data.items || [],
     meta: data.pagination || {
@@ -166,8 +164,6 @@ export const getWhitelistEntries = async (surveyId: string, params?: {
     }
   })
   
-  console.log('🔍 Whitelist data received for survey', surveyId, ':', data)
-  
   return {
     surveyId,
     entries: data.whitelist || [],
@@ -189,8 +185,6 @@ export const getWhitelistEntriesPaged = async (surveyId: string, params?: {
       format: 'detailed'
     }
   })
-  
-  console.log('🔍 Paged whitelist data received for survey', surveyId, ':', data)
   
   return data
 }

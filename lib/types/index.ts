@@ -263,6 +263,7 @@ export interface AdminDashboardStats {
     name: string
     responseCount: number
     rewardAmount: number
+    rewardToken: string
   }>
 }
 
@@ -367,6 +368,11 @@ export interface ImportRewardLinksRequest {
 
 export interface AdminSurveyListItem extends Survey {
   whitelistCount: number
+  whitelistCompleted: number
+  whitelistPending: number
+  rewardLinksTotal: number
+  rewardLinksAvailable: number
+  rewardLinksUsed: number
   eligibleUsers: number
   completionRate: number
   averageReward: number
