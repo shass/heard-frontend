@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { RainbowKitProvider, getDefaultConfig } from '@rainbow-me/rainbowkit'
-import { WagmiProvider, type Config } from 'wagmi'
+import { WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { mainnet, polygon, bsc } from 'wagmi/chains'
 import { http } from 'wagmi'
@@ -10,10 +10,12 @@ import { env } from '@/lib/env'
 import '@rainbow-me/rainbowkit/styles.css'
 
 // Web3 configuration optimized for mobile
-const config: Config = getDefaultConfig({
+const config = getDefaultConfig({
   appName: env.APP_NAME,
-  projectId: env.WALLETCONNECT_PROJECT_ID || 'demo',
-  chains: [mainnet, polygon, bsc] as const,
+  projectId: typeof window !== 'undefined' && typeof indexedDB !== 'undefined' 
+    ? env.WALLETCONNECT_PROJECT_ID || 'demo'
+    : 'demo',
+  chains: [mainnet, polygon, bsc],
   ssr: true,
   batch: {
     multicall: true,
@@ -23,7 +25,7 @@ const config: Config = getDefaultConfig({
     [polygon.id]: http(),
     [bsc.id]: http(),
   },
-})
+}) as any
 
 // Create a client for React Query with aggressive caching settings
 const queryClient = new QueryClient({

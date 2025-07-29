@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -57,6 +58,7 @@ interface WhitelistModalProps {
 
 export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [textareaAddresses, setTextareaAddresses] = useState('')
   const [replaceMode, setReplaceMode] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [activeTab, setActiveTab] = useState('import')
@@ -96,6 +98,7 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
   useEffect(() => {
     if (isOpen) {
       setSelectedFile(null)
+      setTextareaAddresses('')
       setReplaceMode(false)
       setIsImporting(false)
       setActiveTab('import')
@@ -121,8 +124,8 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
       })
     },
     onSuccess: (data) => {
-      const { addedCount, skippedCount, mode } = data
-      const action = mode === 'replaced' ? 'replaced' : 'imported'
+      const { addedCount, skippedCount } = data
+      const action = replaceMode ? 'replaced' : 'imported'
       
       notifications.success(
         'Import Complete',
@@ -131,6 +134,7 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
       
       setIsImporting(false)
       setSelectedFile(null)
+      setTextareaAddresses('')
       // Invalidate all whitelist queries
       queryClient.invalidateQueries({ queryKey: ['whitelist-simple'] })
       queryClient.invalidateQueries({ queryKey: ['whitelist-paged'] })
@@ -195,42 +199,70 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
     }
   }
 
+  const handleClearTextarea = () => {
+    setTextareaAddresses('')
+  }
+
   const handleImport = async () => {
-    if (!selectedFile || !survey) return
+    if (!survey) return
+    
+    // Check if we have either a file or textarea content
+    if (!selectedFile && !textareaAddresses.trim()) {
+      notifications.error('No data to import', 'Please select a file or enter addresses in the text area')
+      return
+    }
     
     setIsImporting(true)
     
     try {
-      const text = await selectedFile.text()
-      const addresses = text
-        .split('\n')
-        .map(addr => addr.trim())
-        .filter(addr => addr.length > 0)
+      let allAddresses: string[] = []
       
-      if (addresses.length === 0) {
-        notifications.error('Empty file', 'No addresses found in the selected file')
+      // Get addresses from file if selected
+      if (selectedFile) {
+        const text = await selectedFile.text()
+        const fileAddresses = text
+          .split('\n')
+          .map(addr => addr.trim())
+          .filter(addr => addr.length > 0)
+        allAddresses = [...allAddresses, ...fileAddresses]
+      }
+      
+      // Get addresses from textarea if not empty
+      if (textareaAddresses.trim()) {
+        const textAddresses = textareaAddresses
+          .split('\n')
+          .map(addr => addr.trim())
+          .filter(addr => addr.length > 0)
+        allAddresses = [...allAddresses, ...textAddresses]
+      }
+      
+      // Remove duplicates
+      allAddresses = [...new Set(allAddresses)]
+      
+      if (allAddresses.length === 0) {
+        notifications.error('No addresses found', 'No valid addresses found to import')
         setIsImporting(false)
         return
       }
       
       // Basic validation for wallet addresses
-      const invalidAddresses = addresses.filter(addr => 
+      const invalidAddresses = allAddresses.filter(addr => 
         !addr.match(/^0x[a-fA-F0-9]{40}$/i)
       )
       
       if (invalidAddresses.length > 0) {
         notifications.error(
           'Invalid addresses found',
-          `Found ${invalidAddresses.length} invalid address(es). Please check the file format.`
+          `Found ${invalidAddresses.length} invalid address(es). Please check the format.`
         )
         setIsImporting(false)
         return
       }
       
       // Process the import
-      await importWhitelistMutation.mutateAsync({ addresses, replaceMode })
+      await importWhitelistMutation.mutateAsync({ addresses: allAddresses, replaceMode })
     } catch (error) {
-      notifications.error('File read error', 'Failed to read the selected file')
+      notifications.error('Import error', 'Failed to process the import')
       setIsImporting(false)
     }
   }
@@ -337,8 +369,48 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
                   />
                 </div>
 
+                {/* OR Divider */}
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 border-t border-gray-300"></div>
+                  <span className="text-sm text-gray-500 bg-white px-3">OR</span>
+                  <div className="flex-1 border-t border-gray-300"></div>
+                </div>
+
+                {/* Textarea Section */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Paste addresses (one per line)
+                  </label>
+                  <div className="relative">
+                    <Textarea
+                      value={textareaAddresses}
+                      onChange={(e) => setTextareaAddresses(e.target.value)}
+                      placeholder="0x1234567890123456789012345678901234567890&#10;0x0987654321098765432109876543210987654321&#10;0x..."
+                      rows={6}
+                      disabled={isImporting}
+                      className="resize-none font-mono text-sm"
+                    />
+                    {textareaAddresses.trim() && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearTextarea}
+                        disabled={isImporting}
+                        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                  {textareaAddresses.trim() && (
+                    <div className="text-xs text-gray-500">
+                      {textareaAddresses.split('\n').filter(addr => addr.trim().length > 0).length} addresses entered
+                    </div>
+                  )}
+                </div>
+
                 {/* Replace/Append Mode Toggle */}
-                {selectedFile && (
+                {(selectedFile || textareaAddresses.trim()) && (
                   <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <Switch
                       id="replace-mode"
@@ -509,7 +581,7 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
                 </Button>
                 <Button
                   onClick={handleImport}
-                  disabled={!selectedFile || isImporting}
+                  disabled={(!selectedFile && !textareaAddresses.trim()) || isImporting}
                 >
                   {isImporting ? (
                     <Spinner size="sm" className="mr-2" />
