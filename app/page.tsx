@@ -6,7 +6,6 @@ import { HeroSection } from "@/components/hero-section"
 import { SurveyTable } from "@/components/survey-table"
 import { Footer } from "@/components/footer"
 import { CreateSurveyModal } from "@/components/ui/create-survey-modal"
-import { HomePageWrapper } from "@/components/cache-warming-wrapper"
 import { useRouter } from "next/navigation"
 import type { Survey } from "@/lib/types"
 
@@ -23,7 +22,7 @@ export default function Home() {
   }
 
   return (
-    <HomePageWrapper>
+    <>
       <div className="min-h-screen bg-white flex flex-col">
         <Header onCreateSurvey={handleCreateSurvey} />
 
@@ -35,10 +34,10 @@ export default function Home() {
         <Footer onCreateSurvey={handleCreateSurvey} />
       </div>
 
-      <CreateSurveyModal 
-        isOpen={showCreateModal} 
-        onClose={() => setShowCreateModal(false)} 
+      <CreateSurveyModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
       />
-    </HomePageWrapper>
+    </>
   )
 }

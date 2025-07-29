@@ -4,7 +4,6 @@ import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Button } from "@/components/ui/button"
 import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
 import { useAuthActions } from "@/components/providers/auth-provider"
-import { useIsAuthenticated, useUser, useAuthLoading } from "@/lib/store"
 import { useAccount, useDisconnect } from 'wagmi'
 import { useNotifications } from "@/components/ui/notifications"
 import { formatAddress } from "@/lib/web3"
@@ -17,9 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function AuthSection() {
-  const { logout, isWaitingForSignature, isMobileAndroid, checkAuth } = useAuthActions()
-  const isAuthenticated = useIsAuthenticated()
-  const user = useUser()
+  const { logout, isAuthenticated, user, isLoading, platform } = useAuthActions()
   const { isConnected, address } = useAccount()
   const { disconnect } = useDisconnect()
   const { openConnectModal } = useConnectModal()
@@ -107,7 +104,7 @@ export function AuthSection() {
             </svg>
           </div>
           <span className="text-sm font-medium text-zinc-700">
-            {isWaitingForSignature ? 'Signing...' : (address ? formatAddress(address) : 'Wallet')}
+            {isLoading ? 'Signing...' : (address ? formatAddress(address) : 'Wallet')}
           </span>
           <ChevronDown className="w-4 h-4 text-zinc-500" />
         </Button>

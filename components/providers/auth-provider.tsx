@@ -1,26 +1,26 @@
 'use client'
 
 import React, { createContext, useContext } from 'react'
-import { useAccount } from 'wagmi'
 import { useAuthCleanup } from '@/hooks/use-auth-cleanup'
-import { useMobileWallet } from '@/hooks/use-mobile-wallet'
 import { useAuthSession } from '@/hooks/use-auth-session'
-import { useAuthLogin } from '@/hooks/use-auth-login'
-import { useAuthLogout } from '@/hooks/use-auth-logout'
 import { useAuthEffects } from '@/hooks/use-auth-effects'
+import { useAuth } from '@/hooks/use-auth'
+import { useAccount } from 'wagmi'
 
-// Создаем контекст для auth actions
+// Simplified auth context
 interface AuthContextType {
   login: () => Promise<void>
   logout: () => Promise<void>
   checkAuth: () => Promise<void>
-  isWaitingForSignature: boolean
-  isMobileAndroid: boolean
-  isMobileIOS: boolean
-  isMobile: boolean
-  platformInfo: {
-    walletType: 'metamask' | 'trust' | 'coinbase' | 'unknown'
-    connectionMethod: 'injected' | 'walletconnect' | 'unknown'
+  isAuthenticated: boolean
+  user: any
+  isLoading: boolean
+  error: string | null
+  platform: {
+    isMobile: boolean
+    isIOS: boolean
+    isAndroid: boolean
+    isDesktop: boolean
   }
 }
 
@@ -40,14 +40,8 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const { address, isConnected } = useAccount()
-  
-  // Mobile wallet handling
-  const mobileWallet = useMobileWallet()
-  
-  // Authentication hooks
+  const auth = useAuth()
   const { checkAuth } = useAuthSession()
-  const { login } = useAuthLogin()
-  const { logout } = useAuthLogout()
   
   // Enable global authentication cleanup
   useAuthCleanup()
@@ -55,22 +49,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Handle all authentication effects
   useAuthEffects({ isConnected, address })
 
-  // Wrapper functions that pass wallet state to hooks
-  const handleLogin = () => login(isConnected, address)
   const handleCheckAuth = () => checkAuth(isConnected, address)
 
   const contextValue: AuthContextType = {
-    login: handleLogin,
-    logout,
+    login: auth.login,
+    logout: auth.logout,
     checkAuth: handleCheckAuth,
-    isWaitingForSignature: mobileWallet.isWaitingForSignature,
-    isMobileAndroid: mobileWallet.isAndroid,
-    isMobileIOS: mobileWallet.isIOS,
-    isMobile: mobileWallet.isMobile,
-    platformInfo: {
-      walletType: mobileWallet.platformInfo.walletType,
-      connectionMethod: mobileWallet.platformInfo.connectionMethod,
-    }
+    isAuthenticated: auth.isAuthenticated,
+    user: auth.user,
+    isLoading: auth.isLoading,
+    error: auth.error,
+    platform: auth.platform,
   }
 
   return (

@@ -1,23 +1,27 @@
 'use client'
 
+import React from 'react';
 import { RainbowKitProvider, getDefaultConfig } from '@rainbow-me/rainbowkit'
-import { WagmiProvider } from 'wagmi'
+import { WagmiProvider, type Config } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { mainnet, polygon, bsc } from 'wagmi/chains'
+import { http } from 'wagmi'
 import { env } from '@/lib/env'
-import { createCacheWarmer } from '@/lib/cache-warmer'
-import React, { useEffect, useState } from 'react';
-
 import '@rainbow-me/rainbowkit/styles.css'
 
-// Web3 configuration
-const config = getDefaultConfig({
+// Web3 configuration optimized for mobile
+const config: Config = getDefaultConfig({
   appName: env.APP_NAME,
-  projectId: env.WALLETCONNECT_PROJECT_ID || 'demo', // Fallback for development
-  chains: [mainnet, polygon, bsc],
+  projectId: env.WALLETCONNECT_PROJECT_ID || 'demo',
+  chains: [mainnet, polygon, bsc] as const,
   ssr: true,
   batch: {
     multicall: true,
+  },
+  transports: {
+    [mainnet.id]: http(),
+    [polygon.id]: http(),
+    [bsc.id]: http(),
   },
 })
 
@@ -55,64 +59,21 @@ const queryClient = new QueryClient({
       networkMode: 'online',
     },
   },
-  logger: {
-    log: () => {}, // Suppress logs in development
-    warn: () => {},
-    error: () => {},
-  },
 })
-
-// Initialize cache warmer
-const cacheWarmer = createCacheWarmer(queryClient)
 
 interface Web3ProviderProps {
   children: React.ReactNode
 }
 
 export function Web3Provider({ children }: Web3ProviderProps) {
-  const [cacheWarmed, setCacheWarmed] = useState(false)
-
-  // Warm cache on app initialization
-  useEffect(() => {
-    let mounted = true
-
-    const warmCache = async () => {
-      try {
-        // Small delay to ensure React is ready, but not too long
-        await new Promise(resolve => setTimeout(resolve, 50))
-        
-        if (mounted) {
-          // Start cache warming in background
-          cacheWarmer.warmCache()
-            .then(() => {
-              if (mounted) setCacheWarmed(true)
-            })
-            .catch((error) => {
-              console.warn('Cache warming failed:', error)
-              if (mounted) setCacheWarmed(true) // Still mark as complete
-            })
-        }
-      } catch (error) {
-        console.warn('Cache warming setup failed:', error)
-        if (mounted) setCacheWarmed(true)
-      }
-    }
-
-    // Start immediately, don't wait
-    warmCache()
-
-    return () => {
-      mounted = false
-    }
-  }, [])
-
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           modalSize="compact"
           showRecentTransactions={true}
-          coolMode={true}
+          coolMode={false}
+          locale="en-US"
         >
           {children}
         </RainbowKitProvider>
@@ -121,5 +82,5 @@ export function Web3Provider({ children }: Web3ProviderProps) {
   )
 }
 
-// Export cache warmer instance for use in other components
-export { cacheWarmer, queryClient }
+// Export query client for use in other components
+export { queryClient }

@@ -4,10 +4,8 @@ import { use, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { SurveyPageWrapper } from "@/components/cache-warming-wrapper"
 import { useSurvey, useSurveyEligibility } from "@/hooks/use-surveys"
 import { useUserReward } from "@/hooks/use-reward"
-import { useUser, useIsAuthenticated } from "@/lib/store"
 import { useAuthActions } from "@/components/providers/auth-provider"
 import { useAccount } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
@@ -29,13 +27,10 @@ interface SurveyInfoPageProps {
 
 export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
-  const user = useUser()
-  const isAuthenticated = useIsAuthenticated()
+  const { login, isAuthenticated, user, isLoading: isAuthLoading } = useAuthActions()
   const { isConnected, address } = useAccount()
   const { openConnectModal } = useConnectModal()
-  const { login } = useAuthActions()
   const { id } = use(params)
-  const [isAuthenticating, setIsAuthenticating] = useState(false)
 
   const { data: survey, isLoading, error } = useSurvey(id)
   const { data: eligibility } = useSurveyEligibility(id, address)
@@ -53,18 +48,14 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
   const handleAuthenticate = async () => {
     try {
-      setIsAuthenticating(true)
       await login()
 
       if (eligibility?.isEligible) {
         router.push(`/surveys/${id}`)
-      } else {
-        setIsAuthenticating(false)
       }
 
     } catch (error) {
       console.error('Authentication failed:', error)
-      setIsAuthenticating(false)
     }
   }
 
@@ -148,10 +139,10 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
     if (!isAuthenticated) {
       return {
-        text: isAuthenticating ? "Authenticating..." : "Authenticate & Start Survey",
-        disabled: isAuthenticating,
+        text: isAuthLoading ? "Authenticating..." : "Authenticate & Start Survey",
+        disabled: isAuthLoading,
         handler: handleAuthenticate,
-        loading: isAuthenticating
+        loading: isAuthLoading
       }
     }
 
@@ -161,43 +152,41 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const buttonState = getButtonState()
 
   return (
-    <SurveyPageWrapper surveyId={id}>
-      <div className="min-h-screen bg-white flex flex-col">
-        <Header />
+    <div className="min-h-screen bg-white flex flex-col">
+      <Header />
 
-        <main className="flex-1 py-16">
-          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-            <div className="space-y-8">
-              {/* Header with Back Button */}
-              <SurveyHeader
-                survey={survey}
-                onBack={handleBackToSurveys}
-                variant="info"
+      <main className="flex-1 py-16">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="space-y-8">
+            {/* Header with Back Button */}
+            <SurveyHeader
+              survey={survey}
+              onBack={handleBackToSurveys}
+              variant="info"
+            />
+
+            {/* Survey Stats */}
+            <SurveyStats survey={survey} />
+
+            {/* Survey Information */}
+            <SurveyInfo survey={survey} eligibility={eligibility} />
+
+            {/* Reward Section */}
+            {hasCompleted && userReward?.claimLink && (
+              <SurveyReward
+                userReward={userReward}
+                onClaimReward={handleClaimReward}
+                onCopyClaimLink={handleCopyClaimLink}
               />
+            )}
 
-              {/* Survey Stats */}
-              <SurveyStats survey={survey} />
-
-              {/* Survey Information */}
-              <SurveyInfo survey={survey} eligibility={eligibility} />
-
-              {/* Reward Section */}
-              {hasCompleted && userReward?.claimLink && (
-                <SurveyReward
-                  userReward={userReward}
-                  onClaimReward={handleClaimReward}
-                  onCopyClaimLink={handleCopyClaimLink}
-                />
-              )}
-
-              {/* Action Button */}
-              <SurveyActionButton buttonState={buttonState} />
-            </div>
+            {/* Action Button */}
+            <SurveyActionButton buttonState={buttonState} />
           </div>
-        </main>
+        </div>
+      </main>
 
-        <Footer />
-      </div>
-    </SurveyPageWrapper>
+      <Footer />
+    </div>
   )
 }
