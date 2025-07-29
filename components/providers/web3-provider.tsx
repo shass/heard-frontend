@@ -9,12 +9,31 @@ import { http } from 'wagmi'
 import { env } from '@/lib/env'
 import '@rainbow-me/rainbowkit/styles.css'
 
+// Polyfill for indexedDB in SSR environment
+if (typeof global !== 'undefined' && typeof global.indexedDB === 'undefined') {
+  global.indexedDB = {
+    open: () => ({
+      result: {
+        transaction: () => ({
+          objectStore: () => ({
+            get: () => ({ onsuccess: null, onerror: null }),
+            put: () => ({ onsuccess: null, onerror: null }),
+            delete: () => ({ onsuccess: null, onerror: null })
+          })
+        })
+      },
+      onsuccess: null,
+      onerror: null,
+      onupgradeneeded: null
+    }),
+    deleteDatabase: () => ({ onsuccess: null, onerror: null })
+  } as any
+}
+
 // Web3 configuration optimized for mobile
 const config = getDefaultConfig({
   appName: env.APP_NAME,
-  projectId: typeof window !== 'undefined' && typeof indexedDB !== 'undefined' 
-    ? env.WALLETCONNECT_PROJECT_ID || 'demo'
-    : 'demo',
+  projectId: env.WALLETCONNECT_PROJECT_ID || 'demo',
   chains: [mainnet, polygon, bsc],
   ssr: true,
   batch: {
