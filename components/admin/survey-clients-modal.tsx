@@ -164,6 +164,14 @@ export function SurveyClientsModal({ survey, isOpen, onClose }: SurveyClientsMod
     window.open(url, '_blank')
   }
 
+  const getResultsUrl = () => {
+    if (!survey?.id) return ''
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/surveys/${survey.id}/results`
+    }
+    return `/surveys/${survey.id}/results`
+  }
+
   if (!survey) return null
 
   return (
@@ -385,6 +393,39 @@ export function SurveyClientsModal({ survey, isOpen, onClose }: SurveyClientsMod
                       </div>
                     </div>
                   ) : null}
+                </CardContent>
+              </Card>
+
+              {/* Results Link Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Survey Results Link</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="text-sm text-muted-foreground">
+                      Direct link to view survey results
+                    </div>
+                    <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                      <code className="flex-1 text-sm font-mono break-all">
+                        {getResultsUrl()}
+                      </code>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(getResultsUrl(), 'Results link')}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={openResults}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
