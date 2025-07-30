@@ -4,14 +4,14 @@ import React from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select'
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -20,22 +20,22 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  Eye, 
-  EyeOff, 
-  Globe, 
-  Link, 
-  Lock, 
-  Share2, 
+import {
+  Eye,
+  EyeOff,
+  Globe,
+  Link,
+  Lock,
+  Share2,
   Copy,
   Settings,
   Info
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
-import { 
-  useSurveyVisibility, 
-  useUpdateSurveyVisibility, 
-  useGenerateShareLink 
+import {
+  useSurveyVisibility,
+  useUpdateSurveyVisibility,
+  useGenerateShareLink
 } from '@/hooks/use-survey-clients'
 import { toast } from 'sonner'
 
@@ -46,7 +46,7 @@ interface VisibilityManagerProps {
 export function VisibilityManager({ surveyId }: VisibilityManagerProps) {
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
-  
+
   const { data: visibility, isLoading } = useSurveyVisibility(surveyId)
   const updateVisibility = useUpdateSurveyVisibility()
   const generateLink = useGenerateShareLink()
@@ -86,6 +86,13 @@ export function VisibilityManager({ surveyId }: VisibilityManagerProps) {
     }
   }
 
+  const getResultsUrl = () => {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/surveys/${surveyId}/results`
+    }
+    return `/surveys/${surveyId}/results`
+  }
+
   const getVisibilityIcon = (mode: string) => {
     switch (mode) {
       case 'public': return <Globe className="h-4 w-4" />
@@ -96,11 +103,11 @@ export function VisibilityManager({ surveyId }: VisibilityManagerProps) {
 
   const getVisibilityDescription = (mode: string) => {
     switch (mode) {
-      case 'public': 
+      case 'public':
         return 'Anyone can view the survey results without authentication'
-      case 'link': 
+      case 'link':
         return 'Results can be accessed via a special shareable link'
-      default: 
+      default:
         return 'Only administrators and survey clients can view results'
     }
   }
@@ -144,7 +151,7 @@ export function VisibilityManager({ surveyId }: VisibilityManagerProps) {
                   Choose who can view the survey results
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-4">
                 <Alert>
                   <Info className="h-4 w-4" />
@@ -155,7 +162,7 @@ export function VisibilityManager({ surveyId }: VisibilityManagerProps) {
 
                 <div className="space-y-3">
                   {/* Private Option */}
-                  <div 
+                  <div
                     className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                       visibility.visibilityMode === 'private' 
                         ? 'border-primary bg-primary/5' 
@@ -175,7 +182,7 @@ export function VisibilityManager({ surveyId }: VisibilityManagerProps) {
                   </div>
 
                   {/* Public Option */}
-                  <div 
+                  <div
                     className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                       visibility.visibilityMode === 'public' 
                         ? 'border-primary bg-primary/5' 
@@ -195,7 +202,7 @@ export function VisibilityManager({ surveyId }: VisibilityManagerProps) {
                   </div>
 
                   {/* Link Option */}
-                  <div 
+                  <div
                     className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                       visibility.visibilityMode === 'link' 
                         ? 'border-primary bg-primary/5' 
@@ -217,6 +224,25 @@ export function VisibilityManager({ surveyId }: VisibilityManagerProps) {
               </div>
             </DialogContent>
           </Dialog>
+        </div>
+
+        {/* Results Link Section */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium">Survey Results Link</h4>
+          </div>
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+            <code className="flex-1 text-sm font-mono truncate">
+              {getResultsUrl()}
+            </code>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => copyToClipboard(getResultsUrl())}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Share Link Section */}
