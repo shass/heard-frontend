@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { useSurveyQuestions, useStartSurvey } from "@/hooks/use-surveys"
 import { useSurveyResponseState, useAnswerValidation } from "@/hooks/use-survey-response"
 import { useIsAuthenticated } from "@/lib/store"
@@ -31,6 +31,8 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isStarting, setIsStarting] = useState(false)
   const [isCheckingProgress, setIsCheckingProgress] = useState(false)
+  const [isSubmittingFinalSurvey, setIsSubmittingFinalSurvey] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
   const hasStarted = useRef(false)
   const hasCheckedProgress = useRef(false)
 
@@ -62,7 +64,12 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
   })
 
   // Response state management (only after we have a responseId)
-  const responseState = useSurveyResponseState(responseId || null)
+  // Disable progress and response queries since we manage state locally
+  const responseState = useSurveyResponseState(responseId || null, {
+    enableProgress: false,
+    enableResponse: false
+  })
+
 
   // Answer validation
   const { validateRequired, validateSingleChoice } = useAnswerValidation()
@@ -80,6 +87,8 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
       setSaveStatus('idle')
       setIsStarting(false)
       setIsCheckingProgress(false)
+      setIsSubmittingFinalSurvey(false)
+      setIsRedirecting(false)
       hasStarted.current = false
       hasCheckedProgress.current = false
       setCurrentQuestionIndex(0)
@@ -94,6 +103,13 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
 
       surveyApi.getUserSurveyProgress(survey.id)
         .then((progressData) => {
+          if (progressData.hasCompletedResponse) {
+            // User has already completed this survey, redirect to results
+            notifications?.info('Survey already completed', 'Redirecting to your results...')
+            onSubmit() // This will redirect to reward page
+            return
+          }
+          
           if (progressData.hasIncompleteResponse && progressData.progress) {
             // User has an incomplete response, resume from where they left off
             setResponseId(progressData.progress.responseId)
@@ -156,6 +172,12 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
   const handleNext = async () => {
     if (!currentQuestion || !responseId) return
 
+    // Check if this is the last question and set blocking state immediately
+    const isLastQuestion = currentQuestionIndex === questionsArray.length - 1
+    if (isLastQuestion) {
+      setIsSubmittingFinalSurvey(true)
+    }
+
     // Validate current answer
     const selectedAnswers = answers[currentQuestion.id] || []
     const requiredValidation = validateRequired(currentQuestion, selectedAnswers)
@@ -163,11 +185,13 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
 
     if (!requiredValidation.isValid) {
       notifications.error('Answer required', requiredValidation.error!)
+      if (isLastQuestion) setIsSubmittingFinalSurvey(false) // Reset if validation failed
       return
     }
 
     if (!singleChoiceValidation.isValid) {
       notifications.error('Invalid selection', singleChoiceValidation.error!)
+      if (isLastQuestion) setIsSubmittingFinalSurvey(false) // Reset if validation failed
       return
     }
 
@@ -187,16 +211,26 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
       if (currentQuestionIndex < questionsArray.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1)
       } else {
-        // Submit completed survey
+        // Submit completed survey - blocking state already set at the beginning
         console.log('Submitting completed survey with responseId:', responseId)
-        await responseState.submitSurvey({ responseId })
-        console.log('Survey submitted successfully')
-        onSubmit(responseId)
+        try {
+          await responseState.submitSurvey({ responseId })
+          console.log('Survey submitted successfully')
+          setIsRedirecting(true) // Keep UI blocked during redirect
+          onSubmit(responseId)
+        } finally {
+          // Don't clear the loading state here - let it persist until redirect completes
+          // setIsSubmittingFinalSurvey(false) - removed
+        }
       }
     } catch (error: any) {
       setSaveStatus('error')
       setTimeout(() => setSaveStatus('idle'), 3000)
       notifications.error('Failed to save answer', error.message)
+      // Reset final survey state if there was an error
+      if (isLastQuestion) {
+        setIsSubmittingFinalSurvey(false)
+      }
     }
   }
 
@@ -229,6 +263,10 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
     return <SurveyLoadingState message="Starting survey..." />
   }
 
+  // Check if we should show overlay instead of replacing content
+  const shouldShowOverlay = isSubmittingFinalSurvey || responseState.isSubmittingSurvey || isRedirecting
+  const overlayMessage = isRedirecting ? "Redirecting to results..." : "Submitting survey..."
+
   if (questionsError || !questionsArray.length) {
     const errorMessage = questionsError instanceof Error
       ? questionsError.message
@@ -247,7 +285,7 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
   }
 
   return (
-    <section className="w-full py-16">
+    <section className="w-full py-16 relative">
       <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
         <SurveyHeader
           survey={survey}
@@ -277,6 +315,16 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
           onNext={handleNext}
         />
       </div>
+
+      {/* Loading overlay */}
+      {shouldShowOverlay && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-lg font-medium text-gray-900">{overlayMessage}</p>
+          </div>
+        </div>
+      )}
     </section>
   )
 }

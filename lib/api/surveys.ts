@@ -158,6 +158,7 @@ export class SurveyApi {
    */
   async getUserSurveyProgress(id: string): Promise<{
     hasIncompleteResponse: boolean
+    hasCompletedResponse?: boolean
     progress?: {
       responseId: string
       currentQuestionOrder: number
@@ -172,6 +173,7 @@ export class SurveyApi {
   }> {
     return await apiClient.get<{
       hasIncompleteResponse: boolean
+      hasCompletedResponse?: boolean
       progress?: {
         responseId: string
         currentQuestionOrder: number

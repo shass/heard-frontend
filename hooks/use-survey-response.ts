@@ -41,9 +41,9 @@ export function useSurveyProgress(responseId: string) {
     queryKey: responseKeys.progress(responseId),
     queryFn: () => responseApi.getProgress(responseId),
     enabled: !!responseId && isAuthenticated,
-    staleTime: 10 * 1000, // 10 seconds (real-time progress)
-    gcTime: 2 * 60 * 1000, // 2 minutes
-    refetchInterval: 30 * 1000, // Refetch every 30 seconds during survey
+    staleTime: 5 * 60 * 1000, // 5 minutes (manual refresh only)
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    // Removed refetchInterval - progress is managed locally in survey page
   })
 }
 
@@ -72,16 +72,11 @@ export function useSubmitAnswer() {
   return useMutation({
     mutationFn: (request: SubmitAnswerRequest) => responseApi.submitAnswer(request),
     onSuccess: (data, variables) => {
-      // Update progress cache
-      queryClient.invalidateQueries({ 
-        queryKey: responseKeys.progress(variables.responseId) 
-      })
-      
-      // Update response cache
+      // Progress is managed locally in survey page, no need to refetch constantly
+      // Only invalidate response details if needed
       queryClient.invalidateQueries({ 
         queryKey: responseKeys.detail(variables.responseId) 
       })
-      
     },
     onError: (error: any) => {
       addNotification({
@@ -182,7 +177,8 @@ export function useAnswerValidation() {
 /**
  * Hook to manage survey response state
  */
-export function useSurveyResponseState(responseId: string | null) {
+export function useSurveyResponseState(responseId: string | null, options: { enableProgress?: boolean, enableResponse?: boolean } = {}) {
+  const { enableProgress = false, enableResponse = true } = options
   const isAuthenticated = useIsAuthenticated()
   const queryClient = useQueryClient()
   
@@ -194,8 +190,20 @@ export function useSurveyResponseState(responseId: string | null) {
     }
   }, [isAuthenticated, responseId, queryClient])
   
-  const { data: response, isLoading: responseLoading } = useSurveyResponse(responseId || '')
-  const { data: progress, isLoading: progressLoading } = useSurveyProgress(responseId || '')
+  const { data: response, isLoading: responseLoading } = useQuery({
+    queryKey: responseKeys.detail(responseId || ''),
+    queryFn: () => responseApi.getResponse(responseId || ''),
+    enabled: !!responseId && isAuthenticated && enableResponse,
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
+  })
+  const { data: progress, isLoading: progressLoading } = useQuery({
+    queryKey: responseKeys.progress(responseId || ''),
+    queryFn: () => responseApi.getProgress(responseId || ''),
+    enabled: !!responseId && isAuthenticated && enableProgress,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  })
   const { data: canContinue } = useCanContinueSurvey(responseId || '')
   
   const submitAnswer = useSubmitAnswer()
