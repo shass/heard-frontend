@@ -150,3 +150,17 @@ h2 {
   }
 }
 
+/* Fix z-index for toasts/alerts to appear above modals */
+[data-sonner-toaster] {
+  z-index: 9999 !important;
+}
+
+[data-sonner-toast] {
+  z-index: 9999 !important;
+}
+
+/* Ensure Radix toast is also above modals */
+[data-radix-toast-viewport] {
+  z-index: 9999 !important;
+}
+

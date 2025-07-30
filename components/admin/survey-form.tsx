@@ -48,7 +48,6 @@ const surveySchema = z.object({
   rewardToken: z.string().min(1, 'Reward token is required'),
   heardPointsReward: z.number().min(0, 'HeardPoints reward must be positive'),
   questions: z.array(questionSchema).min(1, 'At least 1 question is required'),
-  whitelist: z.array(z.string()).optional(),
   isActive: z.boolean().optional()
 })
 
@@ -62,7 +61,6 @@ interface SurveyFormProps {
 }
 
 export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyFormProps) {
-  const [whitelistText, setWhitelistText] = useState('')
   const [loadingQuestions, setLoadingQuestions] = useState(false)
   
   const {
@@ -84,7 +82,6 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
       rewardToken: survey.rewardToken,
       heardPointsReward: survey.heardPointsReward,
       questions: [],
-      whitelist: [],
       isActive: survey.isActive
     } : {
       name: '',
@@ -105,7 +102,6 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
         ],
         isRequired: true
       }],
-      whitelist: [],
       isActive: true
     }
   })
@@ -145,14 +141,8 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
   }, [survey?.id, setValue])
 
   const handleFormSubmit = (data: SurveyFormData) => {
-    const whitelist = whitelistText
-      .split('\n')
-      .map(addr => addr.trim())
-      .filter(addr => addr.length > 0)
-
     const submitData = {
       ...data,
-      whitelist: whitelist.length > 0 ? whitelist : undefined,
       ...(survey ? { id: survey.id } : {})
     }
 
@@ -335,27 +325,6 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
         </CardContent>
       </Card>
 
-      {/* Whitelist */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Whitelist (Optional)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div>
-            <Label htmlFor="whitelist">Wallet Addresses</Label>
-            <Textarea
-              id="whitelist"
-              value={whitelistText}
-              onChange={(e) => setWhitelistText(e.target.value)}
-              placeholder="Enter wallet addresses, one per line"
-              rows={6}
-            />
-            <p className="text-sm text-gray-600 mt-2">
-              Leave empty to allow all users. Enter one wallet address per line.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Settings */}
       {survey && (
