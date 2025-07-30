@@ -5,6 +5,7 @@ import { useSurveyQuestions, useStartSurvey } from "@/hooks/use-surveys"
 import { useSurveyResponseState, useAnswerValidation } from "@/hooks/use-survey-response"
 import { useIsAuthenticated } from "@/lib/store"
 import { useNotifications } from "@/components/ui/notifications"
+import { surveyApi } from "@/lib/api/surveys"
 import {
   SurveyHeader,
   SurveyProgressBar,
@@ -29,7 +30,9 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
   const [responseId, setResponseId] = useState<string | null>(null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isStarting, setIsStarting] = useState(false)
+  const [isCheckingProgress, setIsCheckingProgress] = useState(false)
   const hasStarted = useRef(false)
+  const hasCheckedProgress = useRef(false)
 
   const isAuthenticated = useIsAuthenticated()
   const notifications = useNotifications()
@@ -76,30 +79,56 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
       setResponseId(null)
       setSaveStatus('idle')
       setIsStarting(false)
+      setIsCheckingProgress(false)
       hasStarted.current = false
+      hasCheckedProgress.current = false
       setCurrentQuestionIndex(0)
     }
   }, [isAuthenticated])
 
-  // Start survey when component mounts or authentication is restored
+  // Check for incomplete survey responses when authenticated
   useEffect(() => {
-    if (isAuthenticated && !responseId && !isStarting && !startSurvey.isPending && !hasStarted.current) {
+    if (isAuthenticated && !hasCheckedProgress.current && !responseId && !isCheckingProgress) {
+      hasCheckedProgress.current = true
+      setIsCheckingProgress(true)
+
+      surveyApi.getUserSurveyProgress(survey.id)
+        .then((progressData) => {
+          if (progressData.hasIncompleteResponse && progressData.progress) {
+            // User has an incomplete response, resume from where they left off
+            setResponseId(progressData.progress.responseId)
+            setCurrentQuestionIndex(progressData.progress.currentQuestionOrder - 1) // Convert to 0-based index
+
+            // Load previous answers
+            if (progressData.progress.responses) {
+              const previousAnswers: Record<string, string[]> = {}
+              progressData.progress.responses.forEach(response => {
+                previousAnswers[response.questionId] = response.selectedAnswers
+              })
+              setAnswers(previousAnswers)
+            }
+
+            notifications?.success('Resuming survey', 'Continuing from where you left off')
+          }
+        })
+        .catch((error) => {
+          console.warn('Failed to check survey progress:', error)
+          // Don't show error to user, just continue with normal flow
+        })
+        .finally(() => {
+          setIsCheckingProgress(false)
+        })
+    }
+  }, [isAuthenticated, survey.id, responseId, isCheckingProgress, notifications])
+
+  // Start survey when component mounts or authentication is restored (only if no incomplete response)
+  useEffect(() => {
+    if (isAuthenticated && !responseId && !isStarting && !startSurvey.isPending && !hasStarted.current && !isCheckingProgress && hasCheckedProgress.current) {
       hasStarted.current = true
       setIsStarting(true)
       startSurvey.mutate({ id: survey.id })
     }
-  }, [isAuthenticated, survey.id])
-
-  // TODO: Load previous answers when response endpoint is implemented
-  // useEffect(() => {
-  //   if (responseState.response?.responses) {
-  //     const previousAnswers: Record<string, string[]> = {}
-  //     responseState.response.responses.forEach(response => {
-  //       previousAnswers[response.questionId] = response.selectedAnswers
-  //     })
-  //     setAnswers(previousAnswers)
-  //   }
-  // }, [responseState.response])
+  }, [isAuthenticated, survey.id, isCheckingProgress, hasCheckedProgress.current])
 
   const handleAnswerChange = (questionId: string, answer: string, isMultiple: boolean = false) => {
     setAnswers((prev) => {
@@ -120,11 +149,9 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
         newAnswers[questionId] = [answer]
       }
 
-
       return newAnswers
     })
   }
-
 
   const handleNext = async () => {
     if (!currentQuestion || !responseId) return
@@ -146,14 +173,14 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
 
     // Save answer before proceeding
     setSaveStatus('saving')
-    
+
     try {
       await responseState.submitAnswer({
         responseId,
         questionId: currentQuestion.id,
         selectedAnswers
       })
-      
+
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2000)
 
@@ -190,6 +217,11 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
 
   if (questionsLoading) {
     return <SurveyLoadingState message="Loading survey questions..." />
+  }
+
+  // Show loading state while checking for incomplete responses
+  if (isCheckingProgress) {
+    return <SurveyLoadingState message="Checking for previous progress..." />
   }
 
   // Show starting state while survey is being started

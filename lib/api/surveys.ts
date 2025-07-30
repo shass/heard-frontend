@@ -152,6 +152,39 @@ export class SurveyApi {
     })
     return response.surveys
   }
+
+  /**
+   * Get user's survey progress (for incomplete surveys)
+   */
+  async getUserSurveyProgress(id: string): Promise<{
+    hasIncompleteResponse: boolean
+    progress?: {
+      responseId: string
+      currentQuestionOrder: number
+      answeredQuestions: number
+      totalQuestions: number
+      nextQuestionId?: string
+      responses?: Array<{
+        questionId: string
+        selectedAnswers: string[]
+      }>
+    }
+  }> {
+    return await apiClient.get<{
+      hasIncompleteResponse: boolean
+      progress?: {
+        responseId: string
+        currentQuestionOrder: number
+        answeredQuestions: number
+        totalQuestions: number
+        nextQuestionId?: string
+        responses?: Array<{
+          questionId: string
+          selectedAnswers: string[]
+        }>
+      }
+    }>(`/surveys/${id}/my-progress`)
+  }
 }
 
 // Export singleton instance
