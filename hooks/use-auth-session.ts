@@ -75,7 +75,6 @@ export function useAuthSession() {
    * Now validates against persisted state for better mobile experience
    */
   const checkInitialAuth = async () => {
-    console.log('🚀 Running initial auth check on app load')
     setLoading(true)
     try {
       const userData = await authApi.checkAuth()

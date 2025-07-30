@@ -1,11 +1,11 @@
 // Authentication API endpoints
 
 import { apiClient } from './client'
-import type { 
-  User, 
-  AuthResponse, 
-  NonceResponse, 
-  ConnectWalletRequest 
+import type {
+  User,
+  AuthResponse,
+  NonceResponse,
+  ConnectWalletRequest
 } from '@/lib/types'
 
 export class AuthApi {
@@ -23,14 +23,11 @@ export class AuthApi {
    */
   async connectWallet(request: ConnectWalletRequest): Promise<AuthResponse> {
     const response = await apiClient.post<AuthResponse>('/auth/connect-wallet', request)
-    
-    // JWT token is now stored as HttpOnly cookie by backend
-    // No need to store in localStorage anymore
-    // Keep backward compatibility for responses that still include token
+
     if (response.token) {
       apiClient.setToken(response.token)
     }
-    
+
     return response
   }
 
@@ -39,9 +36,7 @@ export class AuthApi {
    * Get current user profile
    */
   async getMe(): Promise<User> {
-    console.log('🔍 Making /auth/me request')
     const result = await apiClient.get<{ user: User }>('/auth/me')
-    console.log('✅ /auth/me response:', result)
     return result.user
   }
 
@@ -50,11 +45,11 @@ export class AuthApi {
    */
   async disconnect(): Promise<{ message: string }> {
     const response = await apiClient.post<{ message: string }>('/auth/disconnect')
-    
+
     // Clear JWT token from localStorage (for backward compatibility)
     // HttpOnly cookie is cleared by backend
     apiClient.clearToken()
-    
+
     return response
   }
 
