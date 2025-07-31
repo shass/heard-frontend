@@ -23,11 +23,7 @@ export class AuthApi {
    */
   async connectWallet(request: ConnectWalletRequest): Promise<AuthResponse> {
     const response = await apiClient.post<AuthResponse>('/auth/connect-wallet', request)
-
-    if (response.token) {
-      apiClient.setToken(response.token)
-    }
-
+    // HttpOnly cookie is set by backend, no client-side token management needed
     return response
   }
 
@@ -45,11 +41,7 @@ export class AuthApi {
    */
   async disconnect(): Promise<{ message: string }> {
     const response = await apiClient.post<{ message: string }>('/auth/disconnect')
-
-    // Clear JWT token from localStorage (for backward compatibility)
-    // HttpOnly cookie is cleared by backend
-    apiClient.clearToken()
-
+    // HttpOnly cookie is cleared by backend, no client-side action needed
     return response
   }
 
@@ -60,8 +52,7 @@ export class AuthApi {
     try {
       return await this.getMe()
     } catch (error) {
-      // Token is invalid or expired
-      apiClient.clearToken()
+      // HttpOnly cookie is invalid or expired - no client-side action needed
       return null
     }
   }

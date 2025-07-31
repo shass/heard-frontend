@@ -1,10 +1,10 @@
 // Global store using Zustand
 
 import { create } from 'zustand'
-import { devtools, persist, createJSONStorage } from 'zustand/middleware'
-import type { User, Survey, SurveyResponse, AppState, SurveyState } from '@/lib/types'
+import { devtools } from 'zustand/middleware'
+import type { User, Survey, SurveyResponse } from '@/lib/types'
 
-// SSR-safe storage
+// SSR-safe storage for UI preferences only
 const createSSRSafeStorage = () => {
   if (typeof window === 'undefined') {
     return {
@@ -13,7 +13,7 @@ const createSSRSafeStorage = () => {
       removeItem: () => {},
     }
   }
-  
+
   return {
     getItem: (name: string) => {
       try {
@@ -45,7 +45,7 @@ interface AuthStore {
   isAuthenticated: boolean
   loading: boolean
   error: string | null
-  
+
   // Actions
   setUser: (user: User | null) => void
   setLoading: (loading: boolean) => void
@@ -55,55 +55,36 @@ interface AuthStore {
 
 export const useAuthStore = create<AuthStore>()(
   devtools(
-    persist(
-      (set) => ({
-        user: null,
-        isAuthenticated: false,
-        loading: false,
+    (set) => ({
+      user: null,
+      isAuthenticated: false,
+      loading: true, // Start with loading true to prevent flickering
+      error: null,
+
+      setUser: (user) => set((state) => ({
+        user,
+        isAuthenticated: !!user,
         error: null,
+      })),
 
-        setUser: (user) => set((state) => ({
-          user,
-          isAuthenticated: !!user,
+      setLoading: (loading) => set({ loading }),
+
+      setError: (error) => set({ error, loading: false }),
+
+      logout: () => {
+        // Clear auth state
+        set({
+          user: null,
+          isAuthenticated: false,
+          loading: false, // Not loading after explicit logout
           error: null,
-        })),
+        })
 
-        setLoading: (loading) => set({ loading }),
-
-        setError: (error) => set({ error, loading: false }),
-
-        logout: () => {
-          // Clear auth state
-          set({
-            user: null,
-            isAuthenticated: false,
-            loading: false,
-            error: null,
-          })
-          
-          // Clear all survey state as well
-          const { clearAll } = useSurveyStore.getState()
-          clearAll()
-        },
-      }),
-      {
-        name: 'heard-auth-store',
-        storage: createJSONStorage(() => createSSRSafeStorage()),
-        // Only persist essential user data, not loading/error states
-        partialize: (state) => ({
-          user: state.user,
-          isAuthenticated: state.isAuthenticated,
-        }),
-        // Rehydrate with proper validation
-        onRehydrateStorage: () => (state) => {
-          if (state) {
-            // Ensure loading and error are reset on rehydration
-            state.loading = false
-            state.error = null
-          }
-        },
-      }
-    ),
+        // Clear all survey state as well
+        const { clearAll } = useSurveyStore.getState()
+        clearAll()
+      },
+    }),
     { name: 'auth-store' }
   )
 )
@@ -114,7 +95,7 @@ export const useUser = () => useAuthStore(state => state.user)
 export const useAuthLoading = () => useAuthStore(state => state.loading)
 export const useAuthError = () => useAuthStore(state => state.error)
 
-// Survey store  
+// Survey store
 interface SurveyStore {
   surveys: Survey[]
   currentSurvey: Survey | null
@@ -207,7 +188,7 @@ export const useUIStore = create<UIStore>()(
       addNotification: (notification) => {
         const id = Math.random().toString(36).slice(2)
         const newNotification = { ...notification, id }
-        
+
         set((state) => ({
           notifications: [...state.notifications, newNotification]
         }))

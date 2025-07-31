@@ -21,17 +21,9 @@ class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request interceptor - add auth token as fallback (cookies are handled automatically)
+    // Request interceptor - cookies are handled automatically by withCredentials
     this.client.interceptors.request.use(
-      (config) => {
-        // Only add Authorization header if no HttpOnly cookie is available
-        // This serves as backward compatibility for existing localStorage tokens
-        const token = this.getAuthToken()
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`
-        }
-        return config
-      },
+      (config) => config,
       (error) => Promise.reject(error)
     )
 
@@ -40,29 +32,13 @@ class ApiClient {
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          // Handle unauthorized - clear token and redirect to login
-          this.clearAuthToken()
-          // TODO: Add redirect to login page or trigger re-authentication
+          // Handle unauthorized - HttpOnly cookie will be cleared by server
+          // No action needed on client side
         }
         
         return Promise.reject(this.formatError(error))
       }
     )
-  }
-
-  private getAuthToken(): string | null {
-    if (typeof window === 'undefined') return null
-    return localStorage.getItem('heard_auth_token')
-  }
-
-  private setAuthToken(token: string): void {
-    if (typeof window === 'undefined') return
-    localStorage.setItem('heard_auth_token', token)
-  }
-
-  private clearAuthToken(): void {
-    if (typeof window === 'undefined') return
-    localStorage.removeItem('heard_auth_token')
   }
 
   private formatError(error: any): ApiError {
@@ -110,14 +86,6 @@ class ApiClient {
     return response.data.data
   }
 
-  // Auth token management
-  setToken(token: string): void {
-    this.setAuthToken(token)
-  }
-
-  clearToken(): void {
-    this.clearAuthToken()
-  }
 
   // File upload helper
   async uploadFile<T>(url: string, file: File, config?: AxiosRequestConfig): Promise<T> {

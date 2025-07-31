@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useState } from "react"
+import { use, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -27,10 +27,15 @@ interface SurveyInfoPageProps {
 
 export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
-  const { login, isAuthenticated, user, isLoading: isAuthLoading } = useAuthActions()
+  const { login, isAuthenticated, isLoading: isAuthLoading, checkAuth } = useAuthActions()
   const { isConnected, address } = useAccount()
   const { openConnectModal } = useConnectModal()
   const { id } = use(params)
+
+  // Force auth check on component mount to ensure localStorage state is synced with server
+  useEffect(() => {
+    checkAuth().then()
+  }, [])
 
   const { data: survey, isLoading, error } = useSurvey(id)
   const { data: eligibility } = useSurveyEligibility(id, address)
@@ -139,7 +144,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
     if (!isAuthenticated) {
       return {
-        text: isAuthLoading ? "Authenticating..." : "Authenticate & Start Survey",
+        text: isAuthLoading ? "Authenticating..." : "Authorize & Start Survey",
         disabled: isAuthLoading,
         handler: handleAuthenticate,
         loading: isAuthLoading

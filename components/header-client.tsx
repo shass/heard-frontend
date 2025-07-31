@@ -5,7 +5,7 @@ import React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { useUser, useIsAuthenticated } from "@/lib/store"
+import { useUser, useIsAuthenticated, useAuthLoading } from "@/lib/store"
 import { Settings } from "lucide-react"
 
 // Dynamically import Web3 components to avoid SSR issues
@@ -26,9 +26,9 @@ interface HeaderClientProps {
 export function HeaderClient({ onCreateSurvey }: HeaderClientProps) {
   const user = useUser()
   const isAuthenticated = useIsAuthenticated()
+  const isAuthLoading = useAuthLoading()
 
-  // Admin panel for authenticated admin users
-  const isAuthenticatedAdmin = isAuthenticated && user?.role === 'admin'
+  const isAuthenticatedAdmin = !isAuthLoading && isAuthenticated && user?.role === 'admin'
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-zinc-200">
