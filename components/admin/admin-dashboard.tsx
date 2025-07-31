@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getAdminDashboardStats } from '@/lib/api/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Spinner } from '@/components/ui/loading-states'
 import {
-  PlusCircle,
   BarChart3,
   Users,
   FileText,
@@ -19,6 +18,7 @@ import {
 } from 'lucide-react'
 import { SurveyManagement } from './survey-management'
 import { AdminRoute } from '@/components/auth/admin-route'
+import Link from 'next/link';
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('surveys')
@@ -54,30 +54,25 @@ export function AdminDashboard() {
         {/* Header */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
+            <div className="flex items-center py-6 gap-10">
+              <div>
+                <Link href="/">
+                  &larr; To Homepage
+                </Link>
+              </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
                 <p className="mt-1 text-sm text-gray-600">
                   Manage surveys, whitelists, and monitor platform activity
                 </p>
               </div>
-              <div className="flex space-x-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setActiveTab('surveys')}
-                >
-                  <PlusCircle className="w-4 h-4 mr-2" />
-                  New Survey
-                </Button>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* Main Content */ }
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={ activeTab } onValueChange={ setActiveTab }>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="surveys">
                 <FileText className="w-4 h-4 mr-2" />

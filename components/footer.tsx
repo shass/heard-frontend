@@ -1,3 +1,5 @@
+'use client'
+
 import { XIcon } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { useCreateSurveyModal } from '@/hooks/use-create-survey-modal'
