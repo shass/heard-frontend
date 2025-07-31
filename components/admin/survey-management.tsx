@@ -388,101 +388,112 @@ export function SurveyManagement() {
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2">
+                {/* Status Toggle */}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleToggleStatus(survey.id, survey.isActive)}
                   disabled={toggleStatusMutation.isPending}
+                  title={survey.isActive ? "Pause Survey" : "Activate Survey"}
                 >
                   {survey.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </Button>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedSurvey(survey)
-                    setIsResponsesDialogOpen(true)
-                  }}
-                  title="View Responses"
-                >
-                  <Users className="w-4 h-4" />
-                </Button>
+                {/* View/Manage Actions */}
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedSurvey(survey)
+                      setIsResponsesDialogOpen(true)
+                    }}
+                    title="View Responses"
+                  >
+                    <Users className="w-4 h-4" />
+                  </Button>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedSurvey(survey)
-                    setIsWhitelistModalOpen(true)
-                  }}
-                  title="Manage Whitelist"
-                >
-                  <List className="w-4 h-4" />
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedSurvey(survey)
+                      setIsWhitelistModalOpen(true)
+                    }}
+                    title="Manage Whitelist"
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedSurvey(survey)
-                    setIsRewardLinksModalOpen(true)
-                  }}
-                  title="Manage Reward Links"
-                >
-                  <Gift className="w-4 h-4" />
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedSurvey(survey)
+                      setIsRewardLinksModalOpen(true)
+                    }}
+                    title="Manage Reward Links"
+                  >
+                    <Gift className="w-4 h-4" />
+                  </Button>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedSurvey(survey)
-                    setIsSurveyClientsModalOpen(true)
-                  }}
-                  title="Manage Survey Clients"
-                >
-                  <Crown className="w-4 h-4" />
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedSurvey(survey)
+                      setIsSurveyClientsModalOpen(true)
+                    }}
+                    title="Manage Survey Clients"
+                  >
+                    <Crown className="w-4 h-4" />
+                  </Button>
+                </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedSurvey(survey)
-                    setIsEditDialogOpen(true)
-                  }}
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
+                {/* Edit Actions */}
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedSurvey(survey)
+                      setIsEditDialogOpen(true)
+                    }}
+                    title="Edit Survey"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDuplicateSurvey(survey.id, survey.name)}
-                  disabled={duplicateSurveyMutation.isPending}
-                  title="Duplicate Survey"
-                >
-                  <Copy className="w-4 h-4" />
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDuplicateSurvey(survey.id, survey.name)}
+                    disabled={duplicateSurveyMutation.isPending}
+                    title="Duplicate Survey"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleExportSurvey(survey.id)}
-                  disabled={exportSurveyMutation.isPending}
-                  title="Export Survey to JSON"
-                >
-                  <Download className="w-4 h-4" />
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleExportSurvey(survey.id)}
+                    disabled={exportSurveyMutation.isPending}
+                    title="Export Survey to JSON"
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </div>
 
+                {/* Delete Action - Separated */}
+                <div className="flex-1"></div>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleDeleteSurvey(survey.id)}
                   disabled={deleteSurveyMutation.isPending}
-                  className="text-red-600 hover:text-red-700"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   title="Delete Survey"
                 >
                   <Trash2 className="w-4 h-4" />
