@@ -6,6 +6,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { useUser, useIsAuthenticated, useAuthLoading } from "@/lib/store"
+import { useCreateSurveyModal } from "@/hooks/use-create-survey-modal"
 import { Settings } from "lucide-react"
 
 // Dynamically import Web3 components to avoid SSR issues
@@ -27,6 +28,7 @@ export function HeaderClient({ onCreateSurvey }: HeaderClientProps) {
   const user = useUser()
   const isAuthenticated = useIsAuthenticated()
   const isAuthLoading = useAuthLoading()
+  const { openModal } = useCreateSurveyModal()
 
   const isAuthenticatedAdmin = !isAuthLoading && isAuthenticated && user?.role === 'admin'
 
@@ -51,7 +53,13 @@ export function HeaderClient({ onCreateSurvey }: HeaderClientProps) {
             )}
 
             <Button
-              onClick={onCreateSurvey}
+              onClick={() => {
+                if (onCreateSurvey) {
+                  onCreateSurvey()
+                } else {
+                  openModal()
+                }
+              }}
               className="hidden sm:flex bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg px-6 py-2 font-medium"
             >
               Create survey

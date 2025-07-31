@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Web3Provider } from '@/components/providers/web3-provider'
 import { AuthProvider } from '@/components/providers/auth-provider'
+import { CreateSurveyModalProvider } from '@/components/providers/create-survey-modal-provider'
 import { NotificationContainer } from '@/components/ui/notifications'
 import { NetworkStatus } from '@/components/lazy'
 import ErrorBoundary from '@/components/ui/error-boundary'
@@ -29,10 +30,12 @@ export default function RootLayout({
         <ErrorBoundary>
           <Web3Provider>
             <AuthProvider>
-              <StoreHydration />
-              <NetworkStatus />
-              {children}
-              <NotificationContainer />
+              <CreateSurveyModalProvider>
+                <StoreHydration />
+                <NetworkStatus />
+                {children}
+                <NotificationContainer />
+              </CreateSurveyModalProvider>
             </AuthProvider>
           </Web3Provider>
         </ErrorBoundary>

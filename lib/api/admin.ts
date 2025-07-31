@@ -125,6 +125,11 @@ export const importSurveys = async (surveysData: any): Promise<{
   return data
 }
 
+export const exportSurvey = async (surveyId: string): Promise<any> => {
+  const data = await apiClient.get<any>(`/admin/surveys/${surveyId}/export`)
+  return data
+}
+
 // Survey Responses Management
 export const getSurveyResponses = async (surveyId: string, params?: {
   limit?: number

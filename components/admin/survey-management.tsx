@@ -9,7 +9,8 @@ import {
   deleteSurvey,
   toggleSurveyStatus,
   duplicateSurvey,
-  importSurveys
+  importSurveys,
+  exportSurvey
 } from '@/lib/api/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -32,6 +33,7 @@ import {
   List,
   Gift,
   Upload,
+  Download,
   FileText,
   AlertCircle,
   CheckCircle,
@@ -157,6 +159,32 @@ export function SurveyManagement() {
     }
   })
 
+  const exportSurveyMutation = useMutation({
+    mutationFn: exportSurvey,
+    onSuccess: (data, surveyId) => {
+      // Find survey name for filename
+      const survey = surveys.find(s => s.id === surveyId)
+      const filename = `${survey?.name || 'survey'}_export.json`
+      
+      // Create and download file
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      
+      notifications.success('Export Completed', `Survey exported as ${filename}`)
+    },
+    onError: (error: any) => {
+      const errorMessage = error.error?.message || error.message || 'Failed to export survey'
+      notifications.error('Export Failed', errorMessage)
+    }
+  })
+
   const handleCreateSurvey = (data: CreateSurveyRequest | UpdateSurveyRequest) => {
     createSurveyMutation.mutate(data as CreateSurveyRequest)
   }
@@ -180,6 +208,10 @@ export function SurveyManagement() {
     if (newName) {
       duplicateSurveyMutation.mutate({ surveyId, newName })
     }
+  }
+
+  const handleExportSurvey = (surveyId: string) => {
+    exportSurveyMutation.mutate(surveyId)
   }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -430,8 +462,19 @@ export function SurveyManagement() {
                   size="sm"
                   onClick={() => handleDuplicateSurvey(survey.id, survey.name)}
                   disabled={duplicateSurveyMutation.isPending}
+                  title="Duplicate Survey"
                 >
                   <Copy className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleExportSurvey(survey.id)}
+                  disabled={exportSurveyMutation.isPending}
+                  title="Export Survey to JSON"
+                >
+                  <Download className="w-4 h-4" />
                 </Button>
 
                 <Button
@@ -440,6 +483,7 @@ export function SurveyManagement() {
                   onClick={() => handleDeleteSurvey(survey.id)}
                   disabled={deleteSurveyMutation.isPending}
                   className="text-red-600 hover:text-red-700"
+                  title="Delete Survey"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
