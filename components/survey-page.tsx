@@ -76,7 +76,11 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
 
   const currentQuestion = Array.isArray(questions) ? questions[currentQuestionIndex] : undefined
   const questionsArray = Array.isArray(questions) ? questions : []
-  const progress = questionsArray.length > 0 ? ((currentQuestionIndex + 1) / questionsArray.length) * 100 : 0
+  
+  // Calculate progress based on submitted answers (questions that have been processed via Next/Submit)
+  // Progress should only update after successful submission, not on answer selection
+  const submittedQuestionsCount = currentQuestionIndex
+  const progress = questionsArray.length > 0 ? (submittedQuestionsCount / questionsArray.length) * 100 : 0
 
   // Clear survey state when authentication changes
   useEffect(() => {
