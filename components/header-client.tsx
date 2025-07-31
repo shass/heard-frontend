@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState } from "react"
+import React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -27,8 +27,8 @@ export function HeaderClient({ onCreateSurvey }: HeaderClientProps) {
   const user = useUser()
   const isAuthenticated = useIsAuthenticated()
 
-  // Only show admin panel for authenticated admin users
-  const isAdmin = isAuthenticated && user?.role === 'admin'
+  // Admin panel for authenticated admin users
+  const isAuthenticatedAdmin = isAuthenticated && user?.role === 'admin'
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-zinc-200">
@@ -41,7 +41,7 @@ export function HeaderClient({ onCreateSurvey }: HeaderClientProps) {
           </div>
 
           <div className="flex items-center space-x-4">
-            {isAdmin && (
+            {isAuthenticatedAdmin && (
               <Link href="/admin">
                 <Button variant="outline" className="border-zinc-300 text-zinc-700 hover:bg-zinc-50">
                   <Settings className="w-4 h-4 mr-2" />
@@ -49,7 +49,7 @@ export function HeaderClient({ onCreateSurvey }: HeaderClientProps) {
                 </Button>
               </Link>
             )}
-            
+
             <Button
               onClick={onCreateSurvey}
               className="hidden sm:flex bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg px-6 py-2 font-medium"
