@@ -30,13 +30,22 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
 
   // Get updated user points
   const { data: userPoints, refetch: refetchPoints } = useHeardPoints()
+  
+  // Get user's heard points balance to check if they earned points
+  const currentHeardPoints = user?.heardPointsBalance || 0
 
   // Determine reward information (prioritize new system)
   const claimLink = userReward?.claimLink
   const linkDropCode = userReward?.linkDropCode
-  const heardPointsAwarded = userReward?.heardPointsAwarded || 0
+  // Use HeardPoints from userReward if available, otherwise use survey's heardPointsReward
+  const heardPointsAwarded = userReward?.heardPointsAwarded || survey.heardPointsReward || 0
   const rewardIssued = !!userReward?.usedAt
   const isNewLinkdropSystem = userReward?.type === 'linkdrop'
+  
+  // Check if there are any actual rewards available
+  const hasTokenRewards = !!(claimLink || linkDropCode)
+  const hasHeardPointsRewards = heardPointsAwarded > 0
+  const hasAnyRewards = hasTokenRewards || hasHeardPointsRewards
 
   // Generate QR code for LinkDrop claim
   useEffect(() => {
@@ -115,6 +124,17 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
   }
 
   const formatReward = () => {
+    // If there's a claim link or code, show the survey tokens
+    if (claimLink || linkDropCode) {
+      return `${survey.rewardAmount} ${survey.rewardToken}`
+    }
+    
+    // Otherwise, show HeardPoints as the reward
+    if (heardPointsAwarded > 0) {
+      return `${heardPointsAwarded} HeardPoints`
+    }
+    
+    // Fallback to survey reward info
     return `${survey.rewardAmount} ${survey.rewardToken}`
   }
 
@@ -142,10 +162,11 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
     )
   }
 
-  // Show error state ONLY if there's an actual error and no data
-  // Note: responseState.response is always null (disabled in hook), so only check userReward
-  const hasRewardData = !!userReward
-  const shouldShowErrorState = !hasRewardData && !rewardLoading && rewardError
+  // Check if user has completed the survey by checking if they have responseId
+  const hasCompletedSurvey = !!responseId
+  
+  // Show error state ONLY if survey is not completed
+  const shouldShowErrorState = !hasCompletedSurvey && !rewardLoading
 
   if (shouldShowErrorState) {
     return (
@@ -156,6 +177,37 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
             You need to complete this survey first to receive your reward.
           </p>
           <Button onClick={onBackToSurveys}>Back to Surveys</Button>
+        </div>
+      </section>
+    )
+  }
+
+  // If completed but no rewards available, show thank you message
+  if (hasCompletedSurvey && !hasAnyRewards) {
+    return (
+      <section className="w-full py-16">
+        <div className="mx-auto max-w-lg px-4 sm:px-6 lg:px-8 text-center">
+          <div className="space-y-8">
+            <div>
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                  <Gift className="w-8 h-8 text-green-600" />
+                </div>
+              </div>
+              <h2 className="text-2xl font-semibold text-zinc-900 mb-4">Thank You!</h2>
+              <p className="text-base text-zinc-600">
+                Thank you for completing the <strong>{survey.name}</strong> survey from {survey.company}.
+                Your feedback is valuable to us!
+              </p>
+            </div>
+
+            <Button
+              onClick={onBackToSurveys}
+              className="w-full bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg py-3 text-base font-medium"
+            >
+              Back to Home
+            </Button>
+          </div>
         </div>
       </section>
     )
@@ -185,7 +237,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
               {formatReward()}
             </div>
 
-            {heardPointsAwarded > 0 && (
+            {heardPointsAwarded > 0 && (claimLink || linkDropCode) && (
               <div className="flex items-center justify-center space-x-2 text-sm text-zinc-600">
                 <CheckCircle2 className="w-4 h-4 text-green-600" />
                 <span>{heardPointsAwarded} HeardPoints have been added to your account</span>
@@ -284,7 +336,18 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
               </>
             )}
 
-            {!claimLink && !linkDropCode && (
+            {!claimLink && !linkDropCode && heardPointsAwarded > 0 && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="text-green-800">
+                  <strong>Reward Earned!</strong>
+                </div>
+                <p className="text-sm text-green-700 mt-1">
+                  You have earned <strong>{heardPointsAwarded} HeardPoints</strong> for completing this survey.
+                </p>
+              </div>
+            )}
+
+            {!claimLink && !linkDropCode && heardPointsAwarded === 0 && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <div className="text-yellow-800">
                   <strong>Processing Reward...</strong>
