@@ -1,7 +1,7 @@
 "use client"
 
-// Client-side Header component 
 import dynamic from 'next/dynamic'
+import React from 'react';
 
 interface HeaderClientProps {
   onCreateSurvey?: () => void
@@ -10,7 +10,7 @@ interface HeaderClientProps {
 // Dynamically import the client component to avoid SSR issues
 const HeaderClient = dynamic(
   () => import('./header-client').then(mod => ({ default: mod.HeaderClient })),
-  { 
+  {
     ssr: false,
     loading: () => (
       <header className="sticky top-0 z-50 w-full bg-white border-b border-zinc-200">

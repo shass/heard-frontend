@@ -23,7 +23,7 @@ export function Footer({ onCreateSurvey }: FooterProps = {}) {
               </Button>
             </div>
           )}
-          
+
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
             <p className="text-sm text-zinc-500 order-2 sm:order-1">© {currentYear} · Heard Labs</p>
             <a
