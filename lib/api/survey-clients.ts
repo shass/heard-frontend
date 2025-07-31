@@ -207,11 +207,11 @@ export const resultsUtils = {
   // Generate color palette for charts
   generateChartColors(count: number): string[] {
     const baseColors = [
-      'hsl(var(--chart-1))',
-      'hsl(var(--chart-2))',
-      'hsl(var(--chart-3))',
-      'hsl(var(--chart-4))',
-      'hsl(var(--chart-5))',
+      'hsl(220, 70%, 50%)', // --chart-1
+      'hsl(160, 60%, 45%)', // --chart-2  
+      'hsl(30, 80%, 55%)',  // --chart-3
+      'hsl(280, 65%, 50%)', // --chart-4
+      'hsl(340, 75%, 55%)', // --chart-5
     ]
 
     if (count <= baseColors.length) {

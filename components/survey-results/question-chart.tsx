@@ -138,7 +138,7 @@ export function QuestionChart({ question, data, colors, totalResponses }: Questi
                   />
                   <Bar 
                     dataKey="count" 
-                    fill="hsl(var(--chart-1))"
+                    fill="hsl(220, 70%, 50%)"
                     radius={[0, 4, 4, 0]}
                   />
                 </BarChart>
