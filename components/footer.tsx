@@ -1,6 +1,6 @@
 'use client'
 
-import { XIcon } from '@/components/ui/icons'
+import { XIcon, MailIcon } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { useCreateSurveyModal } from '@/hooks/use-create-survey-modal'
 
@@ -34,15 +34,28 @@ export function Footer({ onCreateSurvey }: FooterProps = {}) {
 
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
             <p className="text-sm text-zinc-500 order-2 sm:order-1">© {currentYear} · Heard Labs</p>
-            <a
-              href="https://x.com/Heard_labs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-zinc-500 hover:text-zinc-700 transition-colors order-1 sm:order-2"
-              aria-label="Follow us on X (formerly Twitter)"
-            >
-              <XIcon className="w-5 h-5" />
-            </a>
+            <div className="flex items-center space-x-4 order-1 sm:order-2">
+              <a
+                href="mailto:contact@heardlabs.xyz"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-zinc-500 hover:text-zinc-700 transition-colors"
+                aria-label="Contact us via email"
+                title="Contact us via email"
+              >
+                <MailIcon className="w-5 h-5" />
+              </a>
+              <a
+                href="https://x.com/Heard_labs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-zinc-500 hover:text-zinc-700 transition-colors"
+                aria-label="Follow us on X (formerly Twitter)"
+                title="Follow us on X"
+              >
+                <XIcon className="w-5 h-5" />
+              </a>
+            </div>
           </div>
         </div>
       </div>
