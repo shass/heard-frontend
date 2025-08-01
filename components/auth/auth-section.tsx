@@ -24,11 +24,10 @@ export function AuthSection() {
 
   const handleLogout = async () => {
     try {
-      await logout()
-      disconnect() // Also disconnect the wallet
+      await logout();
+      disconnect();
       notifications.success('Logged out', 'You have been successfully logged out')
     } catch (error: any) {
-      console.error('AuthSection: Logout failed', error)
       notifications.error('Logout failed', error.message || 'Please try again')
     }
   }
@@ -47,7 +46,7 @@ export function AuthSection() {
 
   if (!isConnected) {
     return (
-      <Button 
+      <Button
         onClick={() => openConnectModal?.()}
         className="bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg px-4 py-2 font-medium flex items-center space-x-2"
       >
@@ -110,7 +109,7 @@ export function AuthSection() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => disconnect()} className="text-red-600 focus:text-red-600">
+        <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
           <LogOut className="w-4 h-4 mr-2" />
           Disconnect Wallet
         </DropdownMenuItem>

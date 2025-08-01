@@ -17,39 +17,48 @@ import {
   Settings
 } from 'lucide-react'
 import { SurveyManagement } from './survey-management'
-import { AdminRoute } from '@/components/auth/admin-route'
+import { AdminAuthWrapper } from './admin-auth-wrapper'
+import { useAuthActions } from '@/components/providers/auth-provider'
 import Link from 'next/link';
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('surveys')
+  const { isAuthenticated, user } = useAuthActions()
 
   const { data: stats, isLoading: loading, error } = useQuery({
     queryKey: ['admin-dashboard-stats'],
     queryFn: getAdminDashboardStats,
+    enabled: isAuthenticated && user?.role === 'admin', // Only fetch when authenticated as admin
     refetchInterval: 60000 // Refresh every minute
   })
 
+  // Loading and error states are handled by the wrapper during auth check
+  // This loading state is only for dashboard data
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner size="lg" />
-      </div>
+      <AdminAuthWrapper>
+        <div className="min-h-screen flex items-center justify-center">
+          <Spinner size="lg" />
+        </div>
+      </AdminAuthWrapper>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Dashboard</h1>
-          <p className="text-gray-600">{error.message}</p>
+      <AdminAuthWrapper>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Dashboard</h1>
+            <p className="text-gray-600">{error.message}</p>
+          </div>
         </div>
-      </div>
+      </AdminAuthWrapper>
     )
   }
 
   return (
-    <AdminRoute>
+    <AdminAuthWrapper>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-white shadow-sm border-b">
@@ -213,6 +222,6 @@ export function AdminDashboard() {
           </Tabs>
         </div>
       </div>
-    </AdminRoute>
+    </AdminAuthWrapper>
   )
 }
