@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useAuthActions } from '@/components/providers/auth-provider'
 import {
   getAdminSurveys,
   createSurvey,
@@ -47,6 +48,7 @@ import { SurveyClientsModal } from './survey-clients-modal'
 import type { AdminSurveyListItem, CreateSurveyRequest, UpdateSurveyRequest } from '@/lib/types'
 
 export function SurveyManagement() {
+  const { isAuthenticated, user } = useAuthActions()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [selectedSurvey, setSelectedSurvey] = useState<AdminSurveyListItem | null>(null)
@@ -74,6 +76,7 @@ export function SurveyManagement() {
       status: statusFilter === 'all' ? undefined : statusFilter,
       limit: 50
     }),
+    enabled: isAuthenticated && user?.role === 'admin', // Only fetch when authenticated as admin
     refetchInterval: 30000
   })
 

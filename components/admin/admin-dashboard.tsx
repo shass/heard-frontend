@@ -18,14 +18,17 @@ import {
 } from 'lucide-react'
 import { SurveyManagement } from './survey-management'
 import { AdminAuthWrapper } from './admin-auth-wrapper'
+import { useAuthActions } from '@/components/providers/auth-provider'
 import Link from 'next/link';
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('surveys')
+  const { isAuthenticated, user } = useAuthActions()
 
   const { data: stats, isLoading: loading, error } = useQuery({
     queryKey: ['admin-dashboard-stats'],
     queryFn: getAdminDashboardStats,
+    enabled: isAuthenticated && user?.role === 'admin', // Only fetch when authenticated as admin
     refetchInterval: 60000 // Refresh every minute
   })
 

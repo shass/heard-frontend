@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/loading-states'
 import { Wallet, Shield, ArrowLeft } from 'lucide-react'
 import { useAuthActions } from '@/components/providers/auth-provider'
-import { useQuery } from '@tanstack/react-query'
-import { userApi } from '@/lib/api/users'
 import Link from 'next/link'
 
 interface AdminAuthWrapperProps {
@@ -20,17 +18,8 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
   const router = useRouter()
   const { isConnected, address } = useAccount()
   const { openConnectModal } = useConnectModal()
-  const { login, isAuthenticated, user } = useAuthActions()
+  const { login, isAuthenticated, user, isLoading: authLoading } = useAuthActions()
   const [isCreatingSession, setIsCreatingSession] = useState(false)
-  const [authChecked, setAuthChecked] = useState(false)
-
-  // Check if user is authenticated using /me endpoint
-  const { data: userData, error: authError, isLoading: checkingAuth, refetch } = useQuery({
-    queryKey: ['check-admin-auth'],
-    queryFn: () => userApi.getCurrentUser(),
-    enabled: isConnected && !isAuthenticated,
-    retry: false,
-  })
 
   useEffect(() => {
     // If authenticated and not admin, redirect to home
@@ -38,12 +27,7 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
       router.push('/')
       return
     }
-
-    // Mark auth as checked after the query completes
-    if (!checkingAuth) {
-      setAuthChecked(true)
-    }
-  }, [isAuthenticated, user, router, checkingAuth])
+  }, [isAuthenticated, user, router])
 
   const handleCreateSession = async () => {
     if (!isConnected) return
@@ -51,8 +35,8 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
     setIsCreatingSession(true)
     try {
       await login()
-      // After login, refetch user data
-      await refetch()
+      // Give a small delay for auth state to update
+      await new Promise(resolve => setTimeout(resolve, 100))
     } catch (error) {
       console.error('Failed to create session:', error)
     } finally {
@@ -61,7 +45,7 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
   }
 
   // Loading state while checking authentication
-  if (checkingAuth || !authChecked) {
+  if (authLoading || isCreatingSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Spinner size="lg" />
@@ -104,8 +88,8 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
     )
   }
 
-  // If wallet connected but got 401, show create session button
-  if (authError && !isAuthenticated) {
+  // If wallet connected but not authenticated, show create session button
+  if (isConnected && !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center max-w-md">
@@ -125,20 +109,10 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
           <Button
             onClick={handleCreateSession}
             size="lg"
-            disabled={isCreatingSession}
             className="bg-zinc-900 hover:bg-zinc-800 text-white px-8"
           >
-            {isCreatingSession ? (
-              <>
-                <Spinner size="sm" className="mr-2" />
-                Creating Session...
-              </>
-            ) : (
-              <>
-                <Shield className="w-5 h-5 mr-2" />
-                Create Session
-              </>
-            )}
+            <Shield className="w-5 h-5 mr-2" />
+            Create Session
           </Button>
 
           <div className="mt-6">
