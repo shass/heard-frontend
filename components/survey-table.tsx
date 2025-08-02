@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { LoadingState, SurveyTableSkeleton } from "@/components/ui/loading-states"
 import { useActiveSurveys, useBatchSurveyEligibility } from "@/hooks/use-surveys"
+import { useSearchSurveys } from "@/hooks/use-search-surveys"
 import { useAuthActions } from "@/components/providers/auth-provider"
-import { useIsAuthenticated, useUser } from "@/lib/store"
 import { useAccount } from 'wagmi'
 import { useNotifications } from "@/components/ui/notifications"
 import { useConnectModal } from '@rainbow-me/rainbowkit'
@@ -137,17 +137,49 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
   const [selectedCompany, setSelectedCompany] = useState("")
   const [copiedSurveyId, setCopiedSurveyId] = useState<string | null>(null)
 
+  // Use search hook for server-side search with throttling
   const {
-    data: surveys = [],
-    isLoading,
-    error,
-    refetch
+    data: searchResults,
+    isLoading: isSearching,
+    error: searchError,
+    refetch: refetchSearch,
+    updateSearch,
+    clearSearch,
+    isSearching: hasActiveSearch,
+    searchTerm,
+    selectedCompany: activeCompany
+  } = useSearchSurveys({ throttleMs: 400 })
+
+  // Fallback to useActiveSurveys when no search/filter is active
+  const {
+    data: allSurveys = [],
+    isLoading: isLoadingAll,
+    error: allSurveysError,
+    refetch: refetchAll
   } = useActiveSurveys({ limit: 50 })
+
+  // Determine which data to use
+  const surveys = hasActiveSearch ? (searchResults?.surveys || []) : allSurveys
+  const isLoading = hasActiveSearch ? isSearching : isLoadingAll
+  const error = hasActiveSearch ? searchError : allSurveysError
+  const refetch = hasActiveSearch ? refetchSearch : refetchAll
 
   const notifications = useNotifications()
   const { login } = useAuthActions()
   const { address } = useAccount()
   const { openConnectModal } = useConnectModal()
+
+  // Update search when inputs change
+  useEffect(() => {
+    if (searchQuery || selectedCompany) {
+      updateSearch({
+        search: searchQuery || undefined,
+        company: selectedCompany || undefined
+      })
+    } else {
+      clearSearch()
+    }
+  }, [searchQuery, selectedCompany, updateSearch, clearSearch])
 
   // Batch eligibility check for all surveys
   // Shows eligibility status when wallet is connected
@@ -156,19 +188,11 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
     address
   )
 
-  // Filter surveys based on search and company
-  const filteredSurveys = surveys.filter(survey => {
-    const matchesSearch = !searchQuery ||
-      survey.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      survey.company.toLowerCase().includes(searchQuery.toLowerCase())
+  // Surveys are already filtered on server-side, so use them directly
+  const filteredSurveys = surveys
 
-    const matchesCompany = !selectedCompany || survey.company === selectedCompany
-
-    return matchesSearch && matchesCompany
-  })
-
-  // Get unique companies for filter
-  const companies = Array.from(new Set(surveys.map(s => s.company))).sort()
+  // Get unique companies for filter (use all surveys for company list)
+  const companies = Array.from(new Set(allSurveys.map(s => s.company))).sort()
 
   const handleTakeSurvey = (survey: Survey) => {
     try {
