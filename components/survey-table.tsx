@@ -10,6 +10,7 @@ import { useAccount } from 'wagmi'
 import { useNotifications } from "@/components/ui/notifications"
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Copy, Check } from "lucide-react"
+import { AnimatedList } from "./animated-survey-list"
 import type { Survey } from "@/lib/types"
 
 interface SurveyTableProps {
@@ -38,7 +39,7 @@ function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticat
   }
 
   return (
-    <tr className="hover:bg-zinc-50">
+    <tr className="hover:bg-zinc-50 transition-all duration-300 ease-out animate-fade-in">
       <td className="px-6 py-4">
         <div>
           <div className="text-base font-medium text-zinc-900">{survey.name}</div>
@@ -327,19 +328,22 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
           </div>
 
           {/* Mobile Cards */}
-          <div className="lg:hidden space-y-4">
-            {filteredSurveys.map((survey) => (
-              <MobileSurveyCard
-                key={survey.id}
-                survey={survey}
-                onTakeSurvey={handleTakeSurvey}
-                onConnectWallet={handleConnectWallet}
-                onAuthenticate={handleAuthenticate}
-                onCopyLink={handleCopyLink}
-                copiedSurveyId={copiedSurveyId}
-                eligibility={batchEligibility?.[survey.id]}
-              />
-            ))}
+          <div className="lg:hidden">
+            <AnimatedList
+              items={filteredSurveys}
+              className="space-y-4"
+              renderItem={(survey) => (
+                <MobileSurveyCard
+                  survey={survey}
+                  onTakeSurvey={handleTakeSurvey}
+                  onConnectWallet={handleConnectWallet}
+                  onAuthenticate={handleAuthenticate}
+                  onCopyLink={handleCopyLink}
+                  copiedSurveyId={copiedSurveyId}
+                  eligibility={batchEligibility?.[survey.id]}
+                />
+              )}
+            />
           </div>
         </LoadingState>
 
