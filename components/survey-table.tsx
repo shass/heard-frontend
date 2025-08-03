@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { LoadingState, SurveyTableSkeleton } from "@/components/ui/loading-states"
 import { useActiveSurveys } from "@/hooks/use-surveys"
@@ -221,7 +221,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
           {/* Desktop Table */}
           <div className="hidden lg:block">
             <div className="overflow-hidden rounded-lg border border-zinc-200">
-              <table className="w-full">
+              <table className="w-full relative">
                 <thead className="bg-zinc-50">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900">Survey</th>
@@ -280,7 +280,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
 
           {/* Mobile Cards */}
           <motion.div
-            className="lg:hidden space-y-4"
+            className="lg:hidden space-y-4 relative"
             initial="hidden"
             animate="visible"
             variants={{
@@ -300,11 +300,22 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
                   layout
                   initial={{ opacity: 0, y: 20, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.9 }}
+                  exit={{
+                    opacity: 0,
+                    x: 100,
+                    scale: 0.95,
+                    transition: {
+                      duration: 0.3,
+                      ease: "easeInOut"
+                    }
+                  }}
                   transition={{
                     type: "spring",
                     damping: 25,
                     stiffness: 120
+                  }}
+                  style={{
+                    transformOrigin: 'center center'
                   }}
                 >
                   <MobileSurveyCard

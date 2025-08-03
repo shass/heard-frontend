@@ -42,11 +42,11 @@ const itemVariants = {
   },
   exit: {
     opacity: 0,
-    y: -10,
-    scale: 0.9,
+    x: 100,
+    scale: 0.95,
     transition: {
-      duration: 0.2,
-      ease: "easeOut" as const
+      duration: 0.3,
+      ease: "easeInOut" as const
     }
   }
 }
@@ -54,7 +54,7 @@ const itemVariants = {
 export function MotionSurveyTable({ surveys, renderRow }: MotionSurveyTableProps) {
   return (
     <motion.tbody
-      className="divide-y divide-zinc-200"
+      className="divide-y divide-zinc-200 relative"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -71,9 +71,8 @@ export function MotionSurveyTable({ surveys, renderRow }: MotionSurveyTableProps
             className="hover:bg-zinc-50 transition-colors duration-150"
             style={{
               // Optimize for animations
-              willChange: 'transform',
-              backfaceVisibility: 'hidden',
-              perspective: 1000,
+              willChange: 'transform, opacity',
+              transformOrigin: 'center center'
             }}
             whileHover={{
               scale: 1.01,
