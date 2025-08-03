@@ -104,7 +104,7 @@ export function useSearchSurveys(options: UseSearchSurveysOptions = {}) {
     searchNow,
     clearSearch,
     // Convenience getters
-    isSearching: Boolean(searchParams.search || searchParams.company),
+    hasActiveSearch: Boolean(searchParams.search || searchParams.company),
     searchTerm: searchParams.search || '',
     selectedCompany: searchParams.company || ''
   }

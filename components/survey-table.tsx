@@ -86,14 +86,12 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
   // Use search hook for server-side search with throttling
   const {
     data: searchResults,
-    isLoading: isSearching,
+    isFetching,
     error: searchError,
     refetch: refetchSearch,
     updateSearch,
     clearSearch,
-    isSearching: hasActiveSearch,
-    searchTerm,
-    selectedCompany: activeCompany
+    hasActiveSearch,
   } = useSearchSurveys({ throttleMs: 250 })
 
   // Fallback to useActiveSurveys when no search/filter is active
@@ -106,12 +104,12 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
 
   // Determine which data to use
   // When searching, keep showing previous results until new ones arrive
-  const surveys = hasActiveSearch 
-    ? (searchResults?.surveys || allSurveys) 
+  const surveys = hasActiveSearch
+    ? (searchResults?.surveys || allSurveys)
     : allSurveys
-  
+
   // Show loading only on very first load when we have no data at all
-  const isLoading = !hasActiveSearch && isLoadingAll && allSurveys.length === 0
+  const showLoading = !hasActiveSearch && isLoadingAll && allSurveys.length === 0
   const error = hasActiveSearch ? searchError : allSurveysError
   const refetch = hasActiveSearch ? refetchSearch : refetchAll
 
@@ -193,7 +191,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
-            {hasActiveSearch && isSearching && (
+            {(searchQuery || selectedCompany) && isFetching && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-zinc-300 border-t-orange-500"></div>
               </div>
@@ -214,7 +212,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
         </div>
 
         <LoadingState
-          loading={isLoading}
+          loading={showLoading}
           error={error ? "Failed to load surveys" : null}
           empty={filteredSurveys.length === 0}
           emptyMessage={searchQuery || selectedCompany ? "No surveys match your filters" : "No surveys available"}
@@ -281,7 +279,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
           </div>
 
           {/* Mobile Cards */}
-          <motion.div 
+          <motion.div
             className="lg:hidden space-y-4"
             initial="hidden"
             animate="visible"
@@ -322,7 +320,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
         </LoadingState>
 
         {/* Results count */}
-        {!isLoading && (
+        {!showLoading && (
           <div className="mt-6 text-center text-sm text-zinc-600">
             Showing {filteredSurveys.length} of {surveys.length} surveys
           </div>
