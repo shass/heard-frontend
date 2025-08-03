@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useCallback, useRef, useState, useEffect } from 'react'
 import { surveyApi } from '@/lib/api/surveys'
 
@@ -18,16 +18,25 @@ export function useSearchSurveys(options: UseSearchSurveysOptions = {}) {
   const { enabled = true, throttleMs = 200 } = options
   const [searchParams, setSearchParams] = useState<SearchParams>({})
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   // React Query for actual API calls
   const queryResult = useQuery({
     queryKey: ['surveys', 'search', searchParams],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
+      // Cancel previous request if it exists
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+      
+      // Create new AbortController for this request
+      abortControllerRef.current = new AbortController()
+      
       return surveyApi.getSurveys({
         ...searchParams,
         limit: searchParams.limit || 50,
         offset: searchParams.offset || 0
-      })
+      }, { signal: signal || abortControllerRef.current.signal })
     },
     enabled: enabled,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -36,7 +45,9 @@ export function useSearchSurveys(options: UseSearchSurveysOptions = {}) {
       // Don't retry if request was aborted
       if (error?.name === 'AbortError') return false
       return failureCount < 3
-    }
+    },
+    // Keep previous data while fetching new data
+    placeholderData: keepPreviousData
   })
 
   // Throttled search function

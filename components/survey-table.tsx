@@ -3,14 +3,12 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { LoadingState, SurveyTableSkeleton } from "@/components/ui/loading-states"
-import { useActiveSurveys, useBatchSurveyEligibility } from "@/hooks/use-surveys"
+import { useActiveSurveys } from "@/hooks/use-surveys"
 import { useSearchSurveys } from "@/hooks/use-search-surveys"
-import { useAuthActions } from "@/components/providers/auth-provider"
-import { useAccount } from 'wagmi'
 import { useNotifications } from "@/components/ui/notifications"
-import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Copy, Check } from "lucide-react"
-import { AnimatedList } from "./animated-survey-list"
+import { MotionSurveyTable } from "./motion-survey-table"
+import { motion, AnimatePresence } from "motion/react"
 import type { Survey } from "@/lib/types"
 
 interface SurveyTableProps {
@@ -20,64 +18,11 @@ interface SurveyTableProps {
 interface SurveyRowProps {
   survey: Survey
   onTakeSurvey: (survey: Survey) => void
-  onConnectWallet?: () => void
-  onAuthenticate?: () => void
   onCopyLink: (surveyId: string) => void
   copiedSurveyId: string | null
-  eligibility?: any // Pass eligibility data from batch request
 }
 
-function DesktopSurveyRow({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, onCopyLink, copiedSurveyId, eligibility }: SurveyRowProps) {
-  const handleButtonClick = () => {
-    onTakeSurvey(survey)
-  }
-
-  const formatReward = (survey: Survey) => {
-    const tokenReward = `${survey.rewardAmount} ${survey.rewardToken}`
-    const pointsReward = survey.heardPointsReward > 0 ? ` + ${survey.heardPointsReward} HP` : ""
-    return tokenReward + pointsReward
-  }
-
-  return (
-    <tr className="hover:bg-zinc-50 transition-all duration-300 ease-out animate-fade-in">
-      <td className="px-6 py-4">
-        <div>
-          <div className="text-base font-medium text-zinc-900">{survey.name}</div>
-          <div className="text-sm text-zinc-500">{survey.totalQuestions} questions</div>
-        </div>
-      </td>
-      <td className="px-6 py-4 text-base text-zinc-600">{survey.company}</td>
-      <td className="px-6 py-4">
-        <div className="text-base font-medium text-zinc-900">{formatReward(survey)}</div>
-      </td>
-      <td className="px-6 py-4">
-        <Button
-          onClick={handleButtonClick}
-          className="text-white rounded-lg px-4 py-2 text-sm font-medium bg-zinc-900 hover:bg-zinc-800"
-          title="View survey information"
-        >
-          Take
-        </Button>
-      </td>
-      <td className="px-6 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onCopyLink(survey.id)}
-          className="flex items-center gap-2"
-        >
-          {copiedSurveyId === survey.id ? (
-            <Check className="w-4 h-4 text-zinc-900" />
-          ) : (
-            <Copy className="w-4 h-4" />
-          )}
-        </Button>
-      </td>
-    </tr>
-  )
-}
-
-function MobileSurveyCard({ survey, onTakeSurvey, onConnectWallet, onAuthenticate, onCopyLink, copiedSurveyId, eligibility }: SurveyRowProps) {
+function MobileSurveyCard({ survey, onTakeSurvey, onCopyLink, copiedSurveyId }: SurveyRowProps) {
   const getButtonStyle = () => {
     return "bg-zinc-900 hover:bg-zinc-800"
   }
@@ -149,7 +94,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
     isSearching: hasActiveSearch,
     searchTerm,
     selectedCompany: activeCompany
-  } = useSearchSurveys({ throttleMs: 400 })
+  } = useSearchSurveys({ throttleMs: 250 })
 
   // Fallback to useActiveSurveys when no search/filter is active
   const {
@@ -160,15 +105,17 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
   } = useActiveSurveys({ limit: 50 })
 
   // Determine which data to use
-  const surveys = hasActiveSearch ? (searchResults?.surveys || []) : allSurveys
-  const isLoading = hasActiveSearch ? isSearching : isLoadingAll
+  // When searching, keep showing previous results until new ones arrive
+  const surveys = hasActiveSearch 
+    ? (searchResults?.surveys || allSurveys) 
+    : allSurveys
+  
+  // Show loading only on very first load when we have no data at all
+  const isLoading = !hasActiveSearch && isLoadingAll && allSurveys.length === 0
   const error = hasActiveSearch ? searchError : allSurveysError
   const refetch = hasActiveSearch ? refetchSearch : refetchAll
 
   const notifications = useNotifications()
-  const { login } = useAuthActions()
-  const { address } = useAccount()
-  const { openConnectModal } = useConnectModal()
 
   // Update search when inputs change
   useEffect(() => {
@@ -181,13 +128,6 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
       clearSearch()
     }
   }, [searchQuery, selectedCompany, updateSearch, clearSearch])
-
-  // Batch eligibility check for all surveys
-  // Shows eligibility status when wallet is connected
-  const { data: batchEligibility } = useBatchSurveyEligibility(
-    surveys.map(s => s.id),
-    address
-  )
 
   // Surveys are already filtered on server-side, so use them directly
   const filteredSurveys = surveys
@@ -202,27 +142,6 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
       notifications.error(
         "Failed to start survey",
         "Please try again or contact support if the problem persists"
-      )
-    }
-  }
-
-  const handleConnectWallet = () => {
-    if (openConnectModal) {
-      openConnectModal()
-    }
-  }
-
-  const handleAuthenticate = async () => {
-    try {
-      console.log('SurveyTable: Starting login process')
-      await login()
-      console.log('SurveyTable: Login successful')
-      notifications.success("Authentication successful", "You can now take surveys")
-    } catch (error: any) {
-      console.error('SurveyTable: Login failed', error)
-      notifications.error(
-        "Authentication failed",
-        error.message || "Please try again or contact support if the problem persists"
       )
     }
   }
@@ -266,7 +185,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Filters */}
         <div className="mb-8 flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+          <div className="flex-1 relative">
             <input
               type="text"
               placeholder="Search surveys..."
@@ -274,6 +193,11 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
+            {hasActiveSearch && isSearching && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-zinc-300 border-t-orange-500"></div>
+              </div>
+            )}
           </div>
           <div className="sm:w-48">
             <select
@@ -309,42 +233,92 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900">Share</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-200">
-                  {filteredSurveys.map((survey) => (
-                    <DesktopSurveyRow
-                      key={survey.id}
-                      survey={survey}
-                      onTakeSurvey={handleTakeSurvey}
-                      onConnectWallet={handleConnectWallet}
-                      onAuthenticate={handleAuthenticate}
-                      onCopyLink={handleCopyLink}
-                      copiedSurveyId={copiedSurveyId}
-                      eligibility={batchEligibility?.[survey.id]}
-                    />
-                  ))}
-                </tbody>
+                <MotionSurveyTable
+                  surveys={filteredSurveys}
+                  renderRow={(survey) => (
+                    <>
+                      <td className="px-6 py-4">
+                        <div>
+                          <div className="text-base font-medium text-zinc-900">{survey.name}</div>
+                          <div className="text-sm text-zinc-500">{survey.totalQuestions} questions</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-base text-zinc-600">{survey.company}</td>
+                      <td className="px-6 py-4">
+                        <div className="text-base font-medium text-zinc-900">
+                          {`${survey.rewardAmount} ${survey.rewardToken}`}
+                          {survey.heardPointsReward > 0 ? ` + ${survey.heardPointsReward} HP` : ""}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Button
+                          onClick={() => handleTakeSurvey(survey)}
+                          className="text-white rounded-lg px-4 py-2 text-sm font-medium bg-zinc-900 hover:bg-zinc-800"
+                          title="View survey information"
+                        >
+                          Take
+                        </Button>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCopyLink(survey.id)}
+                          className="flex items-center gap-2"
+                        >
+                          {copiedSurveyId === survey.id ? (
+                            <Check className="w-4 h-4 text-zinc-900" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </td>
+                    </>
+                  )}
+                />
               </table>
             </div>
           </div>
 
           {/* Mobile Cards */}
-          <div className="lg:hidden">
-            <AnimatedList
-              items={filteredSurveys}
-              className="space-y-4"
-              renderItem={(survey) => (
-                <MobileSurveyCard
-                  survey={survey}
-                  onTakeSurvey={handleTakeSurvey}
-                  onConnectWallet={handleConnectWallet}
-                  onAuthenticate={handleAuthenticate}
-                  onCopyLink={handleCopyLink}
-                  copiedSurveyId={copiedSurveyId}
-                  eligibility={batchEligibility?.[survey.id]}
-                />
-              )}
-            />
-          </div>
+          <motion.div 
+            className="lg:hidden space-y-4"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 1 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.05
+                }
+              }
+            }}
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredSurveys.map((survey) => (
+                <motion.div
+                  key={survey.id}
+                  layout
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.9 }}
+                  transition={{
+                    type: "spring",
+                    damping: 25,
+                    stiffness: 120
+                  }}
+                >
+                  <MobileSurveyCard
+                    survey={survey}
+                    onTakeSurvey={handleTakeSurvey}
+                    onCopyLink={handleCopyLink}
+                    copiedSurveyId={copiedSurveyId}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
         </LoadingState>
 
         {/* Results count */}

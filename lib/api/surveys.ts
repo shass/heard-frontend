@@ -37,7 +37,7 @@ export class SurveyApi {
   /**
    * Get list of active surveys with pagination
    */
-  async getSurveys(params: GetSurveysRequest = {}): Promise<GetSurveysResponse> {
+  async getSurveys(params: GetSurveysRequest = {}, options?: { signal?: AbortSignal }): Promise<GetSurveysResponse> {
     const queryParams = new URLSearchParams()
 
     if (params.limit) queryParams.append('limit', params.limit.toString())
@@ -55,7 +55,7 @@ export class SurveyApi {
         offset: number,
         hasMore: boolean
       }
-    }>(url)
+    }>(url, { signal: options?.signal })
 
     // Transform backend response to frontend expected format
     return {
