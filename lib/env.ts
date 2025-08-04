@@ -7,6 +7,7 @@ const requiredEnvVars = [
   'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID',
   'NEXT_PUBLIC_APP_NAME',
   'NEXT_PUBLIC_ENVIRONMENT',
+  'CDP_CLIENT_API_KEY'
 ] as const
 
 // Only validate on server side during build/startup
@@ -25,6 +26,7 @@ export const env = {
 
   // Web3
   WALLETCONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
+  CDP_CLIENT_API_KEY: process.env.NEXT_PUBLIC_CDP_CLIENT_API_KEY!,
 
   // App
   APP_NAME: process.env.NEXT_PUBLIC_APP_NAME!,

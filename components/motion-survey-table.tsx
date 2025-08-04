@@ -74,10 +74,6 @@ export function MotionSurveyTable({ surveys, renderRow }: MotionSurveyTableProps
               willChange: 'transform, opacity',
               transformOrigin: 'center center'
             }}
-            whileHover={{
-              scale: 1.01,
-              transition: { duration: 0.15 }
-            }}
           >
             {renderRow(survey)}
           </motion.tr>
