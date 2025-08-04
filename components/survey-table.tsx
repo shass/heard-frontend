@@ -190,6 +190,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              style={{ minHeight: '42px' }}
             />
             {(searchQuery || selectedCompany) && isFetching && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -201,7 +202,11 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
             <select
               value={selectedCompany}
               onChange={(e) => setSelectedCompany(e.target.value)}
-              className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none bg-white bg-no-repeat bg-[right_0.7rem_center] bg-[length:16px] pr-10 truncate"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                minHeight: '42px'
+              }}
             >
               <option value="">All Companies</option>
               {companies.map(company => (
