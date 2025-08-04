@@ -5,9 +5,9 @@ const requiredEnvVars = [
   'NEXT_PUBLIC_API_URL',
   'NEXT_PUBLIC_API_TIMEOUT',
   'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID',
+  'NEXT_PUBLIC_CDP_CLIENT_API_KEY',
   'NEXT_PUBLIC_APP_NAME',
-  'NEXT_PUBLIC_ENVIRONMENT',
-  'CDP_CLIENT_API_KEY'
+  'NEXT_PUBLIC_ENVIRONMENT'
 ] as const
 
 // Only validate on server side during build/startup
