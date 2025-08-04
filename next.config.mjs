@@ -11,6 +11,7 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_API_TIMEOUT: process.env.NEXT_PUBLIC_API_TIMEOUT,
     NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
+    NEXT_PUBLIC_CDP_CLIENT_API_KEY: process.env.NEXT_PUBLIC_CDP_CLIENT_API_KEY,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
     NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
     NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
@@ -26,7 +27,7 @@ const nextConfig = {
   },
   async rewrites() {
     const isDevelopment = process.env.NODE_ENV === 'development'
-    
+
     // В development проксируем к локальному бэкенду
     // В production DigitalOcean App Platform роутит /api напрямую к backend сервису
     if (isDevelopment) {
@@ -37,7 +38,7 @@ const nextConfig = {
         },
       ]
     }
-    
+
     // В production rewrites не нужны - DO роутит по HTTP Routes
     return []
   },
@@ -53,7 +54,7 @@ const nextConfig = {
   webpack: (config) => {
     config.resolve.fallback = { fs: false, net: false, tls: false };
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
-    
+
     // Bundle size optimizations
     config.optimization = {
       ...config.optimization,
@@ -81,7 +82,7 @@ const nextConfig = {
         },
       },
     }
-    
+
     return config;
   },
 }

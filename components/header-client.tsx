@@ -36,9 +36,9 @@ export function HeaderClient({ onCreateSurvey }: HeaderClientProps) {
     <header className="sticky top-0 z-50 w-full bg-white border-b border-zinc-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center h-40">
+          <div className="flex items-center h-10">
             <Link href="/">
-              <Image src="/logo.png" alt="Heard Labs" width={160} height={160} className="h-40 w-40 min-w-40" />
+              <Image src="/logo.svg" alt="Heard Labs" width={160} height={160} className="h-10 w-40 min-w-40" />
             </Link>
           </div>
 

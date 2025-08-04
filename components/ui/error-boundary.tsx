@@ -33,12 +33,12 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.setState({ errorInfo })
-    
+
     // Log error to console in development
     if (process.env.NODE_ENV === 'development') {
       console.error('Error caught by boundary:', error, errorInfo)
     }
-    
+
     // Here you could send error to monitoring service
     // Example: sendErrorToMonitoring(error, errorInfo)
   }
@@ -50,12 +50,12 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   render() {
     if (this.state.hasError) {
       const FallbackComponent = this.props.fallback || DefaultErrorFallback
-      
+
       return (
         <FallbackComponent
           error={this.state.error!}
           resetError={this.resetError}
-          errorInfo={this.state.errorInfo}
+          errorInfo={this.state.errorInfo || undefined}
         />
       )
     }
@@ -67,7 +67,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 function DefaultErrorFallback({ error, resetError, errorInfo }: ErrorFallbackProps) {
   const isNetworkError = error.message.includes('fetch') || error.message.includes('network')
   const isAuthError = error.message.includes('auth') || error.message.includes('unauthorized')
-  
+
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-6">
@@ -77,14 +77,14 @@ function DefaultErrorFallback({ error, resetError, errorInfo }: ErrorFallbackPro
             <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
         </div>
-        
+
         {/* Error Message */}
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-zinc-900">
             Something went wrong
           </h1>
           <p className="text-zinc-600">
-            {isNetworkError 
+            {isNetworkError
               ? "We're having trouble connecting to our servers. Please check your internet connection and try again."
               : isAuthError
               ? "There was an authentication issue. Please try signing in again."
@@ -92,7 +92,7 @@ function DefaultErrorFallback({ error, resetError, errorInfo }: ErrorFallbackPro
             }
           </p>
         </div>
-        
+
         {/* Error Details (Development only) */}
         {process.env.NODE_ENV === 'development' && (
           <details className="text-left bg-zinc-50 rounded-lg p-4 border border-zinc-200">
@@ -117,7 +117,7 @@ function DefaultErrorFallback({ error, resetError, errorInfo }: ErrorFallbackPro
             </div>
           </details>
         )}
-        
+
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button
@@ -127,7 +127,7 @@ function DefaultErrorFallback({ error, resetError, errorInfo }: ErrorFallbackPro
             <RefreshCw className="w-4 h-4 mr-2" />
             Try Again
           </Button>
-          
+
           <Button
             onClick={() => window.location.href = '/'}
             variant="outline"
@@ -137,12 +137,12 @@ function DefaultErrorFallback({ error, resetError, errorInfo }: ErrorFallbackPro
             Go Home
           </Button>
         </div>
-        
+
         {/* Support Link */}
         <p className="text-sm text-zinc-500">
           If this problem persists, please{' '}
-          <a 
-            href="mailto:support@heardlabs.com" 
+          <a
+            href="mailto:contact@heardlabs.xyz"
             className="text-zinc-700 hover:text-zinc-900 underline"
           >
             contact our support team
@@ -169,7 +169,7 @@ export function SurveyErrorFallback({ error, resetError }: ErrorFallbackProps) {
           <Button onClick={resetError} className="bg-zinc-900 hover:bg-zinc-800 text-white">
             Try Again
           </Button>
-          <Button 
+          <Button
             onClick={() => window.location.href = '/'}
             variant="outline"
             className="border-zinc-300 text-zinc-700 hover:bg-zinc-50"
@@ -197,7 +197,7 @@ export function AuthErrorFallback({ error, resetError }: ErrorFallbackProps) {
           <Button onClick={resetError} className="bg-zinc-900 hover:bg-zinc-800 text-white">
             Try Again
           </Button>
-          <Button 
+          <Button
             onClick={() => window.location.reload()}
             variant="outline"
             className="border-zinc-300 text-zinc-700 hover:bg-zinc-50"
