@@ -41,11 +41,26 @@ export const metadata: Metadata = {
     images: ['/hero-1200x628.png'],
   },
   other: {
+    // Farcaster Mini App metadata
+    'fc:miniapp': JSON.stringify({
+      version: '1',
+      imageUrl: 'https://heardlabs.xyz/hero-1200x628.png',
+      button: {
+        title: 'Open Heard Labs',
+        action: {
+          type: 'launch_miniapp'
+        }
+      },
+      splashImageUrl: 'https://heardlabs.xyz/hero-banner.png',
+      splashBackgroundColor: '#ffffff'
+    }),
+    // Farcaster Frame metadata (для постов в ленте)
     'fc:frame': 'vNext',
     'fc:frame:image': 'https://heardlabs.xyz/hero-1200x628.png',
     'fc:frame:button:1': 'Open App',
     'fc:frame:button:1:action': 'link',
     'fc:frame:button:1:target': 'https://heardlabs.xyz',
+    // OpenGraph fallback
     'og:image': 'https://heardlabs.xyz/hero-1200x628.png',
   },
   icons: {
