@@ -15,6 +15,11 @@ const nextConfig = {
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
     NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
     NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
+    NEXT_PUBLIC_URL: process.env.NEXT_PUBLIC_URL,
+    // Farcaster manifest variables (server-side)
+    FARCASTER_HEADER: process.env.FARCASTER_HEADER,
+    FARCASTER_PAYLOAD: process.env.FARCASTER_PAYLOAD,
+    FARCASTER_SIGNATURE: process.env.FARCASTER_SIGNATURE,
   },
   // Development indicators
   devIndicators: {
