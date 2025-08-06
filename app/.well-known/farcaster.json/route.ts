@@ -27,11 +27,11 @@ export async function GET() {
     frame: {
       version: "1",
       name: env.APP_NAME,
-      iconUrl: `${env.APP_URL}/icon-200x200.png`,
-      homeUrl: env.APP_URL,
-      imageUrl: `${env.APP_URL}/hero-1200x628.png`,
+      iconUrl: `${env.PUBLIC_URL}/icon-200x200.png`,
+      homeUrl: env.PUBLIC_URL,
+      imageUrl: `${env.PUBLIC_URL}/hero-1200x628.png`,
       buttonTitle: "Start Survey",
-      splashImageUrl: `${env.APP_URL}/hero-banner.png`,
+      splashImageUrl: `${env.PUBLIC_URL}/hero-banner.png`,
       splashBackgroundColor: "#ffffff"
     }
   });

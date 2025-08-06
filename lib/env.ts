@@ -39,7 +39,6 @@ export const env = {
   APP_NAME: process.env.NEXT_PUBLIC_APP_NAME!,
   APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
   ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT!,
-  APP_URL: process.env.NEXT_PUBLIC_URL!,
 
   // Farcaster Manifest (server-side only, for Base catalog)
   FARCASTER_HEADER: process.env.NEXT_PUBLIC_FARCASTER_HEADER!,
