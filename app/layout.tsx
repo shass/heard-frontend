@@ -7,6 +7,7 @@ import { NotificationContainer } from '@/components/ui/notifications'
 import { NetworkStatus } from '@/components/lazy'
 import ErrorBoundary from '@/components/ui/error-boundary'
 import { StoreHydration } from '@/lib/store/hydration'
+import { MiniKitReady } from '@/components/providers/minikit-ready'
 import './globals.css'
 import React from 'react';
 
@@ -54,7 +55,7 @@ export const metadata: Metadata = {
       splashImageUrl: 'https://heardlabs.xyz/hero-banner.png',
       splashBackgroundColor: '#ffffff'
     }),
-    // Farcaster Frame metadata (для постов в ленте)
+    // Farcaster Frame metadata
     'fc:frame': 'vNext',
     'fc:frame:image': 'https://heardlabs.xyz/hero-1200x628.png',
     'fc:frame:button:1': 'Open App',
@@ -88,6 +89,7 @@ export default function RootLayout({
                 <CreateSurveyModalProvider>
                   <StoreHydration />
                   <NetworkStatus />
+                  <MiniKitReady />
                   {children}
                   <NotificationContainer />
                 </CreateSurveyModalProvider>
