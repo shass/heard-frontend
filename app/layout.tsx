@@ -40,6 +40,14 @@ export const metadata: Metadata = {
     description: 'Earn crypto rewards by completing surveys on the Web3 platform',
     images: ['/hero-1200x628.png'],
   },
+  other: {
+    'fc:frame': 'vNext',
+    'fc:frame:image': 'https://heardlabs.xyz/hero-1200x628.png',
+    'fc:frame:button:1': 'Open App',
+    'fc:frame:button:1:action': 'link',
+    'fc:frame:button:1:target': 'https://heardlabs.xyz',
+    'og:image': 'https://heardlabs.xyz/hero-1200x628.png',
+  },
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
