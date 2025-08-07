@@ -43,7 +43,21 @@ export const metadata: Metadata = {
   },
   other: {
     // Farcaster Mini App metadata
-    'fc:miniapp': JSON.stringify({
+    // 'fc:miniapp': JSON.stringify({
+    //   version: '1',
+    //   imageUrl: 'https://heardlabs.xyz/hero-1200x628.png',
+    //   button: {
+    //     title: 'Open Heard Labs',
+    //     action: {
+    //       type: 'launch_miniapp'
+    //     }
+    //   },
+    //   splashImageUrl: 'https://heardlabs.xyz/hero-banner.png',
+    //   splashBackgroundColor: '#ffffff'
+    // }),
+    // Farcaster Frame metadata
+    // 'fc:frame': 'vNext',
+    'fc:frame': JSON.stringify({
       version: '1',
       imageUrl: 'https://heardlabs.xyz/hero-1200x628.png',
       button: {
@@ -55,8 +69,6 @@ export const metadata: Metadata = {
       splashImageUrl: 'https://heardlabs.xyz/hero-banner.png',
       splashBackgroundColor: '#ffffff'
     }),
-    // Farcaster Frame metadata
-    'fc:frame': 'vNext',
     'fc:frame:image': 'https://heardlabs.xyz/hero-1200x628.png',
     'fc:frame:button:1': 'Open App',
     'fc:frame:button:1:action': 'link',
