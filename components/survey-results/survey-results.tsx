@@ -11,6 +11,7 @@ import { useSurveyResultsWithQuestions, useCanViewResults } from '@/hooks/use-su
 import { resultsUtils } from '@/lib/api/survey-clients'
 import { QuestionChart } from './question-chart'
 import { VisibilityManager } from './visibility-manager'
+import { ShareButton } from '@/components/share-button'
 
 interface SurveyResultsProps {
   surveyId: string
@@ -89,6 +90,14 @@ export function SurveyResults({
           )}
         </div>
         <div className="flex items-center gap-2">
+          {visibilityMode === 'public' && (
+            <ShareButton
+              text={`Check out these survey results from ${surveyCompany || 'Heard Labs'}: "${surveyName}"`}
+              url={typeof window !== 'undefined' ? window.location.href : undefined}
+              variant="outline"
+              size="sm"
+            />
+          )}
           {visibilityMode && (
             <Badge variant={visibilityMode === 'public' ? 'default' : 'secondary'}>
               <Eye className="w-3 h-3 mr-1" />

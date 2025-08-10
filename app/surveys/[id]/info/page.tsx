@@ -2,6 +2,7 @@
 
 import { use, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useOpenUrl } from '@coinbase/onchainkit/minikit'
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useSurvey, useSurveyEligibility } from "@/hooks/use-surveys"
@@ -27,6 +28,7 @@ interface SurveyInfoPageProps {
 
 export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
+  const openUrl = useOpenUrl()
   const { login, isAuthenticated, isLoading: isAuthLoading, checkAuth } = useAuthActions()
   const { isConnected, address } = useAccount()
   const { openConnectModal } = useConnectModal()
@@ -70,7 +72,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
   const handleClaimReward = () => {
     if (userReward?.claimLink) {
-      window.open(userReward.claimLink, '_blank')
+      openUrl(userReward.claimLink)
     }
   }
 

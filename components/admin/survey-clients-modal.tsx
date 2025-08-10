@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useOpenUrl } from '@coinbase/onchainkit/minikit'
 import {
   Dialog,
   DialogContent,
@@ -64,6 +65,7 @@ const addClientSchema = z.object({
 type AddClientForm = z.infer<typeof addClientSchema>
 
 export function SurveyClientsModal({ survey, isOpen, onClose }: SurveyClientsModalProps) {
+  const openUrl = useOpenUrl()
   const [activeTab, setActiveTab] = useState<'clients' | 'visibility'>('clients')
   
   const { data: clients, isLoading: clientsLoading } = useSurveyClients(survey?.id || '')
@@ -161,7 +163,7 @@ export function SurveyClientsModal({ survey, isOpen, onClose }: SurveyClientsMod
   const openResults = () => {
     if (!survey?.id) return
     const url = `/surveys/${survey.id}/results`
-    window.open(url, '_blank')
+    openUrl(url)
   }
 
   const getResultsUrl = () => {
@@ -535,7 +537,7 @@ export function SurveyClientsModal({ survey, isOpen, onClose }: SurveyClientsMod
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => window.open(visibility.shareUrl, '_blank')}
+                          onClick={() => visibility.shareUrl && openUrl(visibility.shareUrl)}
                         >
                           <ExternalLink className="h-4 w-4" />
                         </Button>

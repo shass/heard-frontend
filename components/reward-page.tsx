@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useOpenUrl } from '@coinbase/onchainkit/minikit'
 import { Button } from "@/components/ui/button"
 import { LoadingState, InlineLoading } from "@/components/ui/loading-states"
 import { Copy, ExternalLink, Gift, CheckCircle2, Check } from "lucide-react"
@@ -17,6 +18,7 @@ interface RewardPageProps {
 }
 
 export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPageProps) {
+  const openUrl = useOpenUrl()
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null)
   const [claimStatus, setClaimStatus] = useState<'pending' | 'claimed' | 'error'>('pending')
   const [linkCopied, setLinkCopied] = useState(false)
@@ -87,8 +89,8 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
     }
 
     try {
-      // Open LinkDrop claim URL in new tab
-      window.open(claimUrl, '_blank')
+      // Open LinkDrop claim URL using MiniKit hook (fallback to window.open in browsers)
+      openUrl(claimUrl)
 
       // Mark as claimed (optimistically)
       setClaimStatus('claimed')
