@@ -14,12 +14,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { FarcasterAuthButton } from "@/components/farcaster-auth-button"
+import { useMiniKitContext } from "@/hooks/use-minikit-context"
 
 export function AuthSection() {
   const { logout, isAuthenticated, user, isLoading, platform } = useAuthActions()
   const { isConnected, address } = useAccount()
   const { disconnect } = useDisconnect()
   const { openConnectModal } = useConnectModal()
+  const { isFarcasterApp, isBaseApp } = useMiniKitContext()
   const notifications = useNotifications()
 
   const handleLogout = async () => {
@@ -46,13 +49,25 @@ export function AuthSection() {
 
   if (!isConnected) {
     return (
-      <Button
-        onClick={() => openConnectModal?.()}
-        className="bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg px-4 py-2 font-medium flex items-center space-x-2"
-      >
-        <Wallet className="w-4 h-4" />
-        <span>Connect Wallet</span>
-      </Button>
+      <div className="flex items-center space-x-2">
+        {(isFarcasterApp || isBaseApp) && (
+          <FarcasterAuthButton 
+            variant="ghost" 
+            size="sm"
+            onSuccess={(result) => {
+              console.log('Farcaster auth success:', result);
+              // Could integrate with existing auth flow here
+            }}
+          />
+        )}
+        <Button
+          onClick={() => openConnectModal?.()}
+          className="bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg px-4 py-2 font-medium flex items-center space-x-2"
+        >
+          <Wallet className="w-4 h-4" />
+          <span>Connect Wallet</span>
+        </Button>
+      </div>
     )
   }
 
