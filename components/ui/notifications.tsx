@@ -53,11 +53,11 @@ function NotificationItem({ notification, onClose }: NotificationItemProps) {
         bgColors[type]
       )}
     >
-      <div className="flex items-start p-4">
+      <div className="flex items-start p-4 pr-10">
         <div className="flex-shrink-0">
           {icons[type]}
         </div>
-        
+
         <div className="ml-3 flex-1">
           <div className="text-sm font-medium text-zinc-900">
             {title}
@@ -78,16 +78,14 @@ function NotificationItem({ notification, onClose }: NotificationItemProps) {
             </div>
           )}
         </div>
-        
-        <div className="ml-4 flex-shrink-0">
-          <button
-            onClick={() => onClose(id)}
-            className="inline-flex rounded-md text-zinc-400 hover:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
       </div>
+
+      <button
+        onClick={() => onClose(id)}
+        className="absolute top-4 right-4 inline-flex rounded-md text-zinc-400 hover:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </div>
   )
 }
@@ -119,16 +117,16 @@ export function useNotifications() {
   return {
     success: (title: string, message?: string, options?: Partial<Notification>) =>
       addNotification({ type: 'success', title, message, ...options }),
-    
+
     error: (title: string, message?: string, options?: Partial<Notification>) =>
       addNotification({ type: 'error', title, message, ...options }),
-    
+
     warning: (title: string, message?: string, options?: Partial<Notification>) =>
       addNotification({ type: 'warning', title, message, ...options }),
-    
+
     info: (title: string, message?: string, options?: Partial<Notification>) =>
       addNotification({ type: 'info', title, message, ...options }),
-    
+
     custom: (notification: Omit<Notification, 'id'>) =>
       addNotification(notification)
   }
