@@ -225,7 +225,7 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
                 </div>
               ) : (
                 <>
-                  <div className="border rounded-lg overflow-hidden">
+                  <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
