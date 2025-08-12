@@ -298,17 +298,7 @@ export interface UpdateSurveyRequest extends Partial<CreateSurveyRequest> {
   isActive?: boolean
 }
 
-// Legacy WhitelistEntry for old components (if needed)
-export interface LegacyWhitelistEntry {
-  id: string
-  surveyId: string
-  walletAddress: string
-  isActive: boolean
-  createdAt: string
-  createdBy: string
-}
-
-// New WhitelistEntry for paginated view with completion status
+// WhitelistEntry for paginated view with completion status
 export interface WhitelistEntry {
   address: string
   hasCompleted: boolean

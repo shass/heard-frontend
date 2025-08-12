@@ -217,20 +217,104 @@ export const addWhitelistEntry = async (surveyId: string, walletAddress: string)
   return data
 }
 
-export const bulkAddWhitelistEntries = async (request: BulkWhitelistRequest): Promise<{
-  message: string
-  addedCount: number
-  skippedCount: number
-}> => {
-  const data = await apiClient.post<{
+// Smart Upload - automatically chooses optimal processing method
+export const smartUploadWhitelist = async (surveyId: string, data: { 
+  addresses?: string[]
+  file?: File 
+  replaceMode?: boolean 
+}): Promise<{
+  method: 'sync' | 'async'
+  itemCount: number
+  strategy: {
+    batchSize: number
+    description: string
+    estimatedTime: string
+  }
+  validation: {
+    valid: boolean
+    warnings: string[]
+    errors: string[]
+  }
+  recommendations: {
+    webSocketRecommended: boolean
+    chunkedUploadRecommended: boolean
+    memoryWarning: boolean
+    tips: string[]
+  }
+  jobId?: string
+  addedItems?: number
+  skippedItems?: number
+  errors?: Array<{
     message: string
-    addedCount: number
-    skippedCount: number
-  }>(`/admin/surveys/${request.surveyId}/whitelist/bulk-add`, {
-    walletAddresses: request.walletAddresses,
-    replaceMode: request.replaceMode || false
-  })
+    timestamp: string
+    line?: number
+    value?: string
+  }>
+  processingTime?: number
+  eta?: {
+    estimatedSeconds: number
+    estimatedCompletion: string
+  }
+  message: string
+}> => {
+  let requestConfig: any = {
+    url: `/admin/surveys/${surveyId}/whitelist/smart-upload`,
+    method: 'POST'
+  }
+
+  if (data.file) {
+    // File upload - use multipart/form-data
+    const formData = new FormData()
+    formData.append('file', data.file)
+    if (data.replaceMode) {
+      formData.append('replaceMode', 'true')
+    }
+    
+    requestConfig.data = formData
+    requestConfig.headers = {
+      'Content-Type': 'multipart/form-data'
+    }
+  } else if (data.addresses) {
+    // JSON array - use application/json
+    requestConfig.data = {
+      walletAddresses: data.addresses,
+      replaceMode: data.replaceMode || false
+    }
+    requestConfig.headers = {
+      'Content-Type': 'application/json'
+    }
+  } else {
+    throw new Error('Either addresses array or file must be provided')
+  }
+
+  const response = await apiClient.post<any>(
+    requestConfig.url,
+    requestConfig.data,
+    { headers: requestConfig.headers }
+  )
   
+  return response
+}
+
+// Get smart upload job status
+export const getSmartUploadStatus = async (jobId: string): Promise<{
+  jobId: string
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+  progress: number
+  processedItems: number
+  totalItems: number
+  currentBatch: number
+  totalBatches: number
+  speed: number
+  estimatedTimeRemaining: number
+  errors: Array<{
+    message: string
+    timestamp: string
+    line?: number
+    value?: string
+  }>
+}> => {
+  const data = await apiClient.get<any>(`/admin/smart-upload-jobs/${jobId}/status`)
   return data
 }
 
