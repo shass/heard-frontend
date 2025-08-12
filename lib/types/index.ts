@@ -130,8 +130,8 @@ export interface AuthResponse {
 }
 
 export interface NonceResponse {
-  nonce: string
   message: string
+  jwtToken: string // JWT token containing nonce data
 }
 
 // Eligibility types
@@ -171,6 +171,7 @@ export interface ConnectWalletRequest {
   walletAddress: string
   signature: string
   message: string
+  jwtToken: string // JWT token from nonce response
 }
 
 export interface AnswerSubmissionRequest {
