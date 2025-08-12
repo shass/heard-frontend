@@ -9,14 +9,12 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/loading-states'
 import { useNotifications } from '@/components/ui/notifications'
-import { 
-  Upload, 
+import {
+  Upload,
   FileText,
   X,
-  Clock,
   CheckCircle,
   AlertTriangle,
   Info,
@@ -81,9 +79,8 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
   const [activeJobId, setActiveJobId] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
+
   const notifications = useNotifications()
-  const queryClient = useQueryClient()
 
   // Poll job progress if we have an active job
   const { data: jobProgress } = useQuery({
@@ -103,7 +100,7 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
   useEffect(() => {
     if (jobProgress?.status === 'completed') {
       notifications.success(
-        'Import Complete!', 
+        'Import Complete!',
         `Successfully processed ${jobProgress.processedItems} addresses`
       )
       setActiveJobId(null)
@@ -111,7 +108,7 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
       onSuccess()
     } else if (jobProgress?.status === 'failed') {
       notifications.error(
-        'Import Failed', 
+        'Import Failed',
         'The import job encountered an error and could not be completed'
       )
       setActiveJobId(null)
@@ -182,11 +179,11 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
       notifications.error('No data to upload', 'Please select a file or enter addresses in the text area')
       return
     }
-    
+
     setIsUploading(true)
     setUploadResult(null)
     setActiveJobId(null)
-    
+
     try {
       if (selectedFile) {
         // File upload
@@ -200,12 +197,12 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
           .split('\n')
           .map(addr => addr.trim())
           .filter(addr => addr.length > 0)
-          
+
         // Basic validation
-        const invalidAddresses = addresses.filter(addr => 
+        const invalidAddresses = addresses.filter(addr =>
           !addr.match(/^0x[a-fA-F0-9]{40}$/i)
         )
-        
+
         if (invalidAddresses.length > 0) {
           notifications.error(
             'Invalid addresses found',
@@ -233,7 +230,7 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'text-green-600'
-      case 'failed': return 'text-red-600' 
+      case 'failed': return 'text-red-600'
       case 'cancelled': return 'text-gray-600'
       case 'processing': return 'text-blue-600'
       default: return 'text-yellow-600'
@@ -256,14 +253,14 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
             <label className="text-sm font-medium text-gray-700">
               Upload File (.txt or .csv - one address per line)
             </label>
-            
+
             {!selectedFile ? (
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600">Select a file to import wallet addresses</p>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
                   >
@@ -317,7 +314,7 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
               <Textarea
                 value={textareaAddresses}
                 onChange={(e) => setTextareaAddresses(e.target.value)}
-                placeholder="0x1234567890123456789012345678901234567890&#10;0x0987654321098765432109876543210987654321&#10;0x..."
+                placeholder={`0x1234567890123456789012345678901234567890\n0x0987654321098765432109876543210987654321\n0x...`}
                 rows={6}
                 disabled={isUploading}
                 className="resize-none font-mono text-sm"
@@ -355,7 +352,7 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
                   {replaceMode ? 'Replace existing whitelist' : 'Add to existing whitelist'}
                 </Label>
                 <p className="text-xs text-gray-600">
-                  {replaceMode 
+                  {replaceMode
                     ? 'All current addresses will be removed and replaced with imported ones'
                     : 'New addresses will be added to the existing whitelist (duplicates will be skipped)'
                   }
@@ -413,7 +410,7 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
                   )}
                   Validation Status
                 </h4>
-                
+
                 {uploadResult.validation.errors?.length > 0 && (
                   <div className="space-y-1">
                     {uploadResult.validation.errors.map((error, index) => (
@@ -494,7 +491,7 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
               </div>
               <div className="text-center p-3 bg-gray-50 rounded-lg">
                 <div className="text-xl font-bold text-gray-900">
-                  {jobProgress.estimatedTimeRemaining > 60 
+                  {jobProgress.estimatedTimeRemaining > 60
                     ? `${Math.ceil(jobProgress.estimatedTimeRemaining / 60)}m`
                     : `${jobProgress.estimatedTimeRemaining}s`
                   }

@@ -217,25 +217,6 @@ export const addWhitelistEntry = async (surveyId: string, walletAddress: string)
   return data
 }
 
-// Legacy method - deprecated in favor of smartUploadWhitelist
-export const bulkAddWhitelistEntries = async (request: BulkWhitelistRequest): Promise<{
-  message: string
-  addedCount: number
-  skippedCount: number
-}> => {
-  console.warn('bulkAddWhitelistEntries is deprecated. Use smartUploadWhitelist instead.')
-  const data = await apiClient.post<{
-    message: string
-    addedCount: number
-    skippedCount: number
-  }>(`/admin/surveys/${request.surveyId}/whitelist/bulk-add`, {
-    walletAddresses: request.walletAddresses,
-    replaceMode: request.replaceMode || false
-  })
-  
-  return data
-}
-
 // Smart Upload - automatically chooses optimal processing method
 export const smartUploadWhitelist = async (surveyId: string, data: { 
   addresses?: string[]
