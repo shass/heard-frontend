@@ -22,31 +22,27 @@ export function useAuth() {
 
     try {
       // Step 1: Get nonce from backend
-      console.log('🔐 Getting nonce for address:', address)
-      const { message } = await authApi.getNonce(address)
+      const { message, jwtToken } = await authApi.getNonce(address)
 
       // Step 2: Sign message - optimized for mobile
-      console.log('✍️ Requesting signature...')
       const signature = await signMessageAsync({
         message,
         // On mobile, the promise resolves immediately after user interaction
         // Deep linking will handle the rest automatically
       })
 
-      // Step 3: Verify signature with backend
-      console.log('🔐 Verifying signature...')
+      // Step 3: Verify signature with backend using JWT token
       const { user: userData } = await authApi.connectWallet({
         walletAddress: address,
         signature,
         message,
+        jwtToken, // Pass JWT token for stateless verification
       })
 
       // Step 4: Update store
       setUser(userData)
-      console.log('✅ Authentication successful')
 
     } catch (error: any) {
-      console.error('❌ Authentication failed:', error)
       setError(error.message || 'Authentication failed')
       throw error
     } finally {
