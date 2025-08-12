@@ -1,35 +1,28 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { 
-  getWhitelistEntries,
   getWhitelistEntriesPaged,
-  bulkAddWhitelistEntries,
   removeWhitelistEntry,
   clearWhitelist
 } from '@/lib/api/admin'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/loading-states'
 import { useNotifications } from '@/components/ui/notifications'
+import { SmartWhitelistUpload } from './smart-whitelist-upload'
 import { 
-  Upload, 
-  Trash2, 
   Users,
   AlertTriangle,
-  X,
-  FileText,
   Search,
   CheckCircle,
-  XCircle
+  XCircle,
+  Trash2
 } from 'lucide-react'
 import type { AdminSurveyListItem } from '@/lib/types'
 
@@ -57,14 +50,9 @@ interface WhitelistModalProps {
 }
 
 export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [textareaAddresses, setTextareaAddresses] = useState('')
-  const [replaceMode, setReplaceMode] = useState(false)
-  const [isImporting, setIsImporting] = useState(false)
-  const [activeTab, setActiveTab] = useState('import')
+  const [activeTab, setActiveTab] = useState('upload')
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(0)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   
   const notifications = useNotifications()
   const queryClient = useQueryClient()
@@ -74,15 +62,6 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
   
   const ITEMS_PER_PAGE = 20
 
-  // Get current whitelist count for display (used by Clear All button)
-  const { data: whitelistData } = useQuery({
-    queryKey: ['whitelist-simple', survey?.id],
-    queryFn: () => survey ? getWhitelistEntries(survey.id) : Promise.resolve(null),
-    enabled: !!survey && isOpen,
-    retry: false, // Don't retry on error
-    refetchOnWindowFocus: false
-  })
-  
   // Get paginated whitelist with search for addresses tab
   const { data: pagedData, isLoading: isPagedLoading, error: pagedError } = useQuery({
     queryKey: ['whitelist-paged', survey?.id, debouncedSearchTerm, currentPage],
@@ -91,17 +70,13 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
       offset: currentPage * ITEMS_PER_PAGE,
       search: debouncedSearchTerm || undefined
     }) : Promise.resolve(null),
-    enabled: !!survey && isOpen && activeTab === 'addresses'
+    enabled: !!survey && isOpen && activeTab === 'manage'
   })
 
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      setSelectedFile(null)
-      setTextareaAddresses('')
-      setReplaceMode(false)
-      setIsImporting(false)
-      setActiveTab('import')
+      setActiveTab('upload')
       setSearchTerm('')
       setCurrentPage(0)
     }
@@ -112,41 +87,6 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
     setCurrentPage(0)
   }, [debouncedSearchTerm])
 
-  // Import whitelist mutation
-  const importWhitelistMutation = useMutation({
-    mutationFn: async ({ addresses, replaceMode }: { addresses: string[], replaceMode: boolean }) => {
-      if (!survey) throw new Error('No survey selected')
-      
-      return await bulkAddWhitelistEntries({
-        surveyId: survey.id,
-        walletAddresses: addresses,
-        replaceMode
-      })
-    },
-    onSuccess: (data) => {
-      const { addedCount, skippedCount } = data
-      const action = replaceMode ? 'replaced' : 'imported'
-      
-      notifications.success(
-        'Import Complete',
-        `Successfully ${action} ${addedCount} addresses${skippedCount > 0 ? `, skipped ${skippedCount} duplicates` : ''}`
-      )
-      
-      setIsImporting(false)
-      setSelectedFile(null)
-      setTextareaAddresses('')
-      // Invalidate all whitelist queries
-      queryClient.invalidateQueries({ queryKey: ['whitelist-simple'] })
-      queryClient.invalidateQueries({ queryKey: ['whitelist-paged'] })
-      queryClient.invalidateQueries({ queryKey: ['admin-surveys'] })
-    },
-    onError: (error: any) => {
-      const errorMessage = error.error?.message || error.message || 'Failed to import addresses'
-      notifications.error('Import Failed', errorMessage)
-      setIsImporting(false)
-    }
-  })
-
   // Clear whitelist mutation
   const clearWhitelistMutation = useMutation({
     mutationFn: async () => {
@@ -155,7 +95,6 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
     },
     onSuccess: () => {
       notifications.success('Whitelist cleared', 'All addresses have been removed from whitelist')
-      queryClient.invalidateQueries({ queryKey: ['whitelist-simple'] })
       queryClient.invalidateQueries({ queryKey: ['whitelist-paged'] })
       queryClient.invalidateQueries({ queryKey: ['admin-surveys'] })
     },
@@ -171,7 +110,6 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
       removeWhitelistEntry(surveyId, address),
     onSuccess: () => {
       notifications.success('Address removed', 'Address has been removed from whitelist')
-      queryClient.invalidateQueries({ queryKey: ['whitelist-simple'] })
       queryClient.invalidateQueries({ queryKey: ['whitelist-paged'] })
       queryClient.invalidateQueries({ queryKey: ['admin-surveys'] })
     },
@@ -181,92 +119,6 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
     }
   })
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      if (!file.name.toLowerCase().endsWith('.txt')) {
-        notifications.error('Invalid file type', 'Please select a TXT file')
-        return
-      }
-      setSelectedFile(file)
-    }
-  }
-
-  const handleRemoveFile = () => {
-    setSelectedFile(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }
-
-  const handleClearTextarea = () => {
-    setTextareaAddresses('')
-  }
-
-  const handleImport = async () => {
-    if (!survey) return
-    
-    // Check if we have either a file or textarea content
-    if (!selectedFile && !textareaAddresses.trim()) {
-      notifications.error('No data to import', 'Please select a file or enter addresses in the text area')
-      return
-    }
-    
-    setIsImporting(true)
-    
-    try {
-      let allAddresses: string[] = []
-      
-      // Get addresses from file if selected
-      if (selectedFile) {
-        const text = await selectedFile.text()
-        const fileAddresses = text
-          .split('\n')
-          .map(addr => addr.trim())
-          .filter(addr => addr.length > 0)
-        allAddresses = [...allAddresses, ...fileAddresses]
-      }
-      
-      // Get addresses from textarea if not empty
-      if (textareaAddresses.trim()) {
-        const textAddresses = textareaAddresses
-          .split('\n')
-          .map(addr => addr.trim())
-          .filter(addr => addr.length > 0)
-        allAddresses = [...allAddresses, ...textAddresses]
-      }
-      
-      // Remove duplicates
-      allAddresses = [...new Set(allAddresses)]
-      
-      if (allAddresses.length === 0) {
-        notifications.error('No addresses found', 'No valid addresses found to import')
-        setIsImporting(false)
-        return
-      }
-      
-      // Basic validation for wallet addresses
-      const invalidAddresses = allAddresses.filter(addr => 
-        !addr.match(/^0x[a-fA-F0-9]{40}$/i)
-      )
-      
-      if (invalidAddresses.length > 0) {
-        notifications.error(
-          'Invalid addresses found',
-          `Found ${invalidAddresses.length} invalid address(es). Please check the format.`
-        )
-        setIsImporting(false)
-        return
-      }
-      
-      // Process the import
-      await importWhitelistMutation.mutateAsync({ addresses: allAddresses, replaceMode })
-    } catch (error) {
-      notifications.error('Import error', 'Failed to process the import')
-      setIsImporting(false)
-    }
-  }
-
   const handleClear = () => {
     if (window.confirm('Are you sure you want to clear all addresses from this whitelist?')) {
       clearWhitelistMutation.mutate()
@@ -274,13 +126,7 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
   }
 
   const handleClose = () => {
-    if (isImporting) {
-      if (window.confirm('Import is in progress. Are you sure you want to close?')) {
-        onClose()
-      }
-    } else {
-      onClose()
-    }
+    onClose()
   }
   
   const handleRemoveAddress = (address: string) => {
@@ -298,11 +144,19 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
     setCurrentPage(newPage)
   }
 
+  const handleUploadSuccess = () => {
+    // Refresh data and switch to manage tab
+    queryClient.invalidateQueries({ queryKey: ['whitelist-paged'] })
+    queryClient.invalidateQueries({ queryKey: ['admin-surveys'] })
+    setActiveTab('manage')
+    notifications.success('Upload Complete', 'Successfully imported addresses')
+  }
+
   if (!survey) return null
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
@@ -313,128 +167,19 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
         <div className="flex-1">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="import">Import Addresses</TabsTrigger>
-              <TabsTrigger value="addresses">View Addresses</TabsTrigger>
+              <TabsTrigger value="upload">Upload Addresses</TabsTrigger>
+              <TabsTrigger value="manage">Manage Addresses</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="import" className="flex-1 space-y-6 mt-6">
-              {/* File Upload Section */}
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Import from TXT file (one address per line)
-                  </label>
-                  
-                  {!selectedFile ? (
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-600">Select a TXT file to import wallet addresses</p>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={isImporting}
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Choose File
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="border border-gray-300 rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-5 h-5 text-blue-600" />
-                          <span className="text-sm font-medium text-gray-900">{selectedFile.name}</span>
-                          <span className="text-xs text-gray-500">({(selectedFile.size / 1024).toFixed(1)} KB)</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleRemoveFile}
-                          disabled={isImporting}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileSelect}
-                    accept=".txt"
-                    className="hidden"
-                  />
-                </div>
-
-                {/* OR Divider */}
-                <div className="flex items-center gap-4">
-                  <div className="flex-1 border-t border-gray-300"></div>
-                  <span className="text-sm text-gray-500 bg-white px-3">OR</span>
-                  <div className="flex-1 border-t border-gray-300"></div>
-                </div>
-
-                {/* Textarea Section */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Paste addresses (one per line)
-                  </label>
-                  <div className="relative">
-                    <Textarea
-                      value={textareaAddresses}
-                      onChange={(e) => setTextareaAddresses(e.target.value)}
-                      placeholder="0x1234567890123456789012345678901234567890&#10;0x0987654321098765432109876543210987654321&#10;0x..."
-                      rows={6}
-                      disabled={isImporting}
-                      className="resize-none font-mono text-sm"
-                    />
-                    {textareaAddresses.trim() && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleClearTextarea}
-                        disabled={isImporting}
-                        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                  {textareaAddresses.trim() && (
-                    <div className="text-xs text-gray-500">
-                      {textareaAddresses.split('\n').filter(addr => addr.trim().length > 0).length} addresses entered
-                    </div>
-                  )}
-                </div>
-
-                {/* Replace/Append Mode Toggle */}
-                {(selectedFile || textareaAddresses.trim()) && (
-                  <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <Switch
-                      id="replace-mode"
-                      checked={replaceMode}
-                      onCheckedChange={setReplaceMode}
-                      disabled={isImporting}
-                    />
-                    <div className="flex-1">
-                      <Label htmlFor="replace-mode" className="text-sm font-medium">
-                        {replaceMode ? 'Replace existing whitelist' : 'Add to existing whitelist'}
-                      </Label>
-                      <p className="text-xs text-gray-600">
-                        {replaceMode 
-                          ? 'All current addresses will be removed and replaced with imported ones'
-                          : 'New addresses will be added to the existing whitelist (duplicates will be skipped)'
-                        }
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+            <TabsContent value="upload" className="flex-1 space-y-6 mt-6">
+              <SmartWhitelistUpload 
+                survey={survey}
+                onSuccess={handleUploadSuccess}
+                onCancel={() => setActiveTab('manage')}
+              />
             </TabsContent>
             
-            <TabsContent value="addresses" className="flex-1 space-y-4 mt-6">
+            <TabsContent value="manage" className="flex-1 space-y-4 mt-6">
               {/* Search Bar */}
               <div className="flex items-center space-x-4">
                 <div className="relative flex-1">
@@ -468,6 +213,15 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
                   <p className="text-gray-600">
                     {searchTerm ? 'No addresses match your search criteria.' : 'This survey has no whitelist entries yet.'}
                   </p>
+                  {!searchTerm && (
+                    <Button 
+                      onClick={() => setActiveTab('upload')} 
+                      className="mt-4"
+                      variant="outline"
+                    >
+                      Upload Addresses
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <>
@@ -559,61 +313,22 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
         </div>
 
         <div className="flex justify-between pt-4 border-t">
-          {activeTab === 'import' ? (
-            <>
-              <Button
-                variant="outline"
-                onClick={handleClear}
-                disabled={clearWhitelistMutation.isPending}
-                className="text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Clear All
-              </Button>
+          <Button
+            variant="outline"
+            onClick={handleClear}
+            disabled={clearWhitelistMutation.isPending}
+            className="text-red-600 hover:text-red-700"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Clear All
+          </Button>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={isImporting}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleImport}
-                  disabled={(!selectedFile && !textareaAddresses.trim()) || isImporting}
-                >
-                  {isImporting ? (
-                    <Spinner size="sm" className="mr-2" />
-                  ) : (
-                    <Upload className="w-4 h-4 mr-2" />
-                  )}
-                  {isImporting ? 'Importing...' : 'Import Addresses'}
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                onClick={handleClear}
-                disabled={clearWhitelistMutation.isPending}
-                className="text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Clear All
-              </Button>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleClose}
-                >
-                  Close
-                </Button>
-              </div>
-            </>
-          )}
+          <Button
+            variant="outline"
+            onClick={handleClose}
+          >
+            Close
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
