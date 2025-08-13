@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { uploadWhitelist } from '@/lib/api/admin'
 import { useJobProgress } from '@/hooks/use-job-progress'
@@ -74,7 +74,7 @@ export function WhitelistUpload({ survey, onSuccess, onCancel }: WhitelistUpload
   const [isUploading, setIsUploading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
+
   // Use the centralized job progress hook
   const { progress: jobProgress, isConnected, error: wsError } = useJobProgress(activeJobId)
 
@@ -93,13 +93,13 @@ export function WhitelistUpload({ survey, onSuccess, onCancel }: WhitelistUpload
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
-      
+
       setSuccessMessage(`Successfully processed ${jobProgress.processedItems?.toLocaleString() || 'all'} addresses`)
       setTimeout(() => {
         setSuccessMessage(null)
       }, 5000)
     }
-    
+
     if (jobProgress.status === 'failed') {
       notifications.error(
         'Import Failed',
@@ -120,9 +120,8 @@ export function WhitelistUpload({ survey, onSuccess, onCancel }: WhitelistUpload
       setIsUploading(false)
 
       // Все загрузки теперь обрабатываются через WebSocket
-      const jobId = result.jobId || result.data?.jobId
-      if (jobId) {
-        setActiveJobId(jobId)
+      if (result.jobId) {
+        setActiveJobId(result.jobId)
       }
     },
     onError: (error: any) => {
@@ -162,7 +161,7 @@ export function WhitelistUpload({ survey, onSuccess, onCancel }: WhitelistUpload
       return
     }
 
-    
+
     setIsUploading(true)
     setUploadResult(null)
     setActiveJobId(null)
@@ -368,7 +367,7 @@ export function WhitelistUpload({ survey, onSuccess, onCancel }: WhitelistUpload
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ 
+                style={{
                   width: jobProgress?.progress ? `${jobProgress.progress}%` : '0%',
                   ...((!jobProgress?.progress) && { animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' })
                 }}
