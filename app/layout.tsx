@@ -17,14 +17,15 @@ export const viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Heard Labs - Web3 Survey Platform',
+  title: 'Heard - Web3 Survey Platform',
   description: 'Earn crypto rewards by completing surveys on the Web3 platform',
-  generator: 'Heard Labs',
+  category: 'Social',
+  generator: 'Heard',
   openGraph: {
-    title: 'Heard Labs',
+    title: 'Heard',
     description: 'Earn crypto rewards by completing surveys on the Web3 platform',
     url: 'https://heardlabs.xyz',
-    siteName: 'Heard Labs',
+    siteName: 'Heard',
     images: [
       {
         url: '/hero-1200x628.png',
@@ -37,7 +38,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Heard Labs',
+    title: 'Heard',
     description: 'Earn crypto rewards by completing surveys on the Web3 platform',
     images: ['/hero-1200x628.png'],
   },
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
     //   version: '1',
     //   imageUrl: 'https://heardlabs.xyz/hero-1200x628.png',
     //   button: {
-    //     title: 'Open Heard Labs',
+    //     title: 'Open Heard',
     //     action: {
     //       type: 'launch_miniapp'
     //     }
@@ -61,7 +62,7 @@ export const metadata: Metadata = {
       version: '1',
       imageUrl: 'https://heardlabs.xyz/hero-1200x628.png',
       button: {
-        title: 'Open Heard Labs',
+        title: 'Open Heard',
         action: {
           type: 'launch_miniapp'
         }

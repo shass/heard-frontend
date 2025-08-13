@@ -68,6 +68,12 @@ class ApiClient {
 
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     const response: AxiosResponse<ApiResponse<T>> = await this.client.post(url, data, config)
+    
+    // Handle upload endpoints that return wrapped ApiResponse
+    if (url.includes('/whitelist/upload')) {
+      return (response.data as any).data as T
+    }
+    
     return response.data.data
   }
 
