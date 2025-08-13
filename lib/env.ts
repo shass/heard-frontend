@@ -29,7 +29,7 @@ export const env = {
 
   // Backend API
   API_URL: process.env.NEXT_PUBLIC_API_URL!,
-  API_TIMEOUT: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '10000'),
+  API_TIMEOUT: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000'),
 
   // Web3
   WALLETCONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,

@@ -301,7 +301,10 @@ export const uploadWhitelist = async (surveyId: string, data: {
   const response = await apiClient.post<any>(
     requestConfig.url,
     requestConfig.data,
-    { headers: requestConfig.headers }
+    { 
+      headers: requestConfig.headers,
+      timeout: 300000 // 5 minutes timeout for file uploads
+    }
   )
   
   return response
@@ -328,6 +331,95 @@ export const clearWhitelist = async (surveyId: string): Promise<void> => {
 // Note: CSV import is not yet implemented on backend
 export const importWhitelistFromCSV = async (surveyId: string, file: File): Promise<any> => {
   throw new Error('CSV upload functionality is not yet implemented. Please use TXT file import instead.')
+}
+
+// New batch upload endpoints
+export const createUploadSession = async (
+  surveyId: string,
+  totalAddresses: number,
+  replaceMode: boolean,
+  batchSize: number
+): Promise<{
+  sessionId: string
+  surveyId: string
+  totalAddresses: number
+  processedAddresses: number
+  totalBatches: number
+  completedBatches: number
+  replaceMode: boolean
+  createdAt: string
+  status: 'active' | 'completed' | 'failed' | 'cancelled'
+}> => {
+  const data = await apiClient.post<{
+    sessionId: string
+    surveyId: string
+    totalAddresses: number
+    processedAddresses: number
+    totalBatches: number
+    completedBatches: number
+    replaceMode: boolean
+    createdAt: string
+    status: 'active' | 'completed' | 'failed' | 'cancelled'
+  }>(`/admin/surveys/${surveyId}/whitelist/upload-session`, {
+    totalAddresses,
+    replaceMode,
+    batchSize
+  })
+  return data
+}
+
+export const uploadAddressBatch = async (
+  surveyId: string,
+  sessionId: string,
+  batchIndex: number,
+  addresses: string[]
+): Promise<{
+  added: number
+  skipped: number
+  errors: Array<{
+    value?: string
+    message: string
+    timestamp: string
+  }>
+}> => {
+  const data = await apiClient.post<{
+    added: number
+    skipped: number
+    errors: Array<{
+      value?: string
+      message: string
+      timestamp: string
+    }>
+  }>(`/admin/surveys/${surveyId}/whitelist/batch`, {
+    sessionId,
+    batchIndex,
+    addresses
+  })
+  return data
+}
+
+export const completeUploadSession = async (
+  surveyId: string,
+  sessionId: string
+): Promise<{
+  message: string
+  sessionId: string
+  finalStats: {
+    total: number
+    completed: number
+    pending: number
+  }
+}> => {
+  const data = await apiClient.post<{
+    message: string
+    sessionId: string
+    finalStats: {
+      total: number
+      completed: number
+      pending: number
+    }
+  }>(`/admin/surveys/${surveyId}/whitelist/upload-session/${sessionId}/complete`, {})
+  return data
 }
 
 // Survey Questions Management
