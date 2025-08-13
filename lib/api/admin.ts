@@ -251,6 +251,16 @@ export const uploadWhitelist = async (surveyId: string, data: {
     line?: number
     value?: string
   }>
+  // For direct processing (small batches)
+  result?: {
+    added: number
+    skipped: number
+    errors: Array<{
+      value?: string
+      message: string
+      timestamp: string
+    }>
+  }
   processingTime?: number
   eta?: {
     estimatedSeconds: number

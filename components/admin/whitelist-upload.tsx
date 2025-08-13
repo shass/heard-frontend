@@ -119,9 +119,28 @@ export function WhitelistUpload({ survey, onSuccess, onCancel }: WhitelistUpload
       setUploadResult(result)
       setIsUploading(false)
 
-      // Все загрузки теперь обрабатываются через WebSocket
+      // Check if this was processed directly (small batch) or via WebSocket (large batch)
       if (result.jobId) {
+        // Large batch - track via WebSocket
         setActiveJobId(result.jobId)
+      } else {
+        // Small batch - processed directly, show immediate success
+        if (result.result) {
+          setSuccessMessage(
+            `Successfully added ${result.result.added?.toLocaleString() || 0} addresses` +
+            (result.result.skipped ? ` (${result.result.skipped} already existed)` : '')
+          )
+          setTimeout(() => {
+            setSuccessMessage(null)
+          }, 5000)
+        }
+        
+        // Clear form
+        setSelectedFile(null)
+        setTextareaAddresses('')
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
       }
     },
     onError: (error: any) => {
