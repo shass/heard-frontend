@@ -80,7 +80,7 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
   const { data: jobProgress } = useQuery({
     queryKey: ['smart-upload-progress', activeJobId],
     queryFn: () => activeJobId ? getSmartUploadStatus(activeJobId) : null,
-    enabled: !!activeJobId && uploadResult?.method === 'async',
+    enabled: !!activeJobId,
     refetchInterval: (query) => {
       const data = query.state.data
       if (!data || data.status === 'completed' || data.status === 'failed' || data.status === 'cancelled') {
@@ -125,24 +125,9 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
       setUploadResult(result)
       setIsUploading(false)
 
-      if (result.method === 'sync') {
-        // Synchronous processing completed immediately
-        setSelectedFile(null)
-        setTextareaAddresses('')
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ''
-        }
-
-        // Show success message for 5 seconds
-        setSuccessMessage(`Successfully processed ${result.itemCount?.toLocaleString() || 'all'} addresses`)
-        setTimeout(() => {
-          setSuccessMessage(null)
-        }, 5000)
-      } else if (result.method === 'async') {
-        // Asynchronous processing started
-        if (result.jobId) {
-          setActiveJobId(result.jobId)
-        }
+      // Все загрузки теперь обрабатываются через WebSocket
+      if (result.jobId) {
+        setActiveJobId(result.jobId)
       }
     },
     onError: (error: any) => {
