@@ -368,14 +368,22 @@ export function WhitelistUpload({ survey, onSuccess, onCancel }: WhitelistUpload
               <div
                 className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                 style={{
-                  width: jobProgress?.progress ? `${jobProgress.progress}%` : '0%',
-                  ...((!jobProgress?.progress) && { animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' })
+                  width: jobProgress?.progress === -1 
+                    ? '100%' 
+                    : jobProgress?.progress 
+                    ? `${jobProgress.progress}%` 
+                    : '0%',
+                  ...(jobProgress?.progress === -1 || !jobProgress?.progress) && { 
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' 
+                  }
                 }}
               />
             </div>
             <div className="text-center text-sm font-medium text-gray-900">
               {wsError ? (
                 <span className="text-red-600">Connection error: {wsError}</span>
+              ) : jobProgress?.progress === -1 && jobProgress?.processedItems ? (
+                `Processing... ${jobProgress.processedItems.toLocaleString()} addresses processed`
               ) : jobProgress?.processedItems && jobProgress?.totalItems ? (
                 `${jobProgress.processedItems.toLocaleString()} / ${jobProgress.totalItems.toLocaleString()} addresses`
               ) : isConnected ? (

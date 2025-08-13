@@ -9,6 +9,7 @@ import type {
   WhitelistPagedData,
   BulkWhitelistRequest,
   RewardLink,
+  UsedRewardLink,
   RewardLinksData,
   ImportRewardLinksRequest,
   Survey,
@@ -409,6 +410,33 @@ export const getRewardLinks = async (surveyId: string): Promise<RewardLinksData>
     used: data.rewards.used,
     stats: data.stats
   }
+}
+
+// Paginated reward links function
+export const getRewardLinksPaged = async (surveyId: string, params?: {
+  type: 'unused' | 'used'
+  limit?: number
+  offset?: number
+  search?: string
+}): Promise<{
+  links: RewardLink[] | UsedRewardLink[]
+  stats: { total: number; unused: number; used: number }
+  meta: PaginationMeta
+}> => {
+  const data = await apiClient.get<{
+    links: RewardLink[] | UsedRewardLink[]
+    stats: { total: number; unused: number; used: number }
+    meta: PaginationMeta
+  }>(`/admin/surveys/${surveyId}/rewards/paged`, {
+    params: {
+      type: params?.type || 'unused',
+      limit: params?.limit || 20,
+      offset: params?.offset || 0,
+      search: params?.search
+    }
+  })
+  
+  return data
 }
 
 // Removed single reward link addition - only bulk import supported
