@@ -19,6 +19,7 @@ export const viewport = {
 export const metadata: Metadata = {
   title: 'Heard - Web3 Survey Platform',
   description: 'Earn crypto rewards by completing surveys on the Web3 platform',
+  category: 'Social',
   generator: 'Heard',
   openGraph: {
     title: 'Heard',
