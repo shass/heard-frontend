@@ -1,3 +1,5 @@
+import { env } from '@/lib/env'
+
 export interface JobProgress {
   jobId: string
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
@@ -38,9 +40,20 @@ export class JobProgressClient {
   private getWebSocketUrl(): string {
     if (typeof window === 'undefined') return ''
     
-    return process.env.NODE_ENV === 'production'
-      ? `wss://${window.location.hostname}/ws/import-progress`
-      : 'ws://localhost:3001/ws/import-progress'
+    const apiUrl = env.API_URL
+    
+    // Handle relative API URLs like "/api"
+    if (apiUrl.startsWith('/')) {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      const host = window.location.host
+      return `${protocol}//${host}/ws/import-progress`
+    }
+    
+    // Handle absolute API URLs like "http://localhost:3001/api"
+    const baseUrl = apiUrl.replace(/\/api\/?$/, '')
+    const wsUrl = baseUrl.replace(/^https?/, baseUrl.startsWith('https') ? 'wss' : 'ws')
+    
+    return `${wsUrl}/ws/import-progress`
   }
 
   private async connect(): Promise<void> {
