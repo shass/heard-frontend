@@ -120,16 +120,43 @@ export function WhitelistUpload({ survey, onSuccess, onCancel }: WhitelistUpload
       setIsUploading(false)
 
       // Check if this was processed directly (small batch) or via WebSocket (large batch)
-      if (result.jobId) {
+      if (result.jobId && result.jobId !== 'null' && result.jobId !== null) {
         // Large batch - track via WebSocket
         setActiveJobId(result.jobId)
       } else {
         // Small batch - processed directly, show immediate success
         if (result.result) {
-          setSuccessMessage(
-            `Successfully added ${result.result.added?.toLocaleString() || 0} addresses` +
-            (result.result.skipped ? ` (${result.result.skipped} already existed)` : '')
-          )
+          const added = result.result.added || 0
+          const skipped = result.result.skipped || 0
+          const errors = result.result.errors?.length || 0
+          
+          if (added > 0) {
+            setSuccessMessage(
+              `Successfully added ${added.toLocaleString()} address${added > 1 ? 'es' : ''}` +
+              (skipped > 0 ? ` (${skipped} already existed)` : '')
+            )
+          } else if (skipped > 0 && errors === 0) {
+            // All addresses already existed
+            notifications.info(
+              'No New Addresses',
+              `All ${skipped} address${skipped > 1 ? 'es' : ''} already exist in the whitelist`
+            )
+          } else if (errors > 0) {
+            // Some validation errors occurred
+            notifications.error(
+              'Validation Errors',
+              `${errors} address${errors > 1 ? 'es' : ''} failed validation. Please check the format.`
+            )
+          }
+          
+          if (added > 0) {
+            setTimeout(() => {
+              setSuccessMessage(null)
+            }, 5000)
+          }
+        } else {
+          // Fallback success message if result is missing
+          setSuccessMessage('Addresses processed successfully')
           setTimeout(() => {
             setSuccessMessage(null)
           }, 5000)
