@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/loading-states'
 import { useNotifications } from '@/components/ui/notifications'
-import { SmartWhitelistUpload } from './smart-whitelist-upload'
+import { WhitelistUpload } from './whitelist-upload'
 import { 
   Users,
   AlertTriangle,
@@ -172,7 +172,7 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
             </TabsList>
             
             <TabsContent value="upload" className="flex-1 space-y-6 mt-6">
-              <SmartWhitelistUpload 
+              <WhitelistUpload 
                 survey={survey}
                 onSuccess={handleUploadSuccess}
                 onCancel={() => setActiveTab('manage')}

@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { smartUploadWhitelist, getSmartUploadStatus } from '@/lib/api/admin'
+import { useMutation } from '@tanstack/react-query'
+import { uploadWhitelist } from '@/lib/api/admin'
+import { useJobProgress } from '@/hooks/use-job-progress'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
@@ -17,7 +18,7 @@ import {
 } from 'lucide-react'
 import type { AdminSurveyListItem } from '@/lib/types'
 
-interface SmartWhitelistUploadProps {
+interface WhitelistUploadProps {
   survey: AdminSurveyListItem
   onSuccess: () => void
   onCancel: () => void
@@ -64,7 +65,7 @@ interface JobProgress {
   }>
 }
 
-export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhitelistUploadProps) {
+export function WhitelistUpload({ survey, onSuccess, onCancel }: WhitelistUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [textareaAddresses, setTextareaAddresses] = useState('')
   const [replaceMode, setReplaceMode] = useState(false)
@@ -73,26 +74,18 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
   const [isUploading, setIsUploading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Use the centralized job progress hook
+  const { progress: jobProgress, isConnected, error: wsError } = useJobProgress(activeJobId)
 
   const notifications = useNotifications()
 
-  // Poll job progress if we have an active job
-  const { data: jobProgress } = useQuery({
-    queryKey: ['smart-upload-progress', activeJobId],
-    queryFn: () => activeJobId ? getSmartUploadStatus(activeJobId) : null,
-    enabled: !!activeJobId,
-    refetchInterval: (query) => {
-      const data = query.state.data
-      if (!data || data.status === 'completed' || data.status === 'failed' || data.status === 'cancelled') {
-        return false
-      }
-      return 2000 // Poll every 2 seconds for active jobs
-    }
-  })
-
-  // Handle job completion
+  // Handle job completion and failures via WebSocket
   useEffect(() => {
-    if (jobProgress?.status === 'completed') {
+    if (!jobProgress) return
+
+    if (jobProgress.status === 'completed') {
+      // Job completed successfully
       setActiveJobId(null)
       setUploadResult(null)
       setSelectedFile(null)
@@ -100,13 +93,14 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
-
-      // Show success message for 5 seconds
-      setSuccessMessage(`Successfully processed ${jobProgress.processedItems.toLocaleString()} addresses`)
+      
+      setSuccessMessage(`Successfully processed ${jobProgress.processedItems?.toLocaleString() || 'all'} addresses`)
       setTimeout(() => {
         setSuccessMessage(null)
       }, 5000)
-    } else if (jobProgress?.status === 'failed') {
+    }
+    
+    if (jobProgress.status === 'failed') {
       notifications.error(
         'Import Failed',
         'The import job encountered an error and could not be completed'
@@ -114,20 +108,21 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
       setActiveJobId(null)
       setUploadResult(null)
     }
-  }, [jobProgress?.status, notifications, onSuccess])
+  }, [jobProgress?.status, notifications])
 
-  // Smart upload mutation
-  const smartUploadMutation = useMutation({
+  // WebSocket upload mutation
+  const uploadMutation = useMutation({
     mutationFn: async (data: { addresses?: string[], file?: File, replaceMode: boolean }) => {
-      return await smartUploadWhitelist(survey.id, data)
+      return await uploadWhitelist(survey.id, data)
     },
     onSuccess: (result) => {
       setUploadResult(result)
       setIsUploading(false)
 
       // Все загрузки теперь обрабатываются через WebSocket
-      if (result.jobId) {
-        setActiveJobId(result.jobId)
+      const jobId = result.jobId || result.data?.jobId
+      if (jobId) {
+        setActiveJobId(jobId)
       }
     },
     onError: (error: any) => {
@@ -167,6 +162,7 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
       return
     }
 
+    
     setIsUploading(true)
     setUploadResult(null)
     setActiveJobId(null)
@@ -174,7 +170,7 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
     try {
       if (selectedFile) {
         // File upload
-        await smartUploadMutation.mutateAsync({
+        await uploadMutation.mutateAsync({
           file: selectedFile,
           replaceMode
         })
@@ -199,7 +195,7 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
           return
         }
 
-        await smartUploadMutation.mutateAsync({
+        await uploadMutation.mutateAsync({
           addresses,
           replaceMode
         })
@@ -218,7 +214,7 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="w-5 h-5" />
-            Smart Whitelist Upload
+            Whitelist Upload
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -367,16 +363,27 @@ export function SmartWhitelistUpload({ survey, onSuccess, onCancel }: SmartWhite
         </div>
 
         {/* Progress bar under buttons */}
-        {(activeJobId && jobProgress) && (
+        {activeJobId && (
           <div className="space-y-2">
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${jobProgress.progress}%` }}
+                style={{ 
+                  width: jobProgress?.progress ? `${jobProgress.progress}%` : '0%',
+                  ...((!jobProgress?.progress) && { animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' })
+                }}
               />
             </div>
             <div className="text-center text-sm font-medium text-gray-900">
-              {jobProgress.processedItems.toLocaleString()} / {jobProgress.totalItems.toLocaleString()} addresses
+              {wsError ? (
+                <span className="text-red-600">Connection error: {wsError}</span>
+              ) : jobProgress?.processedItems && jobProgress?.totalItems ? (
+                `${jobProgress.processedItems.toLocaleString()} / ${jobProgress.totalItems.toLocaleString()} addresses`
+              ) : isConnected ? (
+                'Processing...'
+              ) : (
+                'Connecting to WebSocket...'
+              )}
             </div>
           </div>
         )}

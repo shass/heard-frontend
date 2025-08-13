@@ -217,8 +217,8 @@ export const addWhitelistEntry = async (surveyId: string, walletAddress: string)
   return data
 }
 
-// Smart Upload - automatically chooses optimal processing method
-export const smartUploadWhitelist = async (surveyId: string, data: { 
+// WebSocket Upload - processes all uploads via WebSocket for reliability
+export const uploadWhitelist = async (surveyId: string, data: { 
   addresses?: string[]
   file?: File 
   replaceMode?: boolean 
@@ -258,7 +258,7 @@ export const smartUploadWhitelist = async (surveyId: string, data: {
   message: string
 }> => {
   let requestConfig: any = {
-    url: `/admin/surveys/${surveyId}/whitelist/smart-upload`,
+    url: `/admin/surveys/${surveyId}/whitelist/upload`,
     method: 'POST'
   }
 
@@ -296,27 +296,7 @@ export const smartUploadWhitelist = async (surveyId: string, data: {
   return response
 }
 
-// Get smart upload job status
-export const getSmartUploadStatus = async (jobId: string): Promise<{
-  jobId: string
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
-  progress: number
-  processedItems: number
-  totalItems: number
-  currentBatch: number
-  totalBatches: number
-  speed: number
-  estimatedTimeRemaining: number
-  errors: Array<{
-    message: string
-    timestamp: string
-    line?: number
-    value?: string
-  }>
-}> => {
-  const data = await apiClient.get<any>(`/admin/smart-upload-jobs/${jobId}/status`)
-  return data
-}
+// Удалено - используем только WebSocket для трекинга прогресса
 
 export const removeWhitelistEntry = async (surveyId: string, entryId: string): Promise<void> => {
   await apiClient.delete(`/admin/surveys/${surveyId}/whitelist/${entryId}`)
