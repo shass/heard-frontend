@@ -46,7 +46,8 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
   
   // Check if there are any actual rewards available
   const hasTokenRewards = !!(claimLink || linkDropCode)
-  const hasHeardPointsRewards = heardPointsAwarded > 0
+  // Only count HeardPoints as reward if they were actually awarded through userReward system
+  const hasHeardPointsRewards = !!userReward?.heardPointsAwarded && userReward.heardPointsAwarded > 0
   const hasAnyRewards = hasTokenRewards || hasHeardPointsRewards
 
   // Generate QR code for LinkDrop claim
