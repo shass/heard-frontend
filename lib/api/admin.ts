@@ -111,6 +111,15 @@ export const duplicateSurvey = async (surveyId: string, newName: string): Promis
   return data
 }
 
+export const refreshSurveyStats = async (surveyId?: string): Promise<{ success: boolean; message: string }> => {
+  const endpoint = surveyId 
+    ? `/admin/surveys/${surveyId}/refresh-stats`
+    : '/admin/surveys/refresh-stats'
+  
+  const data = await apiClient.post<{ success: boolean; message: string }>(endpoint, {})
+  return data
+}
+
 export const importSurveys = async (surveysData: any): Promise<{
   message: string
   imported: number
