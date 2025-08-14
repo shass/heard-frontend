@@ -97,6 +97,7 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
       notifications.success('Whitelist cleared', 'All addresses have been removed from whitelist')
       queryClient.invalidateQueries({ queryKey: ['whitelist-paged'] })
       queryClient.invalidateQueries({ queryKey: ['admin-surveys'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] })
     },
     onError: (error: any) => {
       const errorMessage = error.error?.message || error.message || 'Failed to clear whitelist'
@@ -112,6 +113,7 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
       notifications.success('Address removed', 'Address has been removed from whitelist')
       queryClient.invalidateQueries({ queryKey: ['whitelist-paged'] })
       queryClient.invalidateQueries({ queryKey: ['admin-surveys'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] })
     },
     onError: (error: any) => {
       const errorMessage = error.error?.message || error.message || 'Failed to remove address'
@@ -148,6 +150,7 @@ export function WhitelistModal({ survey, isOpen, onClose }: WhitelistModalProps)
     // Refresh data and switch to manage tab
     queryClient.invalidateQueries({ queryKey: ['whitelist-paged'] })
     queryClient.invalidateQueries({ queryKey: ['admin-surveys'] })
+    queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] })
     setActiveTab('manage')
     notifications.success('Upload Complete', 'Successfully imported addresses')
   }

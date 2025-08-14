@@ -43,7 +43,7 @@ import {
 import { SurveyForm } from './survey-form'
 import { SurveyResponses } from './survey-responses'
 import { WhitelistModal } from './whitelist-modal'
-import { RewardLinksModal } from './reward-links-modal'
+import { RewardLinksModalPaginated } from './reward-links-modal-paginated'
 import { SurveyClientsModal } from './survey-clients-modal'
 import type { AdminSurveyListItem, CreateSurveyRequest, UpdateSurveyRequest } from '@/lib/types'
 
@@ -568,7 +568,7 @@ export function SurveyManagement() {
       />
 
       {/* Reward Links Management Modal */}
-      <RewardLinksModal
+      <RewardLinksModalPaginated
         survey={selectedSurvey}
         isOpen={isRewardLinksModalOpen}
         onClose={() => {

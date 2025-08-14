@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { 
+import type {
   AdminDashboardStats,
   AdminSurveyListItem,
   CreateSurveyRequest,
@@ -9,6 +9,7 @@ import type {
   WhitelistPagedData,
   BulkWhitelistRequest,
   RewardLink,
+  UsedRewardLink,
   RewardLinksData,
   ImportRewardLinksRequest,
   Survey,
@@ -24,29 +25,29 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
   try {
     // Note: apiClient.get() already extracts response.data.data and returns it directly
     const data = await apiClient.get<AdminDashboardStats>('/admin/dashboard')
-    
+
     // Debug logging
     console.log('🔍 Admin dashboard data received:', data)
-    
+
     if (!data || typeof data !== 'object') {
       throw new Error('Invalid response structure from admin dashboard API')
     }
-    
+
     return data
   } catch (error: any) {
     console.error('🚨 Admin dashboard API error:', error)
     console.error('🚨 Error response:', error?.response?.data)
-    
+
     // Check if it's an authentication error
     if (error?.response?.status === 401) {
       throw new Error('Authentication required. Please login as admin.')
     }
-    
+
     // Check if it's an authorization error (not admin)
     if (error?.response?.status === 403) {
       throw new Error('Admin access required. You do not have permission to view this page.')
     }
-    
+
     // For other errors, provide more context
     throw new Error(error?.response?.data?.error?.message || error?.message || 'Failed to load dashboard data')
   }
@@ -70,7 +71,7 @@ export const getAdminSurveys = async (params?: {
       status: params?.status
     }
   })
-  
+
   return {
     surveys: data.items || [],
     meta: data.pagination || {
@@ -183,7 +184,7 @@ export const getWhitelistEntries = async (surveyId: string, params?: {
       format: 'simple'
     }
   })
-  
+
   return {
     surveyId,
     entries: data.whitelist || [],
@@ -205,7 +206,7 @@ export const getWhitelistEntriesPaged = async (surveyId: string, params?: {
       format: 'detailed'
     }
   })
-  
+
   return data
 }
 
@@ -213,90 +214,9 @@ export const addWhitelistEntry = async (surveyId: string, walletAddress: string)
   const data = await apiClient.post<{ message: string, addedAddress: string }>(`/admin/surveys/${surveyId}/whitelist/add`, {
     walletAddress
   })
-  
+
   return data
 }
-
-// WebSocket Upload - processes all uploads via WebSocket for reliability
-export const uploadWhitelist = async (surveyId: string, data: { 
-  addresses?: string[]
-  file?: File 
-  replaceMode?: boolean 
-}): Promise<{
-  method: 'sync' | 'async'
-  itemCount: number
-  strategy: {
-    batchSize: number
-    description: string
-    estimatedTime: string
-  }
-  validation: {
-    valid: boolean
-    warnings: string[]
-    errors: string[]
-  }
-  recommendations: {
-    webSocketRecommended: boolean
-    chunkedUploadRecommended: boolean
-    memoryWarning: boolean
-    tips: string[]
-  }
-  jobId?: string
-  addedItems?: number
-  skippedItems?: number
-  errors?: Array<{
-    message: string
-    timestamp: string
-    line?: number
-    value?: string
-  }>
-  processingTime?: number
-  eta?: {
-    estimatedSeconds: number
-    estimatedCompletion: string
-  }
-  message: string
-}> => {
-  let requestConfig: any = {
-    url: `/admin/surveys/${surveyId}/whitelist/upload`,
-    method: 'POST'
-  }
-
-  if (data.file) {
-    // File upload - use multipart/form-data
-    const formData = new FormData()
-    formData.append('file', data.file)
-    if (data.replaceMode) {
-      formData.append('replaceMode', 'true')
-    }
-    
-    requestConfig.data = formData
-    requestConfig.headers = {
-      'Content-Type': 'multipart/form-data'
-    }
-  } else if (data.addresses) {
-    // JSON array - use application/json
-    requestConfig.data = {
-      walletAddresses: data.addresses,
-      replaceMode: data.replaceMode || false
-    }
-    requestConfig.headers = {
-      'Content-Type': 'application/json'
-    }
-  } else {
-    throw new Error('Either addresses array or file must be provided')
-  }
-
-  const response = await apiClient.post<any>(
-    requestConfig.url,
-    requestConfig.data,
-    { headers: requestConfig.headers }
-  )
-  
-  return response
-}
-
-// Удалено - используем только WebSocket для трекинга прогресса
 
 export const removeWhitelistEntry = async (surveyId: string, entryId: string): Promise<void> => {
   await apiClient.delete(`/admin/surveys/${surveyId}/whitelist/${entryId}`)
@@ -306,7 +226,7 @@ export const toggleWhitelistEntry = async (surveyId: string, entryId: string, is
   const data = await apiClient.patch<{ message: string, address: string, inWhitelist: boolean }>(`/admin/surveys/${surveyId}/whitelist/${entryId}/toggle`, {
     isActive
   })
-  
+
   return data
 }
 
@@ -317,6 +237,95 @@ export const clearWhitelist = async (surveyId: string): Promise<void> => {
 // Note: CSV import is not yet implemented on backend
 export const importWhitelistFromCSV = async (surveyId: string, file: File): Promise<any> => {
   throw new Error('CSV upload functionality is not yet implemented. Please use TXT file import instead.')
+}
+
+// New batch upload endpoints
+export const createUploadSession = async (
+  surveyId: string,
+  totalAddresses: number,
+  replaceMode: boolean,
+  batchSize: number
+): Promise<{
+  sessionId: string
+  surveyId: string
+  totalAddresses: number
+  processedAddresses: number
+  totalBatches: number
+  completedBatches: number
+  replaceMode: boolean
+  createdAt: string
+  status: 'active' | 'completed' | 'failed' | 'cancelled'
+}> => {
+  const data = await apiClient.post<{
+    sessionId: string
+    surveyId: string
+    totalAddresses: number
+    processedAddresses: number
+    totalBatches: number
+    completedBatches: number
+    replaceMode: boolean
+    createdAt: string
+    status: 'active' | 'completed' | 'failed' | 'cancelled'
+  }>(`/admin/surveys/${surveyId}/whitelist/upload-session`, {
+    totalAddresses,
+    replaceMode,
+    batchSize
+  })
+  return data
+}
+
+export const uploadAddressBatch = async (
+  surveyId: string,
+  sessionId: string,
+  batchIndex: number,
+  addresses: string[]
+): Promise<{
+  added: number
+  skipped: number
+  errors: Array<{
+    value?: string
+    message: string
+    timestamp: string
+  }>
+}> => {
+  const data = await apiClient.post<{
+    added: number
+    skipped: number
+    errors: Array<{
+      value?: string
+      message: string
+      timestamp: string
+    }>
+  }>(`/admin/surveys/${surveyId}/whitelist/batch`, {
+    sessionId,
+    batchIndex,
+    addresses
+  })
+  return data
+}
+
+export const completeUploadSession = async (
+  surveyId: string,
+  sessionId: string
+): Promise<{
+  message: string
+  sessionId: string
+  finalStats: {
+    total: number
+    completed: number
+    pending: number
+  }
+}> => {
+  const data = await apiClient.post<{
+    message: string
+    sessionId: string
+    finalStats: {
+      total: number
+      completed: number
+      pending: number
+    }
+  }>(`/admin/surveys/${surveyId}/whitelist/upload-session/${sessionId}/complete`, {})
+  return data
 }
 
 // Survey Questions Management
@@ -350,7 +359,7 @@ export const getSurveyQuestions = async (surveyId: string): Promise<{
       responseCount: number
     }>
   }>(`/admin/surveys/${surveyId}/questions`)
-  
+
   return data
 }
 
@@ -411,6 +420,33 @@ export const getRewardLinks = async (surveyId: string): Promise<RewardLinksData>
   }
 }
 
+// Paginated reward links function
+export const getRewardLinksPaged = async (surveyId: string, params?: {
+  type: 'unused' | 'used'
+  limit?: number
+  offset?: number
+  search?: string
+}): Promise<{
+  links: RewardLink[] | UsedRewardLink[]
+  stats: { total: number; unused: number; used: number }
+  meta: PaginationMeta
+}> => {
+  const data = await apiClient.get<{
+    links: RewardLink[] | UsedRewardLink[]
+    stats: { total: number; unused: number; used: number }
+    meta: PaginationMeta
+  }>(`/admin/surveys/${surveyId}/rewards/paged`, {
+    params: {
+      type: params?.type || 'unused',
+      limit: params?.limit || 20,
+      offset: params?.offset || 0,
+      search: params?.search
+    }
+  })
+
+  return data
+}
+
 // Removed single reward link addition - only bulk import supported
 
 export const deleteRewardLink = async (surveyId: string, rewardId: string): Promise<void> => {
@@ -421,14 +457,14 @@ export const clearAllRewardLinks = async (surveyId: string): Promise<void> => {
   await apiClient.delete(`/admin/surveys/${surveyId}/rewards`)
 }
 
-export const importRewardLinks = async (surveyId: string, request: ImportRewardLinksRequest): Promise<{ 
-  imported: number, 
+export const importRewardLinks = async (surveyId: string, request: ImportRewardLinksRequest): Promise<{
+  imported: number,
   skipped: number,
   failedLinks: string[],
   message: string
 }> => {
-  const data = await apiClient.post<{ 
-    imported: number, 
+  const data = await apiClient.post<{
+    imported: number,
     skipped: number,
     failedLinks: string[],
     message: string
