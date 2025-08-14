@@ -11,7 +11,8 @@ import {
   toggleSurveyStatus,
   duplicateSurvey,
   importSurveys,
-  exportSurvey
+  exportSurvey,
+  refreshSurveyStats
 } from '@/lib/api/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -38,7 +39,8 @@ import {
   FileText,
   AlertCircle,
   CheckCircle,
-  Crown
+  Crown,
+  RefreshCw
 } from 'lucide-react'
 import { SurveyForm } from './survey-form'
 import { SurveyResponses } from './survey-responses'
@@ -144,6 +146,19 @@ export function SurveyManagement() {
     onError: (error: any) => {
       const errorMessage = error.error?.message || error.message || 'Failed to duplicate survey'
       notifications.error('Duplication Failed', errorMessage)
+    }
+  })
+
+  const refreshStatsMutation = useMutation({
+    mutationFn: (surveyId?: string) => refreshSurveyStats(surveyId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-surveys'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] })
+      notifications.success('Statistics Refreshed', data.message)
+    },
+    onError: (error: any) => {
+      const errorMessage = error.error?.message || error.message || 'Failed to refresh statistics'
+      notifications.error('Refresh Failed', errorMessage)
     }
   })
 
@@ -301,6 +316,15 @@ export function SurveyManagement() {
         </div>
 
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => refreshStatsMutation.mutate(undefined)}
+            disabled={refreshStatsMutation.isPending}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshStatsMutation.isPending ? 'animate-spin' : ''}`} />
+            Refresh Stats
+          </Button>
+
           <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
@@ -401,6 +425,17 @@ export function SurveyManagement() {
                   title={survey.isActive ? "Pause Survey" : "Activate Survey"}
                 >
                   {survey.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </Button>
+
+                {/* Refresh Stats for Individual Survey */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refreshStatsMutation.mutate(survey.id)}
+                  disabled={refreshStatsMutation.isPending}
+                  title="Refresh Statistics for this Survey"
+                >
+                  <RefreshCw className={`w-4 h-4 ${refreshStatsMutation.isPending ? 'animate-spin' : ''}`} />
                 </Button>
 
                 {/* View/Manage Actions */}
