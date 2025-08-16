@@ -6,3 +6,12 @@
   font-style: normal;
   font-display: swap;
 }
+
+/* Tektur Font Family */
+@font-face {
+  font-family: 'Tektur';
+  src: url('/fonts/tektur-500.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
