@@ -3,6 +3,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hero Section Typography */
+@layer components {
+  .hero-title {
+    font-family: 'Tektur';
+    font-weight: 500;
+    font-size: clamp(2rem, 7vw, 3.5rem);
+  }
+  
+  .hero-subtitle {
+    font-family: 'Bahnschrift';
+    font-weight: 400;
+    font-size: clamp(0.75rem, 3vw, 1.5rem);
+  }
+}
+
 /* Smooth animations for survey list */
 @layer utilities {
   .animate-list-item {
