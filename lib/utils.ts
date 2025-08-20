@@ -40,7 +40,14 @@ export function formatDuration(seconds: number): string {
 /**
  * Format address for display (show first and last few characters)
  */
-export function formatAddress(address: string, chars = 4): string {
-  if (address.length <= chars * 2 + 2) return address
-  return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`
+export function formatAddress(address: string): string {
+  if (!address) return ''
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
+
+/**
+ * Format numbers with thousands separators
+ */
+export function formatNumber(num: number, locale = 'en-US'): string {
+  return new Intl.NumberFormat(locale).format(num)
 }

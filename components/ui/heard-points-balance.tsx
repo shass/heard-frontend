@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAutoRefreshHeardPoints } from '@/hooks/use-users'
 import { useUser } from '@/lib/store'
 import { HeardPointsHistoryModal } from '@/components/lazy'
+import { formatNumber } from '@/lib/utils'
 import { History } from 'lucide-react'
 
 interface HeardPointsBalanceProps {
@@ -105,7 +106,7 @@ export function HeardPointsBalance({
             : 'text-zinc-900'
         }`}
       >
-        {displayedBalance.toLocaleString()}
+        {formatNumber(displayedBalance)}
       </span>
       {showLabel && <span className="text-sm text-zinc-600">HP</span>}
       

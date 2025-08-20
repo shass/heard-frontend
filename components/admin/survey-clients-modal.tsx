@@ -47,9 +47,7 @@ import { toast } from 'sonner'
 // Wallet address validation schema
 const walletAddressSchema = z
   .string()
-  .min(42, 'Wallet address must be 42 characters')
-  .max(42, 'Wallet address must be 42 characters')
-  .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum wallet address format')
+  .min(1, 'Wallet address is required')
 
 interface SurveyClientsModalProps {
   survey: { id: string; name: string; company?: string } | null
