@@ -8,6 +8,7 @@ import { NetworkStatus } from '@/components/lazy'
 import ErrorBoundary from '@/components/ui/error-boundary'
 import { StoreHydration } from '@/lib/store/hydration'
 import { MiniKitReady } from '@/components/providers/minikit-ready'
+import { env } from '@/lib/env'
 import './globals.css'
 import React from 'react';
 
@@ -17,6 +18,7 @@ export const viewport = {
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL(env.PUBLIC_URL || ''),
   title: 'Heard - Web3 Survey Platform',
   description: 'Earn crypto rewards by completing surveys on the Web3 platform',
   category: 'Social',
