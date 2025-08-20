@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
@@ -9,18 +9,15 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { Plus, Minus, GripVertical } from 'lucide-react'
+import { Plus, Minus } from 'lucide-react'
 import { Spinner } from '@/components/ui/loading-states'
 import { getSurveyQuestions } from '@/lib/api/admin'
-import type { 
-  CreateSurveyRequest, 
-  UpdateSurveyRequest, 
-  AdminSurveyListItem, 
-  CreateQuestionRequest,
-  CreateAnswerRequest 
+import type {
+  CreateSurveyRequest,
+  UpdateSurveyRequest,
+  AdminSurveyListItem,
 } from '@/lib/types'
 
 const answerSchema = z.object({
@@ -62,7 +59,7 @@ interface SurveyFormProps {
 
 export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyFormProps) {
   const [loadingQuestions, setLoadingQuestions] = useState(false)
-  
+
   const {
     register,
     control,
@@ -127,7 +124,7 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
               order: a.order
             }))
           }))
-          
+
           // Replace the default empty questions array with actual questions
           setValue('questions', formattedQuestions)
         })
@@ -183,7 +180,7 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
                 <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
               )}
             </div>
-            
+
             <div>
               <Label htmlFor="company">Company *</Label>
               <Input
@@ -258,7 +255,7 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
                 <p className="text-sm text-red-600 mt-1">{errors.rewardAmount.message}</p>
               )}
             </div>
-            
+
             <div>
               <Label htmlFor="rewardToken">Reward Token *</Label>
               <Input
@@ -270,7 +267,7 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
                 <p className="text-sm text-red-600 mt-1">{errors.rewardToken.message}</p>
               )}
             </div>
-            
+
             <div>
               <Label htmlFor="heardPointsReward">HeardPoints Reward *</Label>
               <Input
@@ -367,13 +364,13 @@ interface QuestionEditorProps {
   canRemove: boolean
 }
 
-function QuestionEditor({ 
-  questionIndex, 
-  register, 
-  control, 
-  errors, 
-  onRemove, 
-  canRemove 
+function QuestionEditor({
+  questionIndex,
+  register,
+  control,
+  errors,
+  onRemove,
+  canRemove
 }: QuestionEditorProps) {
   const { fields: answers, append: addAnswer, remove: removeAnswer } = useFieldArray({
     control,
@@ -415,18 +412,21 @@ function QuestionEditor({
 
         <div>
           <Label htmlFor={`question-${questionIndex}-type`}>Question Type *</Label>
-          <Select 
-            value={register(`questions.${questionIndex}.questionType`).value}
-            onValueChange={(value) => register(`questions.${questionIndex}.questionType`).onChange({ target: { value } })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select question type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="single">Single Choice</SelectItem>
-              <SelectItem value="multiple">Multiple Choice</SelectItem>
-            </SelectContent>
-          </Select>
+          <Controller
+            name={`questions.${questionIndex}.questionType`}
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select question type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="single">Single Choice</SelectItem>
+                  <SelectItem value="multiple">Multiple Choice</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
 
         <div>
@@ -445,9 +445,9 @@ function QuestionEditor({
                   placeholder={`Answer ${answerIndex + 1}`}
                 />
                 {answers.length > 2 && (
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     size="sm"
                     onClick={() => removeAnswer(answerIndex)}
                   >
