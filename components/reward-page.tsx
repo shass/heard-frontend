@@ -9,6 +9,7 @@ import { useUserReward } from "@/hooks/use-reward"
 import { useHeardPoints } from "@/hooks/use-users"
 import { useIsAuthenticated, useUser } from "@/lib/store"
 import { useNotifications } from "@/components/ui/notifications"
+import { formatNumber } from "@/lib/utils"
 import type { Survey } from "@/lib/types"
 
 interface RewardPageProps {
@@ -129,7 +130,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
   const formatReward = () => {
     // If there's a claim link or code, show the survey tokens
     if (claimLink || linkDropCode) {
-      return `${survey.rewardAmount} ${survey.rewardToken}`
+      return `${formatNumber(survey.rewardAmount)} ${survey.rewardToken}`
     }
     
     // Otherwise, show HeardPoints as the reward
@@ -138,7 +139,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
     }
     
     // Fallback to survey reward info
-    return `${survey.rewardAmount} ${survey.rewardToken}`
+    return `${formatNumber(survey.rewardAmount)} ${survey.rewardToken}`
   }
 
   if (!isAuthenticated) {
@@ -262,7 +263,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
                 </div>
               </div>
               <p className="text-sm text-zinc-600">
-                Scan this QR code or use the link below to claim your {survey.rewardAmount} {survey.rewardToken}
+                Scan this QR code or use the link below to claim your {formatNumber(survey.rewardAmount)} {survey.rewardToken}
               </p>
 
               {/* Direct claim link */}

@@ -19,6 +19,7 @@ import {
 import { SurveyManagement } from './survey-management'
 import { AdminAuthWrapper } from './admin-auth-wrapper'
 import { useAuthActions } from '@/components/providers/auth-provider'
+import { formatNumber } from '@/lib/utils'
 import Link from 'next/link';
 
 export function AdminDashboard() {
@@ -169,7 +170,7 @@ export function AdminDashboard() {
                         </div>
                         <div className="text-right">
                           <Badge variant="secondary">
-                            {survey.rewardAmount} {survey.rewardToken}
+                            {formatNumber(survey.rewardAmount)} {survey.rewardToken}
                           </Badge>
                         </div>
                       </div>

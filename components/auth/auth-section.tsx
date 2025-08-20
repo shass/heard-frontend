@@ -6,7 +6,6 @@ import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
 import { useAuthActions } from "@/components/providers/auth-provider"
 import { useAccount, useDisconnect } from 'wagmi'
 import { useNotifications } from "@/components/ui/notifications"
-import { formatAddress } from "@/lib/web3"
 import { LogOut, ChevronDown, Wallet } from 'lucide-react'
 import {
   DropdownMenu,
@@ -16,9 +15,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { FarcasterAuthButton } from "@/components/farcaster-auth-button"
 import { useMiniKitContext } from "@/hooks/use-minikit-context"
+import { formatAddress } from '@/lib/utils';
 
 export function AuthSection() {
-  const { logout, isAuthenticated, user, isLoading, platform } = useAuthActions()
+  const { logout, isAuthenticated, user, isLoading } = useAuthActions()
   const { isConnected, address } = useAccount()
   const { disconnect } = useDisconnect()
   const { openConnectModal } = useConnectModal()
@@ -51,8 +51,8 @@ export function AuthSection() {
     return (
       <div className="flex items-center space-x-2">
         {(isFarcasterApp || isBaseApp) && (
-          <FarcasterAuthButton 
-            variant="ghost" 
+          <FarcasterAuthButton
+            variant="ghost"
             size="sm"
             onSuccess={(result) => {
               console.log('Farcaster auth success:', result);

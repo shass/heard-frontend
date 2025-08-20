@@ -47,6 +47,7 @@ import { SurveyResponses } from './survey-responses'
 import { WhitelistModal } from './whitelist-modal'
 import { RewardLinksModalPaginated } from './reward-links-modal-paginated'
 import { SurveyClientsModal } from './survey-clients-modal'
+import { formatNumber } from '@/lib/utils'
 import type { AdminSurveyListItem, CreateSurveyRequest, UpdateSurveyRequest } from '@/lib/types'
 
 export function SurveyManagement() {
@@ -382,11 +383,11 @@ export function SurveyManagement() {
                   </div>
                   <div>
                     <span className="text-gray-500">Reward:</span>
-                    <div className="font-medium">{survey.rewardAmount} {survey.rewardToken}</div>
+                    <div className="font-medium">{formatNumber(survey.rewardAmount)} {survey.rewardToken}</div>
                   </div>
                   <div>
                     <span className="text-gray-500">HeardPoints:</span>
-                    <div className="font-medium">{survey.heardPointsReward} HP</div>
+                    <div className="font-medium">{formatNumber(survey.heardPointsReward)} HP</div>
                   </div>
                 </div>
 

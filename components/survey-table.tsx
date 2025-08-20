@@ -9,6 +9,7 @@ import { useNotifications } from "@/components/ui/notifications"
 import { Copy, Check } from "lucide-react"
 import { MotionSurveyTable } from "./motion-survey-table"
 import { motion, AnimatePresence } from "motion/react"
+import { formatNumber } from "@/lib/utils"
 import type { Survey } from "@/lib/types"
 
 interface SurveyTableProps {
@@ -32,8 +33,8 @@ function MobileSurveyCard({ survey, onTakeSurvey, onCopyLink, copiedSurveyId }: 
   }
 
   const formatReward = (survey: Survey) => {
-    const tokenReward = `${survey.rewardAmount} ${survey.rewardToken}`
-    const pointsReward = survey.heardPointsReward > 0 ? ` + ${survey.heardPointsReward} HP` : ""
+    const tokenReward = `${formatNumber(survey.rewardAmount)} ${survey.rewardToken}`
+    const pointsReward = survey.heardPointsReward > 0 ? ` + ${formatNumber(survey.heardPointsReward)} HP` : ""
     return tokenReward + pointsReward
   }
 
@@ -249,8 +250,8 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
                       <td className="px-6 py-4 text-base text-zinc-600">{survey.company}</td>
                       <td className="px-6 py-4">
                         <div className="text-base font-medium text-zinc-900">
-                          {`${survey.rewardAmount} ${survey.rewardToken}`}
-                          {survey.heardPointsReward > 0 ? ` + ${survey.heardPointsReward} HP` : ""}
+                          {`${formatNumber(survey.rewardAmount)} ${survey.rewardToken}`}
+                          {survey.heardPointsReward > 0 ? ` + ${formatNumber(survey.heardPointsReward)} HP` : ""}
                         </div>
                       </td>
                       <td className="px-6 py-4">

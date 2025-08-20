@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ExternalLink, Copy, CheckCircle2 } from "lucide-react"
+import { formatNumber } from "@/lib/utils"
 
 interface UserReward {
   claimLink?: string
@@ -40,8 +41,8 @@ export function SurveyReward({ userReward, onClaimReward, onCopyClaimLink }: Sur
               <span className="font-medium text-green-800">Survey Completed!</span>
             </div>
             <div className="text-sm text-green-700">
-              <p>Token Reward: {userReward.survey?.rewardAmount} {userReward.survey?.rewardToken}</p>
-              <p>HeardPoints Earned: {userReward.heardPointsAwarded} HP</p>
+              <p>Token Reward: {formatNumber(userReward.survey?.rewardAmount || 0)} {userReward.survey?.rewardToken}</p>
+              <p>HeardPoints Earned: {formatNumber(userReward.heardPointsAwarded)} HP</p>
               {userReward.usedAt && (
                 <p>Reward given: {new Date(userReward.usedAt).toLocaleDateString()}</p>
               )}
@@ -51,7 +52,7 @@ export function SurveyReward({ userReward, onClaimReward, onCopyClaimLink }: Sur
           {/* Claim Actions */}
           <div className="space-y-3">
             <div className="text-sm text-zinc-600">
-              Use the link below to claim your {userReward.survey?.rewardAmount} {userReward.survey?.rewardToken} tokens:
+              Use the link below to claim your {formatNumber(userReward.survey?.rewardAmount || 0)} {userReward.survey?.rewardToken} tokens:
             </div>
 
             <div className="flex space-x-3">
