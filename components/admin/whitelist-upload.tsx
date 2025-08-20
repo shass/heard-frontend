@@ -100,7 +100,7 @@ export function WhitelistUpload({ survey, onSuccess, onCancel }: WhitelistUpload
       // Show summary notification
       const { validCount, duplicateCount, invalidCount } = result.stats
       if (validCount === 0) {
-        notifications.error('No valid addresses', 'No valid Ethereum addresses found to upload')
+        notifications.error('No valid addresses', 'No valid addresses found to upload')
         setUploadState('error')
         return
       }

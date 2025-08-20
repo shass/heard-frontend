@@ -32,7 +32,7 @@ export interface ProcessingProgress {
 
 export class WhitelistFileProcessor {
   private readonly CHUNK_SIZE = 1024 * 1024 // 1MB chunks
-  private readonly ADDRESS_REGEX = /^0x[a-f0-9]{40}$/i
+  private readonly ADDRESS_REGEX = /.+/ // Accept any non-empty string
 
   /**
    * Process file in chunks for large files
@@ -45,7 +45,7 @@ export class WhitelistFileProcessor {
     const addresses = new Set<string>()
     const duplicates = new Set<string>()
     const invalidAddresses: Array<{ value: string; line: number; error: string }> = []
-    
+
     let currentLine = 0
     let processedBytes = 0
     const totalBytes = file.size
@@ -58,7 +58,6 @@ export class WhitelistFileProcessor {
     })
 
     // Read file in chunks
-    const reader = new FileReader()
     let buffer = ''
 
     for (let offset = 0; offset < file.size; offset += this.CHUNK_SIZE) {
@@ -74,11 +73,11 @@ export class WhitelistFileProcessor {
       for (let i = 0; i < lines.length; i++) {
         currentLine++
         const line = lines[i].trim()
-        
+
         if (!line) continue // Skip empty lines
 
         const normalizedAddress = line.toLowerCase()
-        
+
         if (!this.isValidAddress(normalizedAddress)) {
           invalidAddresses.push({
             value: line,
@@ -110,7 +109,7 @@ export class WhitelistFileProcessor {
     if (buffer.trim()) {
       currentLine++
       const normalizedAddress = buffer.trim().toLowerCase()
-      
+
       if (this.isValidAddress(normalizedAddress)) {
         if (addresses.has(normalizedAddress)) {
           duplicates.add(normalizedAddress)
@@ -136,7 +135,7 @@ export class WhitelistFileProcessor {
 
     const validAddresses = Array.from(addresses)
     const duplicateAddresses = Array.from(duplicates)
-    
+
     // Calculate estimated upload time
     const batchCount = Math.ceil(validAddresses.length / batchSize)
     const estimatedSeconds = batchCount * 2 // ~2 seconds per batch
@@ -171,15 +170,15 @@ export class WhitelistFileProcessor {
     const addresses = new Set<string>()
     const duplicates = new Set<string>()
     const invalidAddresses: Array<{ value: string; line: number; error: string }> = []
-    
+
     const lines = text.split('\n')
-    
+
     lines.forEach((line, index) => {
       const trimmed = line.trim()
       if (!trimmed) return
-      
+
       const normalizedAddress = trimmed.toLowerCase()
-      
+
       if (!this.isValidAddress(normalizedAddress)) {
         invalidAddresses.push({
           value: trimmed,
@@ -188,7 +187,7 @@ export class WhitelistFileProcessor {
         })
         return
       }
-      
+
       if (addresses.has(normalizedAddress)) {
         duplicates.add(normalizedAddress)
       } else {
