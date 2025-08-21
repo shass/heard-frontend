@@ -4,6 +4,7 @@ import { useAccount, useSignMessage } from 'wagmi'
 import { useAuthStore } from '@/lib/store'
 import { authApi } from '@/lib/api/auth'
 import { usePlatformDetection } from '@/hooks/use-platform-detection'
+import { useMiniKitEnvironment } from '@/hooks/use-minikit-environment'
 import { useCallback } from 'react'
 
 export function useAuth() {
@@ -11,6 +12,7 @@ export function useAuth() {
   const { signMessageAsync } = useSignMessage()
   const { setUser, setLoading, setError, isAuthenticated, user } = useAuthStore()
   const platform = usePlatformDetection()
+  const { shouldUseMiniKitAuth, canUseAuthenticate } = useMiniKitEnvironment()
 
   const login = useCallback(async () => {
     if (!isConnected || !address) {
@@ -24,11 +26,9 @@ export function useAuth() {
       // Step 1: Get nonce from backend
       const { message, jwtToken } = await authApi.getNonce(address)
 
-      // Step 2: Sign message - optimized for mobile
+      // Step 2: Sign message with wagmi
       const signature = await signMessageAsync({
         message,
-        // On mobile, the promise resolves immediately after user interaction
-        // Deep linking will handle the rest automatically
       })
 
       // Step 3: Verify signature with backend using JWT token
@@ -36,7 +36,7 @@ export function useAuth() {
         walletAddress: address,
         signature,
         message,
-        jwtToken, // Pass JWT token for stateless verification
+        jwtToken,
       })
 
       // Step 4: Update store
@@ -48,7 +48,7 @@ export function useAuth() {
     } finally {
       setLoading(false)
     }
-  }, [address, isConnected, signMessageAsync, setUser, setLoading, setError])
+  }, [address, isConnected, signMessageAsync, shouldUseMiniKitAuth, setUser, setLoading, setError])
 
   const logout = useCallback(async () => {
     try {
@@ -70,5 +70,7 @@ export function useAuth() {
     isLoading: useAuthStore(state => state.loading),
     error: useAuthStore(state => state.error),
     platform,
+    shouldUseMiniKitAuth,
+    canUseAuthenticate,
   }
 }
