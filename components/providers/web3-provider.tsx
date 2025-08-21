@@ -4,42 +4,35 @@ import React from 'react';
 import { RainbowKitProvider, getDefaultConfig } from '@rainbow-me/rainbowkit'
 import { WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { mainnet, polygon, bsc } from 'wagmi/chains'
+import { mainnet, polygon, bsc, base } from 'wagmi/chains'
 import { http } from 'wagmi'
 import { env } from '@/lib/env'
 import '@rainbow-me/rainbowkit/styles.css'
 
-// Polyfill for indexedDB in SSR environment
-if (typeof global !== 'undefined' && typeof global.indexedDB === 'undefined') {
-  global.indexedDB = {
-    open: () => ({
-      result: {
-        transaction: () => ({
-          objectStore: () => ({
-            get: () => ({ onsuccess: null, onerror: null }),
-            put: () => ({ onsuccess: null, onerror: null }),
-            delete: () => ({ onsuccess: null, onerror: null })
-          })
-        })
-      },
-      onsuccess: null,
-      onerror: null,
-      onupgradeneeded: null
-    }),
-    deleteDatabase: () => ({ onsuccess: null, onerror: null })
-  } as any
+// Функция определения контекста Base Mini App
+function isBaseAppContext(): boolean {
+  if (typeof window === 'undefined') return false
+
+  return (
+    window.location.hostname.includes('base.org') ||
+    window.location.hostname.includes('farcaster.xyz') ||
+    /Base|Farcaster|Warpcast/i.test(navigator.userAgent) ||
+    // Проверяем наличие MiniKit в window
+    'miniKit' in window
+  )
 }
 
 // Web3 configuration optimized for mobile
 const config = getDefaultConfig({
   appName: env.APP_NAME,
   projectId: env.WALLETCONNECT_PROJECT_ID || 'demo',
-  chains: [mainnet, polygon, bsc],
+  chains: [mainnet, base, polygon, bsc] as const,
   ssr: true,
   batch: {
     multicall: true,
   },
   transports: {
+    [base.id]: http(),
     [mainnet.id]: http(),
     [polygon.id]: http(),
     [bsc.id]: http(),
