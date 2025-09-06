@@ -1,51 +1,71 @@
 // HTTP client for API communication
 
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { env } from '@/lib/env'
 import type { ApiResponse, ApiError } from '@/lib/types'
 
 class ApiClient {
-  private client: AxiosInstance
+  private baseURL: string
+  private timeout: number
 
   constructor() {
-    this.client = axios.create({
-      baseURL: env.API_URL,
-      timeout: env.API_TIMEOUT,
-      withCredentials: true, // Enable cookies for cross-origin requests
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-
-    this.setupInterceptors()
+    this.baseURL = env.API_URL
+    this.timeout = env.API_TIMEOUT
   }
 
-  private setupInterceptors() {
-    // Request interceptor - cookies are handled automatically by withCredentials
-    this.client.interceptors.request.use(
-      (config) => config,
-      (error) => Promise.reject(error)
-    )
+  private async fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout)
 
-    // Response interceptor - handle errors globally
-    this.client.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          // Handle unauthorized - HttpOnly cookie will be cleared by server
-          // No action needed on client side
-        }
-        
-        return Promise.reject(this.formatError(error))
+    try {
+      // Don't set Content-Type for DELETE requests or when body is not present
+      const shouldSetContentType = 
+        options.method !== 'DELETE' && 
+        (options.body !== undefined || options.method === 'POST')
+      
+      const headers: HeadersInit = {
+        ...options.headers,
       }
-    )
+      
+      if (shouldSetContentType && !(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json'
+      }
+
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+        credentials: 'include', // Enable cookies for cross-origin requests
+        headers,
+      })
+      
+      clearTimeout(timeoutId)
+      return response
+    } catch (error) {
+      clearTimeout(timeoutId)
+      throw error
+    }
+  }
+
+  private async handleResponse<T>(response: Response): Promise<T> {
+    if (response.status === 401) {
+      // Handle unauthorized - HttpOnly cookie will be cleared by server
+      // No action needed on client side
+    }
+
+    if (!response.ok) {
+      let errorData: ApiError
+      try {
+        errorData = await response.json()
+      } catch {
+        errorData = this.formatError(new Error(`HTTP ${response.status}: ${response.statusText}`))
+      }
+      throw errorData
+    }
+
+    const data: ApiResponse<T> = await response.json()
+    return data.data
   }
 
   private formatError(error: any): ApiError {
-    if (error.response?.data) {
-      return error.response.data as ApiError
-    }
-
     return {
       success: false,
       error: {
@@ -61,52 +81,79 @@ class ApiClient {
   }
 
   // Public methods for making requests
-  async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response: AxiosResponse<ApiResponse<T>> = await this.client.get(url, config)
-    return response.data.data
+  async get<T>(url: string, config?: RequestInit): Promise<T> {
+    const response = await this.fetchWithTimeout(`${this.baseURL}${url}`, {
+      method: 'GET',
+      ...config,
+    })
+    return this.handleResponse<T>(response)
   }
 
-  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response: AxiosResponse<ApiResponse<T>> = await this.client.post(url, data, config)
+  async post<T>(url: string, data?: any, config?: RequestInit): Promise<T> {
+    const hasData = data !== undefined && data !== null
+    
+    const response = await this.fetchWithTimeout(`${this.baseURL}${url}`, {
+      method: 'POST',
+      body: hasData ? JSON.stringify(data) : JSON.stringify({}),
+      ...config,
+    })
+    
+    const result = await this.handleResponse<T>(response)
     
     // Handle upload endpoints that return wrapped ApiResponse
     if (url.includes('/whitelist/upload')) {
-      return (response.data as any).data as T
+      return result
     }
     
-    return response.data.data
+    return result
   }
 
-  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response: AxiosResponse<ApiResponse<T>> = await this.client.put(url, data, config)
-    return response.data.data
+  async put<T>(url: string, data?: any, config?: RequestInit): Promise<T> {
+    const response = await this.fetchWithTimeout(`${this.baseURL}${url}`, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+      ...config,
+    })
+    return this.handleResponse<T>(response)
   }
 
-  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response: AxiosResponse<ApiResponse<T>> = await this.client.delete(url, config)
-    return response.data.data
+  async delete<T>(url: string, config?: RequestInit): Promise<T> {
+    const response = await this.fetchWithTimeout(`${this.baseURL}${url}`, {
+      method: 'DELETE',
+      ...config,
+      headers: {
+        // Don't set Content-Type for DELETE requests without body
+        ...config?.headers,
+      },
+    })
+    return this.handleResponse<T>(response)
   }
 
-  async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response: AxiosResponse<ApiResponse<T>> = await this.client.patch(url, data, config)
-    return response.data.data
+  async patch<T>(url: string, data?: any, config?: RequestInit): Promise<T> {
+    const response = await this.fetchWithTimeout(`${this.baseURL}${url}`, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+      ...config,
+    })
+    return this.handleResponse<T>(response)
   }
-
 
   // File upload helper
-  async uploadFile<T>(url: string, file: File, config?: AxiosRequestConfig): Promise<T> {
+  async uploadFile<T>(url: string, file: File, config?: RequestInit): Promise<T> {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response: AxiosResponse<ApiResponse<T>> = await this.client.post(url, formData, {
-      ...config,
+    const response = await this.fetchWithTimeout(`${this.baseURL}${url}`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
       headers: {
+        // Don't set Content-Type for FormData - browser will set it with boundary
         ...config?.headers,
-        'Content-Type': 'multipart/form-data',
       },
     })
 
-    return response.data.data
+    return this.handleResponse<T>(response)
   }
 }
 

@@ -12,6 +12,7 @@ interface UseAuthEffectsProps {
 export function useAuthEffects({ isConnected, address }: UseAuthEffectsProps) {
   const { user } = useAuthStore()
   const { checkAuth, checkInitialAuth } = useAuthSession()
+  const prevAddressRef = useRef<string | undefined>()
 
   /**
    * Auto-check auth on app load (if cookie exists)
@@ -24,9 +25,15 @@ export function useAuthEffects({ isConnected, address }: UseAuthEffectsProps) {
    * Check auth when wallet address changes
    */
   useEffect(() => {
-    if (isConnected && address && user && user.walletAddress &&
-        user.walletAddress.toLowerCase() !== address.toLowerCase()) {
-      checkAuth().then()
+    // Only check if address actually changed (not just user object update)
+    if (isConnected && address && address !== prevAddressRef.current) {
+      prevAddressRef.current = address
+      
+      // Only re-check auth if user exists and wallet address doesn't match
+      if (user && user.walletAddress &&
+          user.walletAddress.toLowerCase() !== address.toLowerCase()) {
+        checkAuth().then()
+      }
     }
-  }, [address, user, isConnected])
+  }, [address, isConnected])
 }
