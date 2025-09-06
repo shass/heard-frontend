@@ -26,14 +26,13 @@ export function useRewardPage(survey: Survey, responseId?: string) {
 
   // Compute reward information
   const claimLink = userReward?.claimLink
-  const linkDropCode = userReward?.linkDropCode
   const heardPointsAwarded = userReward?.heardPointsAwarded || survey.heardPointsReward || 0
   const rewardIssued = !!userReward?.usedAt
-  const isNewLinkdropSystem = userReward?.type === 'linkdrop'
+  const isLinkdropReward = userReward?.type === 'linkdrop'
   const isCompletedNoReward = userReward?.type === 'completed_no_reward'
 
   // Check if there are any rewards available
-  const hasTokenRewards = !!(claimLink || linkDropCode)
+  const hasTokenRewards = !!claimLink
   const hasHeardPointsRewards = !!userReward?.heardPointsAwarded && userReward.heardPointsAwarded > 0
   const hasAnyRewards = hasTokenRewards || hasHeardPointsRewards
   
@@ -42,19 +41,11 @@ export function useRewardPage(survey: Survey, responseId?: string) {
 
   // Generate QR code for LinkDrop claim
   useEffect(() => {
-    let claimUrl = ''
-
-    if (isNewLinkdropSystem && claimLink) {
-      claimUrl = claimLink
-    } else if (linkDropCode) {
-      claimUrl = `${window.location.origin}/claim/${linkDropCode}`
-    }
-
-    if (claimUrl) {
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(claimUrl)}`
+    if (claimLink) {
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(claimLink)}`
       setQrCodeUrl(qrUrl)
     }
-  }, [linkDropCode, claimLink, isNewLinkdropSystem])
+  }, [claimLink])
 
   // Update claim status based on response
   useEffect(() => {
@@ -64,21 +55,13 @@ export function useRewardPage(survey: Survey, responseId?: string) {
   }, [rewardIssued])
 
   const handleClaimReward = async () => {
-    let claimUrl = ''
-
-    if (isNewLinkdropSystem && claimLink) {
-      claimUrl = claimLink
-    } else if (linkDropCode) {
-      claimUrl = `${window.location.origin}/claim/${linkDropCode}`
-    }
-
-    if (!claimUrl) {
+    if (!claimLink) {
       notifications.error('No reward available', 'Claim link not found')
       return
     }
 
     try {
-      openUrl(claimUrl)
+      openUrl(claimLink)
       setClaimStatus('claimed')
       await refetchPoints()
       notifications.success('Reward claimed!', 'Your tokens have been transferred to your wallet')
@@ -89,16 +72,8 @@ export function useRewardPage(survey: Survey, responseId?: string) {
   }
 
   const handleCopyClaimLink = () => {
-    let claimUrl = ''
-
-    if (isNewLinkdropSystem && claimLink) {
-      claimUrl = claimLink
-    } else if (linkDropCode) {
-      claimUrl = `${window.location.origin}/claim/${linkDropCode}`
-    }
-
-    if (claimUrl) {
-      navigator.clipboard.writeText(claimUrl)
+    if (claimLink) {
+      navigator.clipboard.writeText(claimLink)
       notifications.success('Link copied', 'Claim link copied to clipboard')
       setLinkCopied(true)
       setTimeout(() => setLinkCopied(false), 1500)
@@ -121,10 +96,9 @@ export function useRewardPage(survey: Survey, responseId?: string) {
     rewardLoading,
     rewardError,
     claimLink,
-    linkDropCode,
     heardPointsAwarded,
     rewardIssued,
-    isNewLinkdropSystem,
+    isLinkdropReward,
     isCompletedNoReward,
     
     // Computed values
