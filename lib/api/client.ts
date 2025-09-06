@@ -81,10 +81,28 @@ class ApiClient {
   }
 
   // Public methods for making requests
-  async get<T>(url: string, config?: RequestInit): Promise<T> {
-    const response = await this.fetchWithTimeout(`${this.baseURL}${url}`, {
+  async get<T>(url: string, config?: RequestInit & { params?: Record<string, any> }): Promise<T> {
+    let fullUrl = `${this.baseURL}${url}`
+    
+    // Handle query parameters
+    if (config?.params) {
+      const searchParams = new URLSearchParams()
+      Object.entries(config.params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, String(value))
+        }
+      })
+      if (searchParams.toString()) {
+        fullUrl += `?${searchParams.toString()}`
+      }
+    }
+    
+    // Remove params from config before passing to fetch
+    const { params, ...fetchConfig } = config || {}
+    
+    const response = await this.fetchWithTimeout(fullUrl, {
       method: 'GET',
-      ...config,
+      ...fetchConfig,
     })
     return this.handleResponse<T>(response)
   }
