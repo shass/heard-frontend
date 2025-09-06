@@ -5,6 +5,7 @@ import { useAuthStore } from '@/lib/store'
 import { authApi } from '@/lib/api/auth'
 import { usePlatformDetection } from '@/hooks/use-platform-detection'
 import { useMiniKitEnvironment } from '@/hooks/use-minikit-environment'
+import { PlatformManager } from '@/lib/platform/platform.manager'
 import { useCallback } from 'react'
 
 export function useAuth() {
@@ -23,6 +24,9 @@ export function useAuth() {
     setError(null)
 
     try {
+      const detectedPlatform = PlatformManager.getInstance().detect()
+      console.log(`[Auth] Starting authentication on ${detectedPlatform.type}`)
+      
       // Step 1: Get nonce from backend
       const { message, jwtToken } = await authApi.getNonce(address)
 
@@ -41,6 +45,7 @@ export function useAuth() {
 
       // Step 4: Update store
       setUser(userData)
+      console.log(`[Auth] Success on ${detectedPlatform.type}`)
 
     } catch (error: any) {
       setError(error.message || 'Authentication failed')

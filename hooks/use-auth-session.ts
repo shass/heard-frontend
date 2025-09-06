@@ -29,15 +29,7 @@ export function useAuthSession() {
     }
   }
 
-  /**
-   * Check auth on app load using HttpOnly cookie
-   */
-  const checkInitialAuth = async () => {
-    await checkAuth()
-  }
-
   return {
-    checkAuth,
-    checkInitialAuth
+    checkAuth
   }
 }

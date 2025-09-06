@@ -55,14 +55,25 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
   const handleAuthenticate = async () => {
     try {
+      console.log('[Survey] Starting authentication flow')
       await login()
-
+      
+      console.log('[Survey] Authentication successful, checking eligibility')
+      
+      // Wait a moment for eligibility to refresh
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
       if (eligibility?.isEligible) {
+        console.log('[Survey] User eligible, navigating to survey')
         router.push(`/surveys/${id}`)
+      } else {
+        console.log('[Survey] Authentication successful but user not eligible')
+        // Eligibility will refresh automatically via React Query
       }
 
     } catch (error) {
-      console.error('Authentication failed:', error)
+      console.error('[Survey] Authentication failed:', error)
+      // Error is already set in useAuth hook
     }
   }
 
