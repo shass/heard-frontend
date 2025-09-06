@@ -3,6 +3,7 @@ import { Web3Provider } from '@/components/providers/web3-provider'
 import { AuthProvider } from '@/components/providers/auth-provider'
 import { CreateSurveyModalProvider } from '@/components/providers/create-survey-modal-provider'
 import { MiniKitContextProvider } from '@/components/providers/minikit-provider'
+import { NavigationProvider } from '@/components/providers/navigation-provider'
 import { NotificationContainer } from '@/components/ui/notifications'
 import { NetworkStatus } from '@/components/lazy'
 import ErrorBoundary from '@/components/ui/error-boundary'
@@ -101,11 +102,13 @@ export default function RootLayout({
             <Web3Provider>
               <AuthProvider>
                 <CreateSurveyModalProvider>
-                  <StoreHydration />
-                  <NetworkStatus />
-                  <MiniKitReady />
-                  {children}
-                  <NotificationContainer />
+                  <NavigationProvider>
+                    <StoreHydration />
+                    <NetworkStatus />
+                    <MiniKitReady />
+                    {children}
+                    <NotificationContainer />
+                  </NavigationProvider>
                 </CreateSurveyModalProvider>
               </AuthProvider>
             </Web3Provider>

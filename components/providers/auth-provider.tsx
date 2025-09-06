@@ -49,12 +49,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Handle all authentication effects
   useAuthEffects({ isConnected, address })
 
-  const handleCheckAuth = () => checkAuth(isConnected, address)
-
   const contextValue: AuthContextType = {
     login: auth.login,
     logout: auth.logout,
-    checkAuth: handleCheckAuth,
+    checkAuth,
     isAuthenticated: auth.isAuthenticated,
     user: auth.user,
     isLoading: auth.isLoading,
