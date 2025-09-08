@@ -32,7 +32,7 @@ export function MobileSurveyCard({ survey, onTakeSurvey, onCopyLink, copiedSurve
           <h3 className="text-base font-semibold text-zinc-900">{survey.name}</h3>
           <p className="text-sm text-zinc-600">{survey.company}</p>
           <p className="text-xs text-zinc-500 mt-1">
-            {survey.totalQuestions} questions • {survey.responseCount} responses
+            {survey.totalQuestions} questions
           </p>
         </div>
 
