@@ -15,7 +15,7 @@ import {
   type SurveyResultsResponse,
   type QuestionWithAnswers
 } from '@/lib/api/survey-clients'
-import { useAuth } from '@/hooks/use-auth'
+import { useCompatibleAuth } from '@/src/platforms'
 import { toast } from 'sonner'
 
 // Query keys for cache management
@@ -29,7 +29,7 @@ export const surveyClientKeys = {
 
 // Admin hooks for managing survey clients
 export function useSurveyClients(surveyId: string) {
-  const { user } = useAuth()
+  const { user } = useCompatibleAuth()
   const isAdmin = user?.role === 'admin'
 
   return useQuery({
@@ -99,7 +99,7 @@ export function useRemoveSurveyClient() {
 
 // Visibility management hooks
 export function useSurveyVisibility(surveyId: string) {
-  const { user } = useAuth()
+  const { user } = useCompatibleAuth()
   const isAdmin = user?.role === 'admin'
 
   return useQuery({
@@ -198,7 +198,7 @@ export function useSurveyVisibilityInfo(surveyId: string) {
 
 // Utility hooks
 export function useCanViewResults(surveyId: string, token?: string) {
-  const { user } = useAuth()
+  const { user } = useCompatibleAuth()
   const visibilityQuery = useSurveyVisibilityInfo(surveyId)
   
   const canView = React.useMemo(() => {

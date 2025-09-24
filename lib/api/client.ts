@@ -39,8 +39,14 @@ class ApiClient {
       
       clearTimeout(timeoutId)
       return response
-    } catch (error) {
+    } catch (error: any) {
       clearTimeout(timeoutId)
+      
+      // Log abort errors for debugging
+      if (error.name === 'AbortError') {
+        console.error('[ApiClient] Request was aborted:', url, error)
+      }
+      
       throw error
     }
   }

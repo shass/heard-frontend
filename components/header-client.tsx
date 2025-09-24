@@ -11,7 +11,15 @@ import { Settings } from "lucide-react"
 
 // Dynamically import Web3 components to avoid SSR issues
 const AuthSection = dynamic(
-  () => import('./auth/auth-section').then((mod) => ({ default: mod.AuthSection })),
+  () => import('./auth/auth-section').then((mod) => ({ 
+    default: function WrappedAuthSection(props: any) {
+      return (
+        <React.Suspense fallback={<div className="h-10 w-32 bg-zinc-100 rounded-lg animate-pulse"></div>}>
+          <mod.AuthSection {...props} />
+        </React.Suspense>
+      )
+    }
+  })),
   {
     ssr: false,
     loading: () => (

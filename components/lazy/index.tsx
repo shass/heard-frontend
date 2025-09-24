@@ -53,17 +53,12 @@ export function RewardPageWithSuspense(props: any) {
   )
 }
 
-// Admin components lazy loading
-export const LazyAdminDashboard = lazy(() =>
+// Admin components with SSR disabled due to auth requirements
+export const AdminDashboardWithSuspense = dynamic(() =>
   import('@/components/admin/admin-dashboard').then(module => ({
     default: module.AdminDashboard
-  }))
+  })), {
+    ssr: false,
+    loading: () => <PageLoading message="Loading admin dashboard..." />
+  }
 )
-
-export function AdminDashboardWithSuspense(props: any) {
-  return (
-    <Suspense fallback={<PageLoading message="Loading admin dashboard..." />}>
-      <LazyAdminDashboard {...props} />
-    </Suspense>
-  )
-}

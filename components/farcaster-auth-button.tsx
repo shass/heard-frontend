@@ -7,6 +7,11 @@ import { useAuthenticate } from '@coinbase/onchainkit/minikit';
 import { useMiniKitContext } from '@/hooks/use-minikit-context';
 import { useNotifications } from '@/components/ui/notifications';
 import { env } from '@/lib/env';
+import { 
+  useCompatibleAuth, 
+  useMigrationChoice, 
+  PlatformSwitch
+} from '@/src/platforms';
 
 interface FarcasterAuthButtonProps {
   onSuccess?: (result: any) => void;
@@ -15,7 +20,8 @@ interface FarcasterAuthButtonProps {
   className?: string;
 }
 
-export function FarcasterAuthButton({ 
+// Legacy implementation for backward compatibility
+function LegacyFarcasterAuthButton({ 
   onSuccess,
   variant = 'outline', 
   size = 'default',
@@ -62,4 +68,76 @@ export function FarcasterAuthButton({
       {isLoading ? 'Signing in...' : 'Sign in with Farcaster'}
     </Button>
   );
+}
+
+// Modern platform-aware implementation
+function ModernFarcasterAuthButton({ 
+  onSuccess,
+  variant = 'outline', 
+  size = 'default',
+  className 
+}: FarcasterAuthButtonProps) {
+  const auth = useCompatibleAuth();
+  const notifications = useNotifications();
+
+  const handleAuth = async () => {
+    try {
+      if (auth.isAuthenticated) {
+        await auth.logout();
+        notifications.success('Signed out successfully');
+      } else {
+        // Try platform-specific auth first
+        if (auth.loginWithPlatform) {
+          await auth.loginWithPlatform();
+        } else {
+          await auth.login();
+        }
+        notifications.success('Authentication successful!');
+        onSuccess?.(auth.user);
+      }
+    } catch (error) {
+      console.error('Auth failed:', error);
+      notifications.error('Authentication failed', 'Please try again');
+    }
+  };
+
+  return (
+    <PlatformSwitch
+      web={null} // Don't show on web platform
+      baseApp={
+        <Button
+          variant={variant}
+          size={size}
+          onClick={handleAuth}
+          disabled={auth.isLoading}
+          className={className}
+        >
+          <LogIn className="h-4 w-4 mr-2" />
+          {auth.isLoading ? 'Processing...' : 
+           auth.isAuthenticated ? 'Sign Out' : 'Sign in with Base'}
+        </Button>
+      }
+      farcaster={
+        <Button
+          variant={variant}
+          size={size}
+          onClick={handleAuth}
+          disabled={auth.isLoading}
+          className={className}
+        >
+          <LogIn className="h-4 w-4 mr-2" />
+          {auth.isLoading ? 'Signing in...' : 
+           auth.isAuthenticated ? 'Sign Out' : 'Quick Auth'}
+        </Button>
+      }
+    />
+  );
+}
+
+// Export the platform-aware component
+export function FarcasterAuthButton(props: FarcasterAuthButtonProps) {
+  const migrationChoice = useMigrationChoice();
+  
+  // For now, always use the modern implementation
+  return <ModernFarcasterAuthButton {...props} />;
 }
