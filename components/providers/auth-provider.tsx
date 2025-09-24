@@ -71,23 +71,23 @@ function AuthProviderImpl({ children }: AuthProviderProps) {
       const { config } = await import('@/components/providers/web3-provider')
       
       // Get nonce from backend
-      const { nonce } = await authApi.getNonce(address)
+      const { message, jwtToken } = await authApi.getNonce(address)
       
       // Sign message with wallet
-      const message = `Sign this message to authenticate with HEARD platform.\n\nNonce: ${nonce}`
       const signature = await wagmiActions.signMessage(config, { 
         account: address,
         message 
       })
       
       // Connect wallet and get user data
-      const response = await authApi.connectWallet({
+      const { user } = await authApi.connectWallet({
         walletAddress: address,
         signature,
-        nonce
+        message,
+        jwtToken
       })
       
-      setUser(response.user)
+      setUser(user)
     } catch (error) {
       console.error('Web login failed:', error)
       throw error
