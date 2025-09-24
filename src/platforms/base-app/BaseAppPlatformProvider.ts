@@ -1,7 +1,7 @@
 import { IPlatformProvider } from '../shared/interfaces/IPlatformProvider'
 import { IAuthProvider } from '../shared/interfaces/IAuthProvider'
 import { IWalletProvider } from '../shared/interfaces/IWalletProvider'
-import { BaseAppAuthProvider } from './providers/BaseAppAuthProvider'
+import { BaseAppAuthProviderSafe } from './providers/BaseAppAuthProviderSafe'
 import { BaseAppWalletProvider } from './providers/BaseAppWalletProvider'
 
 export class BaseAppPlatformProvider implements IPlatformProvider {
@@ -90,19 +90,28 @@ export class BaseAppPlatformProvider implements IPlatformProvider {
   // Platform-specific methods for Base App
   initializeWithMiniKitHooks(miniKitHooks: any): void {
     // This method should be called from a React component that has access to MiniKit hooks
-    if (!this.authProvider && miniKitHooks.miniKit && miniKitHooks.authenticate) {
-      this.authProvider = new BaseAppAuthProvider(
-        miniKitHooks.miniKit,
-        miniKitHooks.authenticate
+    // Always use safe provider that handles missing hooks gracefully
+    if (!this.authProvider) {
+      // Use safe provider that handles all scenarios (hooks available or not)
+      this.authProvider = new BaseAppAuthProviderSafe(
+        miniKitHooks?.miniKit || null,
+        miniKitHooks?.authenticate || null
       )
+      
+      if (miniKitHooks?.miniKit && miniKitHooks?.authenticate) {
+        console.log('[BaseApp] MiniKit hooks available, using full functionality')
+      } else {
+        console.warn('[BaseApp] Some MiniKit hooks missing, using limited functionality')
+      }
     }
     
-    if (!this.walletProvider && miniKitHooks.miniKit) {
+    if (!this.walletProvider && miniKitHooks?.miniKit) {
+      // Only create wallet provider if miniKit is available
       this.walletProvider = new BaseAppWalletProvider(
         miniKitHooks.miniKit,
-        miniKitHooks.account,
-        miniKitHooks.sendTransaction,
-        miniKitHooks.signMessage
+        miniKitHooks?.account || null,
+        miniKitHooks?.sendTransaction || null,
+        miniKitHooks?.signMessage || null
       )
     }
   }
