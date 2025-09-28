@@ -13,18 +13,18 @@ export function useAdminAuth() {
 
   const login = async () => {
     console.log('[useAdminAuth] login called, isConnected:', isConnected, 'address:', address)
-    
+
     if (!isConnected || !address) {
       throw new Error('Wallet not connected')
     }
-    
+
     setLoading(true)
     setError(null)
-    
+
     try {
       // Get nonce from backend using direct fetch
       console.log('[useAdminAuth] Requesting nonce for address:', address)
-      const nonceResponse = await fetch('http://localhost:3001/api/auth/nonce', {
+      const nonceResponse = await fetch('/api/auth/nonce', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -39,21 +39,21 @@ export function useAdminAuth() {
 
       const nonceData = await nonceResponse.json()
       console.log('[useAdminAuth] Received nonce data:', nonceData)
-      
+
       // Extract message and jwtToken from the response
       const message = nonceData.data.message
       const jwtToken = nonceData.data.jwtToken
       console.log('[useAdminAuth] Message to sign:', message)
       console.log('[useAdminAuth] JWT Token:', jwtToken)
-      
+
       // Sign message with wallet
       console.log('[useAdminAuth] Requesting signature...')
       const signature = await signMessageAsync({ message })
       console.log('[useAdminAuth] Signature received:', signature)
-      
+
       // Connect wallet and get user data using direct fetch
       console.log('[useAdminAuth] Connecting wallet...')
-      const connectResponse = await fetch('http://localhost:3001/api/auth/connect-wallet', {
+      const connectResponse = await fetch('/api/auth/connect-wallet', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ export function useAdminAuth() {
 
       const connectData = await connectResponse.json()
       console.log('[useAdminAuth] Connected successfully, data:', connectData)
-      
+
       setUser(connectData.data.user)
       return connectData.data.user
     } catch (err: any) {
