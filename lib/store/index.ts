@@ -44,6 +44,7 @@ interface AuthStore {
   user: User | null
   isAuthenticated: boolean
   loading: boolean
+  isLoading: boolean // Alias for compatibility
   error: string | null
 
   // Actions
@@ -59,6 +60,7 @@ export const useAuthStore = create<AuthStore>()(
       user: null,
       isAuthenticated: false,
       loading: true, // Start with loading true to prevent flickering
+      isLoading: true, // Alias for compatibility
       error: null,
 
       setUser: (user) => set((state) => ({
@@ -67,9 +69,9 @@ export const useAuthStore = create<AuthStore>()(
         error: null,
       })),
 
-      setLoading: (loading) => set({ loading }),
+      setLoading: (loading) => set({ loading, isLoading: loading }),
 
-      setError: (error) => set({ error, loading: false }),
+      setError: (error) => set({ error, loading: false, isLoading: false }),
 
       logout: () => {
         // Clear auth state
@@ -77,6 +79,7 @@ export const useAuthStore = create<AuthStore>()(
           user: null,
           isAuthenticated: false,
           loading: false, // Not loading after explicit logout
+          isLoading: false,
           error: null,
         })
 

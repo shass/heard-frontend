@@ -2,10 +2,11 @@
 
 import { useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { PlatformManager } from '@/lib/platform/platform.manager'
+import { usePlatform } from '@/src/platforms'
 
 export function useNavigationFix() {
   const router = useRouter()
+  const { platform } = usePlatform()
 
   const handleNavigationClick = useCallback((event: MouseEvent) => {
     const target = event.target as HTMLElement
@@ -18,17 +19,15 @@ export function useNavigationFix() {
     
     // Only handle internal links
     if (href.startsWith('/') && !href.startsWith('//')) {
-      const platform = PlatformManager.getInstance().detect()
-      
       // Prevent default navigation for mini apps to avoid reload
-      if (platform.type === 'base' || platform.type === 'farcaster') {
+      if (platform === 'base-app' || platform === 'farcaster') {
         event.preventDefault()
         
-        console.log(`[Navigation] Intercepted click to ${href} on ${platform.type}`)
+        console.log(`[Navigation] Intercepted click to ${href} on ${platform}`)
         router.push(href)
       }
     }
-  }, [router])
+  }, [router, platform])
 
   useEffect(() => {
     // Add click event listener to intercept navigation
@@ -41,9 +40,8 @@ export function useNavigationFix() {
 
   return {
     navigateWithoutReload: useCallback((href: string) => {
-      const platform = PlatformManager.getInstance().detect()
-      console.log(`[Navigation] Programmatic navigation to ${href} on ${platform.type}`)
+      console.log(`[Navigation] Programmatic navigation to ${href} on ${platform}`)
       router.push(href)
-    }, [router])
+    }, [router, platform])
   }
 }

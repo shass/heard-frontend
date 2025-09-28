@@ -23,7 +23,7 @@ function isBaseAppContext(): boolean {
 }
 
 // Web3 configuration optimized for mobile
-const config = getDefaultConfig({
+export const config = getDefaultConfig({
   appName: env.APP_NAME,
   projectId: env.WALLETCONNECT_PROJECT_ID || 'demo',
   chains: [mainnet, base, polygon, bsc] as const,

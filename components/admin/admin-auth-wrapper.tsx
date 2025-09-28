@@ -2,12 +2,11 @@
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAccount } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/loading-states'
 import { Wallet, Shield, ArrowLeft } from 'lucide-react'
-import { useAuthActions } from '@/components/providers/auth-provider'
+import { useAdminAuth } from '@/hooks/use-admin-auth'
 import Link from 'next/link'
 
 interface AdminAuthWrapperProps {
@@ -16,9 +15,15 @@ interface AdminAuthWrapperProps {
 
 export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
   const router = useRouter()
-  const { isConnected, address } = useAccount()
   const { openConnectModal } = useConnectModal()
-  const { login, isAuthenticated, user, isLoading: authLoading } = useAuthActions()
+  const { 
+    login, 
+    isAuthenticated, 
+    user, 
+    isLoading: authLoading, 
+    isConnected, 
+    address 
+  } = useAdminAuth()
   const [isCreatingSession, setIsCreatingSession] = useState(false)
 
   useEffect(() => {
@@ -29,16 +34,26 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
     }
   }, [isAuthenticated, user, router])
 
-  const handleCreateSession = async () => {
+  const handleCreateSession = async (event?: React.MouseEvent) => {
+    // Prevent any default behavior
+    event?.preventDefault()
+    event?.stopPropagation()
+    
     if (!isConnected) return
+    
+    // Prevent double calls
+    if (isCreatingSession) {
+      console.log('[AdminAuthWrapper] Already creating session, skipping...')
+      return
+    }
 
     setIsCreatingSession(true)
     try {
+      console.log('[AdminAuthWrapper] Creating session...')
       await login()
-      // Give a small delay for auth state to update
-      await new Promise(resolve => setTimeout(resolve, 100))
+      console.log('[AdminAuthWrapper] Session created successfully')
     } catch (error) {
-      console.error('Failed to create session:', error)
+      console.error('[AdminAuthWrapper] Failed to create session:', error)
     } finally {
       setIsCreatingSession(false)
     }
@@ -69,6 +84,7 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
           </div>
 
           <Button
+            type="button"
             onClick={() => openConnectModal?.()}
             size="lg"
             className="bg-zinc-900 hover:bg-zinc-800 text-white px-8"
@@ -107,6 +123,7 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
           </div>
 
           <Button
+            type="button"
             onClick={handleCreateSession}
             size="lg"
             className="bg-zinc-900 hover:bg-zinc-800 text-white px-8"

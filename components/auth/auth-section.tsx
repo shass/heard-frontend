@@ -4,9 +4,10 @@ import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Button } from "@/components/ui/button"
 import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
 import { useAuthActions } from "@/components/providers/auth-provider"
-import { useAccount, useDisconnect } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { useNotifications } from "@/components/ui/notifications"
 import { LogOut, ChevronDown, Wallet } from 'lucide-react'
+import { useCompatibleWallet, PlatformSwitch } from '@/src/platforms'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,21 +15,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { FarcasterAuthButton } from "@/components/farcaster-auth-button"
-import { useMiniKitContext } from "@/hooks/use-minikit-context"
 import { formatAddress } from '@/lib/utils';
 
 export function AuthSection() {
   const { logout, isAuthenticated, user, isLoading } = useAuthActions()
   const { isConnected, address } = useAccount()
-  const { disconnect } = useDisconnect()
   const { openConnectModal } = useConnectModal()
-  const { isFarcasterApp, isBaseApp } = useMiniKitContext()
   const notifications = useNotifications()
+
+  // Use compatible wallet hook for platform-aware functionality
+  const compatibleWallet = useCompatibleWallet()
 
   const handleLogout = async () => {
     try {
       await logout();
-      disconnect();
+      await compatibleWallet.disconnect(); // Use platform-aware disconnect
       notifications.success('Logged out', 'You have been successfully logged out')
     } catch (error: any) {
       notifications.error('Logout failed', error.message || 'Please try again')
@@ -47,26 +48,70 @@ export function AuthSection() {
     }
   }
 
-  if (!isConnected) {
+  if (!isConnected && !compatibleWallet.isConnected) {
+    const handleConnect = async () => {
+      try {
+        if (compatibleWallet.connect) {
+          await compatibleWallet.connect()
+          notifications.success('Wallet Connected', 'Your wallet has been connected successfully')
+        } else if (openConnectModal) {
+          // Fallback to RainbowKit modal for web platform
+          openConnectModal()
+        } else {
+          notifications.error('Connection failed', 'No connection method available')
+        }
+      } catch (error: any) {
+        // Additional fallback to RainbowKit modal for web platform
+        if (openConnectModal) {
+          openConnectModal()
+        } else {
+          notifications.error('Connection failed', error.message || 'Please try again')
+        }
+      }
+    }
+
     return (
       <div className="flex items-center space-x-2">
-        {(isFarcasterApp || isBaseApp) && (
-          <FarcasterAuthButton
-            variant="ghost"
-            size="sm"
-            onSuccess={(result) => {
-              console.log('Farcaster auth success:', result);
-              // Could integrate with existing auth flow here
-            }}
-          />
-        )}
-        <Button
-          onClick={() => openConnectModal?.()}
-          className="bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg px-4 py-2 font-medium flex items-center space-x-2"
-        >
-          <Wallet className="w-4 h-4" />
-          <span>Connect Wallet</span>
-        </Button>
+        <PlatformSwitch
+          web={
+            <div className="flex items-center space-x-2">
+              <FarcasterAuthButton
+                variant="ghost"
+                size="sm"
+                onSuccess={(result) => {
+                  console.log('Farcaster auth success:', result);
+                }}
+              />
+              <Button
+                onClick={() => openConnectModal?.()}
+                className="bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg px-4 py-2 font-medium flex items-center space-x-2"
+              >
+                <Wallet className="w-4 h-4" />
+                <span>Connect Wallet</span>
+              </Button>
+            </div>
+          }
+          baseApp={
+            <Button
+              onClick={handleConnect}
+              disabled={compatibleWallet.isConnecting}
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-medium flex items-center space-x-2"
+            >
+              <Wallet className="w-4 h-4" />
+              <span>{compatibleWallet.isConnecting ? 'Connecting...' : 'Connect Base'}</span>
+            </Button>
+          }
+          farcaster={
+            <Button
+              onClick={handleConnect}
+              disabled={compatibleWallet.isConnecting}
+              className="bg-purple-600 hover:bg-purple-700 text-white rounded-lg px-4 py-2 font-medium flex items-center space-x-2"
+            >
+              <Wallet className="w-4 h-4" />
+              <span>{compatibleWallet.isConnecting ? 'Connecting...' : 'Quick Connect'}</span>
+            </Button>
+          }
+        />
       </div>
     )
   }
