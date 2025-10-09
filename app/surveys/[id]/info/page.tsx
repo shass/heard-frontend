@@ -29,7 +29,7 @@ interface SurveyInfoPageProps {
 export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
   const openUrl = useOpenUrl()
-  const { login, isAuthenticated, isLoading: isAuthLoading, checkAuth } = useAuthActions()
+  const { login, isAuthenticated, isLoading: isAuthLoading, checkAuth, user, error: authError } = useAuthActions()
   const { isConnected, address } = useAccount()
   const { openConnectModal } = useConnectModal()
   const { id } = use(params)
@@ -54,26 +54,72 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   }
 
   const handleAuthenticate = async () => {
+    console.log('[Survey] 🚀 handleAuthenticate called')
+    console.log('[Survey] Current state:', {
+      isAuthenticated,
+      isAuthLoading,
+      address,
+      isConnected,
+      authError: authError || 'None'
+    })
+
     try {
-      console.log('[Survey] Starting authentication flow')
+      console.log('[Survey] 🔄 Calling login()...')
       await login()
-      
-      console.log('[Survey] Authentication successful, checking eligibility')
-      
-      // Wait a moment for eligibility to refresh
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      if (eligibility?.isEligible) {
-        console.log('[Survey] User eligible, navigating to survey')
-        router.push(`/surveys/${id}`)
+
+      console.log('[Survey] ✅ login() completed, checking auth state')
+
+      // Force auth check to ensure state is synced
+      console.log('[Survey] 🔍 Calling checkAuth()...')
+      const authCheckResult = await checkAuth()
+      console.log('[Survey] checkAuth result:', authCheckResult)
+
+      // Wait a bit for all state updates to propagate
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      console.log('[Survey] 📊 Auth state after login:', {
+        isAuthenticated,
+        authCheckResult,
+        user: !!user,
+        authError
+      })
+
+      // Check if authentication was successful before proceeding
+      const finalAuthCheck = await checkAuth()
+      console.log('[Survey] 🔍 Final auth check:', finalAuthCheck)
+
+      if (isAuthenticated || finalAuthCheck) {
+        console.log('[Survey] ✅ User authenticated successfully')
+
+        // Wait for eligibility check to update
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        if (eligibility?.isEligible !== false) {
+          console.log('[Survey] ✅ User eligible or eligibility unknown, navigating to survey')
+          router.push(`/surveys/${id}`)
+        } else {
+          console.log('[Survey] ⚠️ User authenticated but not eligible for this survey')
+          // UI will update to show "Not Eligible" button
+        }
       } else {
-        console.log('[Survey] Authentication successful but user not eligible')
-        // Eligibility will refresh automatically via React Query
+        console.log('[Survey] ❌ Authentication completed but user not authenticated')
+        console.log('[Survey] This might happen if user cancelled the signature')
       }
 
-    } catch (error) {
-      console.error('[Survey] Authentication failed:', error)
-      // Error is already set in useAuth hook
+    } catch (error: any) {
+      console.error('[Survey] ❌ Authentication failed:', error)
+      console.error('[Survey] Error details:', {
+        message: error?.message || 'No message',
+        stack: error?.stack || 'No stack',
+        type: error?.constructor?.name || typeof error,
+        fullError: error
+      })
+
+      // Try to extract more meaningful error information
+      if (error && typeof error === 'object') {
+        console.error('[Survey] Error object keys:', Object.keys(error))
+        console.error('[Survey] Error stringified:', JSON.stringify(error, null, 2))
+      }
     }
   }
 

@@ -63,11 +63,14 @@ export const useAuthStore = create<AuthStore>()(
       isLoading: true, // Alias for compatibility
       error: null,
 
-      setUser: (user) => set((state) => ({
-        user,
-        isAuthenticated: !!user,
-        error: null,
-      })),
+      setUser: (user) => {
+        console.log('[AuthStore] Setting user:', user)
+        set((state) => ({
+          user,
+          isAuthenticated: !!user,
+          error: null,
+        }))
+      },
 
       setLoading: (loading) => set({ loading, isLoading: loading }),
 

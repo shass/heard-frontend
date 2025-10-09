@@ -1,78 +1,154 @@
 import { Platform } from '../config'
 
+export interface MiniKitContext {
+  context?: {
+    client?: {
+      clientFid?: string
+      name?: string
+    }
+    user?: {
+      fid?: number
+      username?: string
+    }
+  }
+}
+
 export class PlatformDetector {
   private static instance: PlatformDetector
   private detectedPlatform: Platform | null = null
-  
+
   private constructor() {}
-  
+
   static getInstance(): PlatformDetector {
     if (!this.instance) {
       this.instance = new PlatformDetector()
     }
     return this.instance
   }
-  
-  detect(): Platform {
-    // Cache detection result
-    if (this.detectedPlatform) {
+
+  /**
+   * Detect the current platform
+   * @param miniKitContext - MiniKit context from useMiniKit hook (if available)
+   */
+  detect(miniKitContext?: MiniKitContext): Platform {
+    // Don't cache if we have new context - need to re-detect
+    if (!miniKitContext && this.detectedPlatform) {
       return this.detectedPlatform
     }
-    
+
     // Server-side rendering check
     if (typeof window === 'undefined') {
       return Platform.UNKNOWN
     }
-    
-    // Base App detection
-    if (this.isBaseApp()) {
+
+    // Base App detection (requires MiniKit + clientFid check)
+    if (this.isBaseApp(miniKitContext)) {
       this.detectedPlatform = Platform.BASE_APP
+      console.log('[PlatformDetector] Detected: Base App')
       return Platform.BASE_APP
     }
-    
-    // Farcaster Frame detection
-    if (this.isFarcasterFrame()) {
+
+    // Farcaster Mini App detection
+    if (this.isFarcasterMiniApp(miniKitContext)) {
       this.detectedPlatform = Platform.FARCASTER
+      console.log('[PlatformDetector] Detected: Farcaster Mini App')
       return Platform.FARCASTER
     }
-    
+
+    // Farcaster Frame detection (legacy/fallback)
+    if (this.isFarcasterFrame()) {
+      this.detectedPlatform = Platform.FARCASTER
+      console.log('[PlatformDetector] Detected: Farcaster Frame')
+      return Platform.FARCASTER
+    }
+
     // Telegram WebApp detection
     if (this.isTelegramWebApp()) {
       this.detectedPlatform = Platform.TELEGRAM
+      console.log('[PlatformDetector] Detected: Telegram')
       return Platform.TELEGRAM
     }
-    
+
     // Default to web
     this.detectedPlatform = Platform.WEB
+    console.log('[PlatformDetector] Detected: Web')
     return Platform.WEB
   }
-  
-  private isBaseApp(): boolean {
-    // Check for MiniKit specific APIs
-    // NOTE: Update this based on actual Base App MiniKit documentation
-    return !!(
-      window as any
-    )?.webkit?.messageHandlers?.minikit ||
-    !!(window as any)?.MiniKit
+
+  /**
+   * Check if running in Base App
+   * According to Base documentation: clientFid === '309857'
+   */
+  private isBaseApp(miniKitContext?: MiniKitContext): boolean {
+    // First check if MiniKit APIs exist
+    const hasMiniKit = this.hasMiniKitAPIs()
+    if (!hasMiniKit) return false
+
+    // Then check clientFid to distinguish Base App from Farcaster
+    const clientFid = miniKitContext?.context?.client?.clientFid
+
+    console.log('[PlatformDetector] Base App check:', {
+      hasMiniKit,
+      clientFid,
+      isBaseApp: clientFid === '309857'
+    })
+
+    return clientFid === '309857'
   }
-  
+
+  /**
+   * Check if running in Farcaster Mini App
+   * According to Base documentation: clientFid === '1'
+   */
+  private isFarcasterMiniApp(miniKitContext?: MiniKitContext): boolean {
+    // First check if MiniKit APIs exist
+    const hasMiniKit = this.hasMiniKitAPIs()
+    if (!hasMiniKit) return false
+
+    // Then check clientFid
+    const clientFid = miniKitContext?.context?.client?.clientFid
+
+    console.log('[PlatformDetector] Farcaster check:', {
+      hasMiniKit,
+      clientFid,
+      isFarcaster: clientFid === '1'
+    })
+
+    return clientFid === '1'
+  }
+
+  /**
+   * Check if MiniKit APIs are available
+   * This applies to both Base App and Farcaster
+   */
+  private hasMiniKitAPIs(): boolean {
+    return !!(
+      (window as any)?.webkit?.messageHandlers?.minikit ||
+      (window as any)?.MiniKit ||
+      (typeof document !== 'undefined' && document.referrer.includes('coinbase.com'))
+    )
+  }
+
+  /**
+   * Legacy Farcaster Frame detection (fallback)
+   * Used when MiniKit context is not available
+   */
   private isFarcasterFrame(): boolean {
     // Check if running in iframe with Farcaster parent
-    // NOTE: Update based on actual Farcaster Frames documentation
     if (window.parent === window) {
       return false
     }
-    
+
     // Check for Farcaster-specific meta tags
     const metaTag = document.querySelector('meta[name="fc:frame"]')
     if (metaTag) {
       return true
     }
-    
+
     // Check referrer
     try {
       const referrer = document.referrer
-      return referrer.includes('warpcast.com') || 
+      return referrer.includes('warpcast.com') ||
              referrer.includes('farcaster.xyz')
     } catch {
       return false
@@ -88,15 +164,20 @@ export class PlatformDetector {
     this.detectedPlatform = null
   }
   
-  getPlatformInfo(): {
+  getPlatformInfo(miniKitContext?: MiniKitContext): {
     platform: Platform
+    clientFid?: string
+    clientName?: string
     userAgent: string
     screen: { width: number; height: number }
     features: string[]
   } {
-    const platform = this.detect()
+    const platform = this.detect(miniKitContext)
+
     return {
       platform,
+      clientFid: miniKitContext?.context?.client?.clientFid,
+      clientName: miniKitContext?.context?.client?.name,
       userAgent: navigator.userAgent,
       screen: {
         width: window.screen.width,

@@ -7,27 +7,51 @@ import { BaseAppWalletProvider } from './providers/BaseAppWalletProvider'
 export class BaseAppPlatformProvider implements IPlatformProvider {
   private authProvider: IAuthProvider | null = null
   private walletProvider: IWalletProvider | null = null
-  
+  private miniAppSdk: any = null
+  private isInitialized: boolean = false
+
   async initialize(): Promise<void> {
-    console.log('Initializing Base App Platform')
-    
-    // Base App platform initialization happens when MiniKit hooks are available
-    // This is because we need React hooks context to create providers
+    if (this.isInitialized) {
+      console.log('[BaseApp] Already initialized')
+      return
+    }
+
+    console.log('[BaseApp] Initializing Base App Platform')
+
+    try {
+      // Dynamic import to avoid loading in other environments
+      const { sdk } = await import('@farcaster/miniapp-sdk')
+      this.miniAppSdk = sdk
+
+      // CRITICAL: Signal that the frame is ready
+      // According to Base documentation: "Always call setFrameReady() after initial app loading"
+      await sdk.actions.ready()
+      console.log('[BaseApp] ✅ Frame ready signal sent')
+
+      this.isInitialized = true
+      console.log('[BaseApp] ✅ Platform initialized successfully')
+    } catch (error) {
+      console.error('[BaseApp] ❌ Failed to initialize:', error)
+      // Don't throw - allow graceful degradation
+      console.warn('[BaseApp] Continuing without MiniKit SDK')
+    }
   }
   
   async shutdown(): Promise<void> {
-    console.log('Shutting down Base App Platform')
-    
+    console.log('[BaseApp] Shutting down Base App Platform')
+
     if (this.authProvider) {
       await this.authProvider.disconnect()
     }
-    
+
     if (this.walletProvider) {
       await this.walletProvider.disconnect()
     }
-    
+
     this.authProvider = null
     this.walletProvider = null
+    this.miniAppSdk = null
+    this.isInitialized = false
   }
   
   getPlatformName(): string {
@@ -47,7 +71,7 @@ export class BaseAppPlatformProvider implements IPlatformProvider {
   isSupported(): boolean {
     // Check if we're in a MiniKit environment
     if (typeof window === 'undefined') return false
-    
+
     // Multiple ways to detect Base App/MiniKit environment
     return !!(
       (window as any)?.MiniKit ||
@@ -55,6 +79,19 @@ export class BaseAppPlatformProvider implements IPlatformProvider {
       // Check for OnchainKit MiniKit context
       (typeof document !== 'undefined' && document.referrer.includes('coinbase.com'))
     )
+  }
+
+  // Новый метод для правильного определения клиента
+  getClientType(context?: any): 'base-app' | 'farcaster' | 'unknown' {
+    const clientFid = context?.client?.clientFid
+
+    if (clientFid === '309857') {
+      return 'base-app'
+    } else if (clientFid === '1') {
+      return 'farcaster'
+    }
+
+    return 'unknown'
   }
   
   hasFeature(feature: string): boolean {
@@ -152,25 +189,34 @@ export class BaseAppPlatformProvider implements IPlatformProvider {
   }
   
   // Environment checks
-  isInBaseApp(): boolean {
-    return this.isSupported() && !!(window as any)?.MiniKit
+  isInBaseApp(context?: any): boolean {
+    return this.isSupported() && this.getClientType(context) === 'base-app'
   }
   
-  isInFarcasterContext(): boolean {
-    return this.isSupported() && typeof document !== 'undefined' && 
-           (document.referrer.includes('warpcast.com') || 
-            document.referrer.includes('farcaster.xyz'))
+  isInFarcasterContext(context?: any): boolean {
+    return this.isSupported() && this.getClientType(context) === 'farcaster'
   }
   
-  getEnvironmentInfo() {
+  getEnvironmentInfo(context?: any) {
     return {
-      isBaseApp: this.isInBaseApp(),
-      isFarcasterContext: this.isInFarcasterContext(),
+      isBaseApp: this.isInBaseApp(context),
+      isFarcasterContext: this.isInFarcasterContext(context),
+      clientType: this.getClientType(context),
+      clientFid: context?.client?.clientFid,
+      clientName: context?.client?.name,
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
       referrer: typeof document !== 'undefined' ? document.referrer : 'unknown',
-      hasMinKit: !!(window as any)?.MiniKit,
+      hasMiniKit: !!this.miniAppSdk,
+      isInitialized: this.isInitialized,
       features: this.getFeatures(),
       capabilities: this.getMiniKitCapabilities()
     }
+  }
+
+  /**
+   * Get MiniKit SDK instance
+   */
+  getMiniKitSdk() {
+    return this.miniAppSdk
   }
 }

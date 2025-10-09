@@ -30,12 +30,16 @@ const nextConfig = {
       fullUrl: process.env.NODE_ENV === 'development',
     },
   },
+  // API Route handler теперь обрабатывает проксирование
+  // Эта конфигурация остается для случая локального backend
   async rewrites() {
     const isDevelopment = process.env.NODE_ENV === 'development'
+    const useProductionBackend = process.env.USE_PRODUCTION_BACKEND === 'true'
 
-    // В development проксируем к локальному бэкенду
-    // В production DigitalOcean App Platform роутит /api напрямую к backend сервису
-    if (isDevelopment) {
+    // Только для локального backend используем rewrites
+    if (isDevelopment && !useProductionBackend) {
+      console.log(`[Next.js] API proxy configured to local backend: http://localhost:3001/api/:path*`)
+
       return [
         {
           source: '/api/:path*',
@@ -44,7 +48,11 @@ const nextConfig = {
       ]
     }
 
-    // В production rewrites не нужны - DO роутит по HTTP Routes
+    // Для production backend используется API Route handler
+    if (isDevelopment && useProductionBackend) {
+      console.log(`[Next.js] Using API Route handler for production backend proxy`)
+    }
+
     return []
   },
   eslint: {

@@ -295,4 +295,56 @@ export class FarcasterAuthProvider implements IAuthProvider {
     const user = await this.getCurrentUser()
     return user?.walletAddress || null
   }
+
+  // IAuthProvider required alias methods
+  async authenticate(): Promise<AuthResult> {
+    return this.connect()
+  }
+
+  async logout(): Promise<void> {
+    return this.disconnect()
+  }
+
+  async checkAuthStatus(): Promise<void> {
+    try {
+      const user = await this.getCurrentUser()
+      if (user && this.currentState === AuthState.AUTHENTICATED) {
+        this.currentUser = user
+        this.setState(AuthState.AUTHENTICATED)
+      } else {
+        this.setState(AuthState.UNAUTHENTICATED)
+      }
+    } catch (error: any) {
+      this.setState(AuthState.ERROR)
+    }
+  }
+
+  // IAuthProvider required getters
+  get isAuthenticated(): boolean {
+    return this.currentState === AuthState.AUTHENTICATED
+  }
+
+  get isLoading(): boolean {
+    return this.currentState === AuthState.LOADING
+  }
+
+  get error(): string | null {
+    return this.currentState === AuthState.ERROR ? 'Authentication error' : null
+  }
+
+  get user(): User | null {
+    return this.currentUser
+  }
+
+  get platform(): string {
+    return 'farcaster'
+  }
+
+  get authState(): AuthState {
+    return this.currentState
+  }
+
+  get canAuthenticate(): boolean {
+    return !!this.miniAppSdk && !!this.miniAppSdk.quickAuth
+  }
 }

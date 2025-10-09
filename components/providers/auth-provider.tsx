@@ -98,21 +98,65 @@ function AuthProviderImpl({ children }: AuthProviderProps) {
 
   const contextValue: AuthContextType = {
     login: async () => {
-      // Use platform-specific auth if available, otherwise use web fallback
-      if (auth.canAuthenticate) {
-        await auth.authenticate()
-      } else if (platform === 'web' && isConnected) {
-        // Fallback to direct web authentication for admin panel
-        await webLogin()
-      } else {
-        throw new Error('Authentication not available')
+      console.log('[AuthProvider] 🚀 Login called')
+      console.log('[AuthProvider] auth.canAuthenticate:', auth.canAuthenticate)
+      console.log('[AuthProvider] platform:', platform)
+      console.log('[AuthProvider] isConnected:', isConnected)
+
+      try {
+        // Use platform-specific auth if available, otherwise use web fallback
+        if (auth.canAuthenticate) {
+          console.log('[AuthProvider] 📱 Using platform-specific auth')
+          console.log('[AuthProvider] Auth object:', {
+            canAuthenticate: auth.canAuthenticate,
+            isAuthenticated: auth.isAuthenticated,
+            isLoading: auth.isLoading,
+            error: auth.error,
+            user: auth.user
+          })
+
+          const result = await auth.authenticate()
+          console.log('[AuthProvider] ✅ Platform auth result:', result)
+        } else if (platform === 'web' && isConnected) {
+          console.log('[AuthProvider] 💻 Using web fallback auth')
+          // Fallback to direct web authentication for admin panel
+          await webLogin()
+          console.log('[AuthProvider] ✅ Web auth completed')
+        } else {
+          console.error('[AuthProvider] ❌ No authentication method available')
+          console.error('[AuthProvider] Details:', {
+            authCanAuthenticate: auth.canAuthenticate,
+            platform,
+            isConnected,
+            authObject: auth
+          })
+          throw new Error('Authentication not available')
+        }
+      } catch (error: any) {
+        console.error('[AuthProvider] ❌ Login failed:', error)
+        console.error('[AuthProvider] Error details:', {
+          message: error.message,
+          stack: error.stack,
+          type: error.constructor.name
+        })
+        throw error
       }
     },
     logout: async () => {
-      if (auth.logout) {
-        await auth.logout()
+      console.log('[AuthProvider] 🚪 Logout called')
+      try {
+        if (auth.logout) {
+          console.log('[AuthProvider] Calling platform logout')
+          await auth.logout()
+        }
+        console.log('[AuthProvider] Calling store logout')
+        storeLogout()
+        console.log('[AuthProvider] ✅ Logout completed')
+      } catch (error: any) {
+        console.error('[AuthProvider] ❌ Logout failed:', error)
+        // Continue with store logout even if platform logout fails
+        storeLogout()
       }
-      storeLogout()
     },
     checkAuth: authSession.checkAuth,
     isAuthenticated: auth.isAuthenticated || isAuthenticated,

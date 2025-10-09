@@ -20,7 +20,7 @@ interface MiniKitContext {
       verifications?: string[]
     }
     client?: {
-      clientFid?: number
+      clientFid?: string
       name?: string
     }
   }
@@ -70,76 +70,243 @@ export class BaseAppAuthProviderSafe implements IAuthProvider {
   }
   
   async connect(): Promise<AuthResult> {
+    console.log('[BaseAppAuth] 🚀 Connect called')
+    console.log('[BaseAppAuth] isAvailable:', this.isAvailable)
+    console.log('[BaseAppAuth] MiniKit context:', this.miniKitContext?.context)
+    console.log('[BaseAppAuth] Authenticate hook available:', !!this.authenticateHook)
+
+    // Правильное определение клиента согласно документации Base
+    const clientFid = this.miniKitContext?.context?.client?.clientFid
+    const isBaseApp = clientFid === '309857'
+    const isFarcaster = clientFid === '1'
+
+    console.log('[BaseAppAuth] 🔍 Client detection:', {
+      clientFid,
+      isBaseApp,
+      isFarcaster,
+      clientName: this.miniKitContext?.context?.client?.name
+    })
+
     if (!this.isAvailable) {
       const error = 'MiniKit not available - cannot authenticate'
+      console.error('[BaseAppAuth] ❌ MiniKit not available')
       this.currentError = error
       return {
         success: false,
         error: error
       }
     }
-    
+
     try {
       this.currentLoading = true
       this.currentError = null
       this.setState(AuthState.LOADING)
-      
-      console.log('[BaseAppAuth] Starting MiniKit authentication')
-      
+
+      console.log('[BaseAppAuth] 🔄 Starting MiniKit authentication')
+
       // Check if signIn method exists
       if (!this.authenticateHook?.signIn) {
+        console.error('[BaseAppAuth] ❌ signIn method not available on authenticateHook')
+        console.log('[BaseAppAuth] authenticateHook object:', this.authenticateHook)
         throw new Error('Authentication hook signIn method not available')
       }
-      
-      // Use MiniKit's authenticate hook with SIWE (Sign In with Ethereum)
-      const authResult = await this.authenticateHook.signIn({
-        domain: window.location.hostname,
-        siweUri: window.location.origin + '/api/auth/siwe',
-        // Add nonce and other SIWE params if needed
-      })
-      
-      if (!authResult) {
-        this.currentError = 'MiniKit authentication failed'
-        this.setState(AuthState.ERROR)
-        return {
-          success: false,
-          error: this.currentError || undefined
-        }
+
+      // First, get wallet address from MiniKit context
+      const walletAddress = this.miniKitContext?.context?.user?.custody?.address
+      console.log('[BaseAppAuth] 📍 Looking for wallet address...')
+      console.log('[BaseAppAuth] Context user:', this.miniKitContext?.context?.user)
+      console.log('[BaseAppAuth] Custody:', this.miniKitContext?.context?.user?.custody)
+
+      if (!walletAddress) {
+        console.error('[BaseAppAuth] ❌ No wallet address in context')
+        throw new Error('No wallet address available in MiniKit context')
       }
-      
-      // Create user object from MiniKit context
+
+      console.log('[BaseAppAuth] ✅ Got wallet address:', walletAddress)
+
+      // Import auth API dynamically to avoid SSR issues
+      console.log('[BaseAppAuth] 📦 Importing auth API...')
+      const { authApi } = await import('@/lib/api/auth')
+
+      // Step 1: Get nonce from backend
+      console.log('[BaseAppAuth] 🔐 Step 1: Getting nonce from backend...')
+      let nonceResponse
+      try {
+        nonceResponse = await authApi.getNonce(walletAddress)
+        console.log('[BaseAppAuth] ✅ Nonce received:', {
+          message: nonceResponse.message,
+          jwtToken: nonceResponse.jwtToken?.substring(0, 20) + '...'
+        })
+      } catch (nonceError: any) {
+        console.error('[BaseAppAuth] ❌ Failed to get nonce:', nonceError)
+        console.error('[BaseAppAuth] Nonce error details:', {
+          message: nonceError.message,
+          stack: nonceError.stack,
+          response: nonceError.response
+        })
+        throw new Error(`Failed to get nonce: ${nonceError.message}`)
+      }
+
+      const { message, jwtToken } = nonceResponse
+
+      // Step 2: Use MiniKit's authenticate hook to sign the message
+      console.log('[BaseAppAuth] ✍️ Step 2: Requesting signature via MiniKit...')
+
+      // Use production domain for signature to match backend expectations
+      const isDev = process.env.NODE_ENV === 'development'
+      const useProdBackend = process.env.NEXT_PUBLIC_USE_PRODUCTION_BACKEND === 'true'
+
+      console.log('[BaseAppAuth] Environment:', {
+        isDev,
+        useProdBackend,
+        USE_PRODUCTION_BACKEND: process.env.USE_PRODUCTION_BACKEND,
+        NEXT_PUBLIC_USE_PRODUCTION_BACKEND: process.env.NEXT_PUBLIC_USE_PRODUCTION_BACKEND
+      })
+
+      const signInDomain = isDev && useProdBackend
+        ? 'heardlabs.xyz'
+        : window.location.hostname
+
+      const signInUri = isDev && useProdBackend
+        ? 'https://heardlabs.xyz'
+        : window.location.origin
+
+      // MiniKit signIn требует стандартные SIWE параметры
+      // Согласно документации Base, используем правильную структуру
+      const siweParams = {
+        domain: signInDomain,
+        address: walletAddress,
+        uri: signInUri,
+        version: '1',
+        chainId: 8453, // Base mainnet
+        nonce: jwtToken,
+        issuedAt: new Date().toISOString(),
+        statement: 'Sign in to Heard Labs'
+      }
+
+      console.log('[BaseAppAuth] 🌐 SIWE SignIn parameters:', siweParams)
+
+      let authResult
+      try {
+        console.log('[BaseAppAuth] 📝 Calling signIn with SIWE params...')
+
+        // Попробуем сначала с минимальными параметрами как в документации
+        authResult = await this.authenticateHook.signIn({
+          domain: signInDomain,
+          siweUri: signInUri
+        })
+
+        console.log('[BaseAppAuth] ✅ SignIn completed, result:', authResult)
+      } catch (signInError: any) {
+        console.error('[BaseAppAuth] ❌ SignIn failed:', signInError)
+        console.error('[BaseAppAuth] SignIn error details:', {
+          message: signInError.message,
+          stack: signInError.stack,
+          code: signInError.code
+        })
+        throw new Error(`MiniKit signIn failed: ${signInError.message}`)
+      }
+
+      if (!authResult) {
+        console.error('[BaseAppAuth] ❌ No authResult returned from signIn')
+        throw new Error('MiniKit signature failed - no result returned')
+      }
+
+      console.log('[BaseAppAuth] 🔏 Got signature from MiniKit:', {
+        type: typeof authResult,
+        hasSignature: !!(authResult as any).signature,
+        hasMessage: !!(authResult as any).message,
+        keys: Object.keys(authResult as any),
+        fullResult: authResult
+      })
+
+      // MiniKit возвращает объект с SIWE данными:
+      // { signature: string, message: string }
+      // где message - это полное SIWE сообщение
+      const siweSignature = (authResult as any).signature
+      const siweMessage = (authResult as any).message
+
+      if (!siweSignature || !siweMessage) {
+        console.error('[BaseAppAuth] ❌ Invalid MiniKit response - missing signature or message')
+        throw new Error('Invalid MiniKit response - missing signature or message')
+      }
+
+      console.log('[BaseAppAuth] 📋 SIWE data from MiniKit:', {
+        messageLength: siweMessage.length,
+        signatureLength: siweSignature.length,
+        messagePreview: siweMessage.substring(0, 100) + '...'
+      })
+
+      // Step 3: Send SIWE data to backend for verification
+      console.log('[BaseAppAuth] 🔄 Step 3: Verifying SIWE signature with backend...')
+
+      const connectWalletPayload = {
+        walletAddress,
+        signature: siweSignature,
+        message: siweMessage, // Используем SIWE сообщение от MiniKit
+        jwtToken
+      }
+
+      console.log('[BaseAppAuth] 📤 Sending SIWE to backend:', {
+        walletAddress,
+        signatureLength: siweSignature.length,
+        messageLength: siweMessage.length,
+        jwtTokenLength: jwtToken?.length
+      })
+
+      let backendResponse
+      try {
+        backendResponse = await authApi.connectWallet(connectWalletPayload)
+        console.log('[BaseAppAuth] ✅ Backend response received:', backendResponse)
+      } catch (connectError: any) {
+        console.error('[BaseAppAuth] ❌ Backend verification failed:', connectError)
+        console.error('[BaseAppAuth] Connect error details:', {
+          message: connectError.message,
+          stack: connectError.stack,
+          response: connectError.response
+        })
+        throw new Error(`Backend verification failed: ${connectError.message}`)
+      }
+
+      const { user: backendUser } = backendResponse
+
+      console.log('[BaseAppAuth] ✅ Backend verification successful, user:', backendUser)
+
+      // Create user object from backend response
       const user: User = {
-        id: (authResult as any).fid?.toString() || 
-            this.miniKitContext?.context?.user?.fid?.toString() || 
-            'unknown',
-        walletAddress: (authResult as any).address,
+        id: backendUser.id || this.miniKitContext?.context?.user?.fid?.toString() || 'unknown',
+        walletAddress: backendUser.walletAddress || walletAddress,
         platform: 'base-app',
         metadata: {
-          fid: (authResult as any).fid,
-          username: (authResult as any).username,
-          displayName: (authResult as any).displayName,
-          pfpUrl: (authResult as any).pfpUrl,
-          address: (authResult as any).address,
+          ...backendUser,
+          fid: this.miniKitContext?.context?.user?.fid,
+          username: this.miniKitContext?.context?.user?.username,
+          displayName: this.miniKitContext?.context?.user?.displayName,
+          pfpUrl: this.miniKitContext?.context?.user?.pfpUrl,
           miniKitContext: this.miniKitContext?.context
         }
       }
-      
+
       this.currentUser = user
       this.currentLoading = false
       this.setState(AuthState.AUTHENTICATED)
-      
-      console.log('[BaseAppAuth] MiniKit authentication successful')
-      
+
+      console.log('[BaseAppAuth] 🎉 Full authentication successful')
+
       return {
         success: true,
         user
       }
-      
+
     } catch (error: any) {
-      console.error('[BaseAppAuth] Authentication error:', error)
+      console.error('[BaseAppAuth] ❌ Authentication error:', error)
+      console.error('[BaseAppAuth] Error stack:', error.stack)
+      console.error('[BaseAppAuth] Error type:', error.constructor.name)
+
       this.currentError = error.message || 'Base App authentication failed'
       this.currentLoading = false
       this.setState(AuthState.ERROR)
+
       return {
         success: false,
         error: this.currentError || undefined

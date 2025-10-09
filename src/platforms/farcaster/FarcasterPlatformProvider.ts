@@ -8,43 +8,55 @@ export class FarcasterPlatformProvider implements IPlatformProvider {
   private authProvider: IAuthProvider | null = null
   private walletProvider: IWalletProvider | null = null
   private miniAppSdk: any = null
-  
+  private isInitialized: boolean = false
+
   async initialize(): Promise<void> {
-    console.log('Initializing Farcaster Mini App Platform')
-    
+    if (this.isInitialized) {
+      console.log('[Farcaster] Already initialized')
+      return
+    }
+
+    console.log('[Farcaster] Initializing Farcaster Mini App Platform')
+
     // Initialize Farcaster Mini App SDK
     try {
       // Dynamic import to avoid SSR issues
       const { sdk } = await import('@farcaster/miniapp-sdk')
       this.miniAppSdk = sdk
-      
-      // Initialize the SDK
+
+      // CRITICAL: Signal that the frame is ready
+      // According to Base documentation: "Always call setFrameReady() after initial app loading"
       await sdk.actions.ready()
-      
+      console.log('[Farcaster] ✅ Frame ready signal sent')
+
       // Create platform providers with SDK
       this.authProvider = new FarcasterAuthProvider(sdk)
       this.walletProvider = new FarcasterWalletProvider(sdk)
-      
-      console.log('Farcaster Mini App Platform initialized successfully')
+
+      this.isInitialized = true
+      console.log('[Farcaster] ✅ Platform initialized successfully')
     } catch (error) {
-      console.error('Failed to initialize Farcaster Mini App Platform:', error)
+      console.error('[Farcaster] ❌ Failed to initialize:', error)
+      // Don't throw - allow graceful degradation
+      console.warn('[Farcaster] Continuing without MiniKit SDK')
     }
   }
   
   async shutdown(): Promise<void> {
-    console.log('Shutting down Farcaster Mini App Platform')
-    
+    console.log('[Farcaster] Shutting down Farcaster Mini App Platform')
+
     if (this.authProvider) {
       await this.authProvider.disconnect()
     }
-    
+
     if (this.walletProvider) {
       await this.walletProvider.disconnect()
     }
-    
+
     this.authProvider = null
     this.walletProvider = null
     this.miniAppSdk = null
+    this.isInitialized = false
   }
   
   getPlatformName(): string {
@@ -168,6 +180,7 @@ export class FarcasterPlatformProvider implements IPlatformProvider {
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
       referrer: typeof document !== 'undefined' ? document.referrer : 'unknown',
       hasMiniAppSdk: !!this.miniAppSdk,
+      isInitialized: this.isInitialized,
       features: this.getFeatures(),
       capabilities: this.getMiniAppCapabilities()
     }

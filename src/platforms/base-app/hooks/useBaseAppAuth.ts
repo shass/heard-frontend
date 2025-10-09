@@ -75,24 +75,50 @@ export function useBaseAppAuth() {
   }, [authState, authProvider, miniKit.context?.user])
   
   const authenticate = useCallback(async () => {
+    console.log('[useBaseAppAuth] 🚀 Authenticate called')
+    console.log('[useBaseAppAuth] authProvider available:', !!authProvider)
+    console.log('[useBaseAppAuth] current state:', {
+      authState,
+      isAuthenticated: authState === AuthState.AUTHENTICATED,
+      user: !!user,
+      error
+    })
+
     if (!authProvider) {
+      console.error('[useBaseAppAuth] ❌ Auth provider not available')
       setError('Base App platform not initialized')
-      return
+      return { success: false, error: 'Base App platform not initialized' }
     }
-    
+
     try {
+      console.log('[useBaseAppAuth] 🔄 Calling authProvider.connect()')
       setError(null)
       const result = await authProvider.connect()
-      
+
+      console.log('[useBaseAppAuth] 📥 Connect result:', result)
+
       if (result.success) {
+        console.log('[useBaseAppAuth] ✅ Authentication successful')
         setUser(result.user || null)
+        return { success: true, user: result.user }
       } else {
+        console.error('[useBaseAppAuth] ❌ Authentication failed:', result.error)
         setError(result.error || 'Authentication failed')
+        return { success: false, error: result.error }
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed')
+    } catch (err: any) {
+      console.error('[useBaseAppAuth] ❌ Exception during authentication:', err)
+      console.error('[useBaseAppAuth] Error details:', {
+        message: err.message,
+        stack: err.stack,
+        type: err.constructor.name
+      })
+
+      const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
+      setError(errorMessage)
+      return { success: false, error: errorMessage }
     }
-  }, [authProvider])
+  }, [authProvider, authState, user, error])
   
   const logout = useCallback(async () => {
     if (!authProvider) return

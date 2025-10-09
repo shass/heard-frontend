@@ -3,6 +3,7 @@ export { Platform } from './config'
 export type { PlatformConfig } from './config'
 
 export { PlatformDetector } from './detection/detector'
+export type { MiniKitContext } from './detection/detector'
 export { PlatformFactory } from './factory'
 export { PlatformManager } from './PlatformManager'
 export { PlatformProvider, usePlatform } from './PlatformContext'
