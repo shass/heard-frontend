@@ -130,8 +130,9 @@ export interface AuthResponse {
 }
 
 export interface NonceResponse {
-  message: string
-  jwtToken: string // JWT token containing nonce data
+  nonce: string // Plain nonce for SIWE/Base App (at least 8 alphanumeric chars)
+  message: string // Custom message for Web platform
+  jwtToken: string // JWT token containing nonce data for verification
 }
 
 // Eligibility types

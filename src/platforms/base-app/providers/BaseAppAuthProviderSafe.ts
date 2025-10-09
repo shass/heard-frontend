@@ -30,6 +30,7 @@ interface AuthenticateHook {
   signIn?: (params: {
     domain: string
     siweUri: string
+    nonce?: string // Optional nonce for SIWE message (at least 8 alphanumeric chars)
   }) => Promise<any>
 }
 
@@ -134,7 +135,7 @@ export class BaseAppAuthProviderSafe implements IAuthProvider {
       try {
         nonceResponse = await authApi.getNonce(walletAddress)
         console.log('[BaseAppAuth] ✅ Nonce received:', {
-          message: nonceResponse.message,
+          nonce: nonceResponse.nonce,
           jwtToken: nonceResponse.jwtToken?.substring(0, 20) + '...'
         })
       } catch (nonceError: any) {
@@ -147,7 +148,7 @@ export class BaseAppAuthProviderSafe implements IAuthProvider {
         throw new Error(`Failed to get nonce: ${nonceError.message}`)
       }
 
-      const { message, jwtToken } = nonceResponse
+      const { nonce, jwtToken } = nonceResponse
 
       // Step 2: Use MiniKit's authenticate hook to sign the message
       console.log('[BaseAppAuth] ✍️ Step 2: Requesting signature via MiniKit...')
@@ -159,8 +160,7 @@ export class BaseAppAuthProviderSafe implements IAuthProvider {
       console.log('[BaseAppAuth] Environment:', {
         isDev,
         useProdBackend,
-        USE_PRODUCTION_BACKEND: process.env.USE_PRODUCTION_BACKEND,
-        NEXT_PUBLIC_USE_PRODUCTION_BACKEND: process.env.NEXT_PUBLIC_USE_PRODUCTION_BACKEND
+        nonce: nonce.substring(0, 8) + '...'
       })
 
       const signInDomain = isDev && useProdBackend
@@ -171,29 +171,22 @@ export class BaseAppAuthProviderSafe implements IAuthProvider {
         ? 'https://heardlabs.xyz'
         : window.location.origin
 
-      // MiniKit signIn требует стандартные SIWE параметры
-      // Согласно документации Base, используем правильную структуру
-      const siweParams = {
+      console.log('[BaseAppAuth] 🌐 SIWE SignIn parameters:', {
         domain: signInDomain,
-        address: walletAddress,
-        uri: signInUri,
-        version: '1',
-        chainId: 8453, // Base mainnet
-        nonce: jwtToken,
-        issuedAt: new Date().toISOString(),
-        statement: 'Sign in to Heard Labs'
-      }
-
-      console.log('[BaseAppAuth] 🌐 SIWE SignIn parameters:', siweParams)
+        siweUri: signInUri,
+        nonce: nonce.substring(0, 8) + '...'
+      })
 
       let authResult
       try {
-        console.log('[BaseAppAuth] 📝 Calling signIn with SIWE params...')
+        console.log('[BaseAppAuth] 📝 Calling signIn with backend nonce...')
 
-        // Попробуем сначала с минимальными параметрами как в документации
+        // CRITICAL: Pass backend nonce to signIn for SIWE message
+        // According to Farcaster docs, signIn accepts nonce parameter
         authResult = await this.authenticateHook.signIn({
           domain: signInDomain,
-          siweUri: signInUri
+          siweUri: signInUri,
+          nonce: nonce // ← Backend nonce for verification
         })
 
         console.log('[BaseAppAuth] ✅ SignIn completed, result:', authResult)
