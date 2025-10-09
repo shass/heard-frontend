@@ -244,7 +244,14 @@ export class BaseAppAuthProviderSafe implements IAuthProvider {
         walletAddress,
         signature: siweSignature,
         message: siweMessage, // Используем SIWE сообщение от MiniKit
-        jwtToken
+        jwtToken,
+        platform: 'base', // Specify Base App platform
+        metadata: {
+          fid: this.miniKitContext?.context?.user?.fid,
+          username: this.miniKitContext?.context?.user?.username,
+          clientFid: this.miniKitContext?.context?.client?.clientFid,
+          clientName: this.miniKitContext?.context?.client?.name
+        }
       }
 
       console.log('[BaseAppAuth] 📤 Sending SIWE to backend:', {

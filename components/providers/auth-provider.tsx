@@ -117,6 +117,25 @@ function AuthProviderImpl({ children }: AuthProviderProps) {
 
           const result = await auth.authenticate()
           console.log('[AuthProvider] ✅ Platform auth result:', result)
+
+          // CRITICAL: After platform auth, fetch full user data from backend
+          // Platform User type is minimal, we need full User data from backend
+          if (result) {
+            console.log('[AuthProvider] 🔄 Fetching full user data from backend...')
+            try {
+              const { authApi } = await import('@/lib/api/auth')
+              const fullUser = await authApi.checkAuth()
+
+              if (fullUser) {
+                console.log('[AuthProvider] ✅ Got full user data:', fullUser)
+                setUser(fullUser)
+              } else {
+                console.warn('[AuthProvider] ⚠️ Backend checkAuth returned no user')
+              }
+            } catch (error) {
+              console.error('[AuthProvider] ❌ Failed to fetch full user data:', error)
+            }
+          }
         } else if (platform === 'web' && isConnected) {
           console.log('[AuthProvider] 💻 Using web fallback auth')
           // Fallback to direct web authentication for admin panel

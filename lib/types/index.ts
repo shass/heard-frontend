@@ -172,6 +172,8 @@ export interface ConnectWalletRequest {
   signature: string
   message: string
   jwtToken: string // JWT token from nonce response
+  platform?: string // Platform identifier: 'web' | 'base' | 'farcaster'
+  metadata?: any // Platform-specific metadata
 }
 
 export interface AnswerSubmissionRequest {
