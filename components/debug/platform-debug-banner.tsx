@@ -9,6 +9,8 @@ export function PlatformDebugBanner() {
 
   useEffect(() => {
     // Read localStorage debug info
+    if (typeof window === 'undefined') return
+
     try {
       const initInfo = localStorage.getItem('debug_platform_init')
       const detectedPlatform = localStorage.getItem('debug_detected_platform')
@@ -24,6 +26,11 @@ export function PlatformDebugBanner() {
       console.error('Failed to read debug info:', e)
     }
   }, [platform, isInitialized, isLoading])
+
+  // SSR safety - don't render on server
+  if (typeof window === 'undefined') {
+    return null
+  }
 
   // Only show in development or if debug flag is set
   if (process.env.NODE_ENV === 'production' && !localStorage.getItem('show_debug_banner')) {
