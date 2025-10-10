@@ -1,22 +1,36 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { usePlatform } from '../../PlatformContext'
-import { FarcasterPlatformProvider } from '../FarcasterPlatformProvider'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useMiniKit } from '@coinbase/onchainkit/minikit'
+import { FarcasterAuthProvider } from '../providers/FarcasterAuthProvider'
 import { AuthState, User } from '../../shared/interfaces/IAuthProvider'
 
 export function useFarcasterAuth() {
-  const { provider } = usePlatform()
-  
+  const miniKit = useMiniKit()
+  const [miniAppSdk, setMiniAppSdk] = useState<any>(null)
+
   const [user, setUser] = useState<User | null>(null)
   const [authState, setAuthState] = useState<AuthState>(AuthState.UNAUTHENTICATED)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
-  // Get Farcaster platform provider
-  const farcasterProvider = provider instanceof FarcasterPlatformProvider ? provider : null
-  const authProvider = farcasterProvider?.getAuthProvider()
-  const miniAppSdk = farcasterProvider?.getMiniAppSdk()
+
+  // Load Farcaster SDK for quickAuth (Farcaster-specific feature)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    import('@farcaster/miniapp-sdk').then((module) => {
+      const sdk = module.default || module
+      setMiniAppSdk(sdk)
+    }).catch((err) => {
+      console.error('[useFarcasterAuth] Failed to load Farcaster SDK:', err)
+    })
+  }, [])
+
+  // Create auth provider with both MiniKit context (OnChainKit) and Farcaster SDK (quickAuth)
+  const authProvider = useMemo(() => {
+    if (!miniAppSdk) return null
+    return new FarcasterAuthProvider(miniKit, miniAppSdk)
+  }, [miniKit, miniAppSdk])
   
   // Set up auth state listener
   useEffect(() => {

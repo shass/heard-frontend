@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { usePlatform } from '@/src/platforms/PlatformContext'
+import { usePlatformDetector } from '@/src/platforms/PlatformDetectorProvider'
 import { Platform } from '@/src/platforms/config'
 
 interface PlatformSwitchProps {
@@ -13,7 +13,7 @@ interface PlatformSwitchProps {
 
 export function PlatformSwitch({ web, baseApp, farcaster, children }: PlatformSwitchProps) {
   try {
-    const { platform } = usePlatform()
+    const { platform } = usePlatformDetector()
 
     switch (platform) {
       case Platform.BASE_APP:
@@ -33,7 +33,7 @@ export function PlatformSwitch({ web, baseApp, farcaster, children }: PlatformSw
 
 export function useMigrationChoice() {
   try {
-    const { platform } = usePlatform()
+    const { platform } = usePlatformDetector()
 
     return {
       platform,

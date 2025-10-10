@@ -1,6 +1,6 @@
 'use client'
 
-import { usePlatform } from '@/src/platforms/PlatformContext'
+import { usePlatformDetector } from '@/src/platforms/PlatformDetectorProvider'
 import { useWebAuth } from '@/src/platforms/web/hooks/useWebAuth'
 import { useBaseAppAuth } from '@/src/platforms/base-app/hooks/useBaseAppAuth'
 import { useFarcasterAuth } from '@/src/platforms/farcaster/hooks/useFarcasterAuth'
@@ -9,12 +9,10 @@ import { Platform } from '@/src/platforms/config'
 
 export function useAuthAdapter() {
   let platform: Platform | string | null = Platform.WEB
-  let provider = null
 
   try {
-    const platformContext = usePlatform()
+    const platformContext = usePlatformDetector()
     platform = platformContext.platform
-    provider = platformContext.provider
   } catch (error) {
     // Fallback to web platform if context is not available
     platform = Platform.WEB

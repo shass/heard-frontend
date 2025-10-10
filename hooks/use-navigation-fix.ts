@@ -2,12 +2,12 @@
 
 import { useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { usePlatform } from '@/src/platforms'
+import { usePlatformDetector } from '@/src/platforms/PlatformDetectorProvider'
 import { Platform } from '@/src/platforms/config'
 
 export function useNavigationFix() {
   const router = useRouter()
-  const { platform } = usePlatform()
+  const { platform } = usePlatformDetector()
 
   const handleNavigationClick = useCallback((event: MouseEvent) => {
     const target = event.target as HTMLElement

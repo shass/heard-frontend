@@ -12,8 +12,11 @@ export class FarcasterAuthProvider implements IAuthProvider {
   private currentState: AuthState = AuthState.UNAUTHENTICATED
   private currentUser: User | null = null
   private currentSession: Session | null = null
-  
-  constructor(private miniAppSdk: any) {
+
+  constructor(
+    private miniKitContext: ReturnType<typeof import('@coinbase/onchainkit/minikit').useMiniKit>,
+    private miniAppSdk: any // Farcaster SDK for quickAuth API
+  ) {
     this.initializeFromContext()
   }
   
@@ -52,14 +55,15 @@ export class FarcasterAuthProvider implements IAuthProvider {
   
   private async getContextData(): Promise<any> {
     try {
-      if (this.miniAppSdk?.context) {
-        return this.miniAppSdk.context
+      // Get context from OnChainKit MiniKit hook
+      if (this.miniKitContext?.context) {
+        return this.miniKitContext.context
       }
-      
-      // Try to get context from SDK
-      return await this.miniAppSdk?.getContext?.()
+
+      console.warn('[FarcasterAuth] No MiniKit context available')
+      return null
     } catch (error) {
-      console.warn('[FarcasterAuth] No context data available:', error)
+      console.error('[FarcasterAuth] Failed to get context:', error)
       return null
     }
   }

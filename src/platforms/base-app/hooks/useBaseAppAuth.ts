@@ -1,41 +1,24 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useMiniKit, useAuthenticate } from '@coinbase/onchainkit/minikit'
-import { usePlatform } from '../../PlatformContext'
-import { BaseAppPlatformProvider } from '../BaseAppPlatformProvider'
+import { BaseAppAuthProvider } from '../providers/BaseAppAuthProvider'
 import { AuthState, User } from '../../shared/interfaces/IAuthProvider'
 import { Platform } from '../../config'
 
 export function useBaseAppAuth() {
-  const { provider } = usePlatform()
   const miniKit = useMiniKit()
   const authenticateHook = useAuthenticate()
-  
+
   const [user, setUser] = useState<User | null>(null)
   const [authState, setAuthState] = useState<AuthState>(AuthState.UNAUTHENTICATED)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
-  // Get Base App platform provider
-  const baseAppProvider = provider instanceof BaseAppPlatformProvider ? provider : null
-  const authProvider = baseAppProvider?.getAuthProvider()
-  
-  // Initialize provider with MiniKit hooks
-  useEffect(() => {
-    if (baseAppProvider && miniKit && authenticateHook) {
-      const hooks = {
-        miniKit,
-        authenticate: authenticateHook,
-        account: null, // Will be provided by parent component
-        sendTransaction: null, // Will be provided by parent component  
-        signMessage: null // Will be provided by parent component
-      }
-      
-      baseAppProvider.initializeWithMiniKitHooks(hooks)
-      console.log('[BaseAppAuth] Initialized with MiniKit hooks')
-    }
-  }, [baseAppProvider, miniKit, authenticateHook])
+
+  // Create auth provider instance directly
+  const authProvider = useMemo(() => {
+    return new BaseAppAuthProvider(miniKit, authenticateHook)
+  }, [miniKit, authenticateHook])
   
   // Set up auth state listener
   useEffect(() => {

@@ -1,15 +1,26 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { usePlatform } from '@/src/platforms/PlatformContext'
+import { usePlatformDetector } from '@/src/platforms/PlatformDetectorProvider'
 
 export function PlatformDebugBanner() {
+  const [mounted, setMounted] = useState(false)
   const [debugInfo, setDebugInfo] = useState<any>(null)
-  const { platform, isInitialized, isLoading } = usePlatform()
+  const [showBanner, setShowBanner] = useState(false)
+  const { platform, isInitialized, isLoading } = usePlatformDetector()
 
   useEffect(() => {
-    // Read localStorage debug info
-    if (typeof window === 'undefined') return
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+
+    // Check if banner should be shown
+    const shouldShow = process.env.NODE_ENV !== 'production' || localStorage.getItem('show_debug_banner')
+    setShowBanner(!!shouldShow)
+
+    if (!shouldShow) return
 
     try {
       const initInfo = localStorage.getItem('debug_platform_init')
@@ -25,15 +36,10 @@ export function PlatformDebugBanner() {
     } catch (e) {
       console.error('Failed to read debug info:', e)
     }
-  }, [platform, isInitialized, isLoading])
+  }, [mounted, platform, isInitialized, isLoading])
 
   // SSR safety - don't render on server
-  if (typeof window === 'undefined') {
-    return null
-  }
-
-  // Only show in development or if debug flag is set
-  if (process.env.NODE_ENV === 'production' && !localStorage.getItem('show_debug_banner')) {
+  if (!mounted || !showBanner) {
     return null
   }
 

@@ -5,7 +5,7 @@ import { useAuthCleanup } from '@/hooks/use-auth-cleanup'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { useAuthEffects } from '@/hooks/use-auth-effects'
 import { useAccount } from 'wagmi'
-import { PlatformProvider, usePlatform } from '@/src/platforms/PlatformContext'
+import { usePlatformDetector } from '@/src/platforms/PlatformDetectorProvider'
 import { useAuthAdapter } from '@/src/components/hooks/use-auth-adapter'
 import { useAuthStore } from '@/lib/store'
 import { Platform } from '@/src/platforms/config'
@@ -42,7 +42,7 @@ interface AuthProviderProps {
 
 function AuthProviderImpl({ children }: AuthProviderProps) {
   const { address, isConnected } = useAccount()
-  const { platform } = usePlatform()
+  const { platform } = usePlatformDetector()
   const auth = useAuthAdapter()
   const authSession = useAuthSession()
   
@@ -195,10 +195,8 @@ function AuthProviderImpl({ children }: AuthProviderProps) {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   return (
-    <PlatformProvider>
-      <AuthProviderImpl>
-        {children}
-      </AuthProviderImpl>
-    </PlatformProvider>
+    <AuthProviderImpl>
+      {children}
+    </AuthProviderImpl>
   )
 }

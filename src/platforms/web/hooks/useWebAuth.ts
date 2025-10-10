@@ -1,24 +1,27 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
-import { usePlatform } from '../../PlatformContext'
-import { WebPlatformProvider } from '../WebPlatformProvider'
+import { WebAuthProvider } from '../providers/WebAuthProvider'
 import { AuthState, User } from '../../shared/interfaces/IAuthProvider'
 
 export function useWebAuth() {
-  const { provider } = usePlatform()
   const { address, isConnected } = useAccount()
   const { signMessageAsync } = useSignMessage()
-  
+
   const [user, setUser] = useState<User | null>(null)
   const [authState, setAuthState] = useState<AuthState>(AuthState.UNAUTHENTICATED)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
-  // Get Web platform provider
-  const webProvider = provider instanceof WebPlatformProvider ? provider : null
-  const authProvider = webProvider?.getAuthProvider()
+
+  // Create auth provider instance directly
+  const authProvider = useMemo(() => {
+    if (!address) return null
+    return new WebAuthProvider(
+      { address, isConnected },
+      async (message: string) => signMessageAsync({ message })
+    )
+  }, [address, isConnected, signMessageAsync])
   
   // Set up auth state listener
   useEffect(() => {
