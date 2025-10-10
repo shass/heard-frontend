@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { useMiniKit } from '@coinbase/onchainkit/minikit'
 import { Platform } from './config'
 import { IPlatformProvider } from './shared/interfaces/IPlatformProvider'
 import { PlatformManager } from './PlatformManager'
@@ -34,8 +35,12 @@ export function PlatformProvider({ children }: PlatformProviderProps) {
   const [error, setError] = useState<string | null>(null)
   const [platformInfo, setPlatformInfo] = useState<PlatformContextValue['platformInfo']>(null)
 
+  // Use MiniKit hook from OnChainKit - it handles initialization properly
+  const miniKit = useMiniKit()
+
   useEffect(() => {
     console.log('[PlatformContext] 🚀 useEffect started')
+    console.log('[PlatformContext] MiniKit context:', miniKit.context ? 'available' : 'not available')
 
     const initializePlatform = async () => {
       try {
@@ -43,44 +48,32 @@ export function PlatformProvider({ children }: PlatformProviderProps) {
         setIsLoading(true)
         setError(null)
 
-        // Try to get MiniKit context for platform detection
+        // Get MiniKit context from OnChainKit hook
         let miniKitContext
-        try {
-          console.log('[PlatformContext] 🔍 Attempting to load MiniKit SDK')
-          if (typeof window !== 'undefined') {
-            const { sdk } = await import('@farcaster/miniapp-sdk')
-            console.log('[PlatformContext] ✅ MiniKit SDK loaded, getting context...')
-            const context = await sdk.context // await Promise
-            console.log('[PlatformContext] Raw context received:', context)
-
-            if (context) {
-              // Map MiniAppContext to our MiniKitContext format
-              // Using any due to type differences between SDK versions
-              const ctx = context as any
-              miniKitContext = {
-                context: {
-                  client: {
-                    clientFid: ctx.client?.fid || ctx.client?.clientFid,
-                    name: ctx.client?.displayName || ctx.client?.name
-                  },
-                  user: ctx.user ? {
-                    fid: ctx.user.fid,
-                    username: ctx.user.username
-                  } : undefined
-                }
-              }
-              console.log('[PlatformContext] ✅ Got MiniKit context:', {
+        if (miniKit.context) {
+          const ctx = miniKit.context as any
+          miniKitContext = {
+            context: {
+              client: {
                 clientFid: ctx.client?.fid || ctx.client?.clientFid,
-                clientName: ctx.client?.displayName || ctx.client?.name,
-                userFid: ctx.user?.fid
-              })
-            } else {
-              console.log('[PlatformContext] ⚠️ Context is null/undefined')
+                name: ctx.client?.displayName || ctx.client?.name
+              },
+              user: ctx.user ? {
+                fid: ctx.user.fid,
+                username: ctx.user.username
+              } : undefined
             }
           }
-        } catch (e) {
-          console.error('[PlatformContext] ❌ Error loading MiniKit:', e)
+          console.log('[PlatformContext] ✅ Got MiniKit context from hook:', {
+            clientFid: ctx.client?.fid || ctx.client?.clientFid,
+            clientName: ctx.client?.displayName || ctx.client?.name,
+            userFid: ctx.user?.fid
+          })
+        } else {
+          console.log('[PlatformContext] ⚠️ No MiniKit context available')
         }
+
+        console.log('[PlatformContext] 🔧 Initializing PlatformManager')
 
         const manager = PlatformManager.getInstance()
         await manager.initialize(miniKitContext)
@@ -103,12 +96,12 @@ export function PlatformProvider({ children }: PlatformProviderProps) {
     }
 
     initializePlatform()
-    
+
     return () => {
       // Cleanup on unmount
       PlatformManager.getInstance().shutdown()
     }
-  }, [])
+  }, [miniKit.context]) // Re-initialize when MiniKit context becomes available
   
   const value: PlatformContextValue = {
     platform,
