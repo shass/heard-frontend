@@ -10,7 +10,7 @@ import ErrorBoundary from '@/components/ui/error-boundary'
 import { StoreHydration } from '@/lib/store/hydration'
 import { MiniKitReady } from '@/components/providers/minikit-ready'
 import { MobileDevTools } from '@/components/debug/mobile-devtools'
-import { AuthErrorTracker } from '@/components/debug/auth-error-tracker'
+import { NetworkErrorTracker } from '@/components/debug/network-error-tracker'
 import { env } from '@/lib/env'
 import './globals.css'
 import React from 'react';
@@ -109,7 +109,7 @@ export default function RootLayout({
                     <NetworkStatus />
                     <MiniKitReady />
                     <MobileDevTools />
-                    <AuthErrorTracker />
+                    <NetworkErrorTracker />
                     {children}
                     <NotificationContainer />
                   </NavigationProvider>

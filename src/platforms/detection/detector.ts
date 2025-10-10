@@ -82,6 +82,13 @@ export class PlatformDetector {
   private isBaseApp(miniKitContext?: MiniKitContext): boolean {
     // First check if MiniKit APIs exist
     const hasMiniKit = this.hasMiniKitAPIs()
+    console.log('[PlatformDetector] isBaseApp check:', {
+      hasMiniKit,
+      hasContext: !!miniKitContext,
+      clientFid: miniKitContext?.context?.client?.clientFid,
+      contextKeys: miniKitContext ? Object.keys(miniKitContext) : []
+    })
+
     if (!hasMiniKit) return false
 
     // Then check clientFid to distinguish Base App from Farcaster

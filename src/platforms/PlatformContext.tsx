@@ -33,25 +33,58 @@ export function PlatformProvider({ children }: PlatformProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [platformInfo, setPlatformInfo] = useState<PlatformContextValue['platformInfo']>(null)
-  
+
   useEffect(() => {
     const initializePlatform = async () => {
       try {
         setIsLoading(true)
         setError(null)
-        
+
+        // Try to get MiniKit context for platform detection
+        let miniKitContext
+        try {
+          if (typeof window !== 'undefined') {
+            const { sdk } = await import('@farcaster/miniapp-sdk')
+            const context = await sdk.context // await Promise
+            if (context) {
+              // Map MiniAppContext to our MiniKitContext format
+              // Using any due to type differences between SDK versions
+              const ctx = context as any
+              miniKitContext = {
+                context: {
+                  client: {
+                    clientFid: ctx.client?.fid || ctx.client?.clientFid,
+                    name: ctx.client?.displayName || ctx.client?.name
+                  },
+                  user: ctx.user ? {
+                    fid: ctx.user.fid,
+                    username: ctx.user.username
+                  } : undefined
+                }
+              }
+              console.log('[PlatformContext] Got MiniKit context:', {
+                clientFid: ctx.client?.fid || ctx.client?.clientFid,
+                clientName: ctx.client?.displayName || ctx.client?.name,
+                userFid: ctx.user?.fid
+              })
+            }
+          }
+        } catch (e) {
+          console.log('[PlatformContext] No MiniKit available:', e)
+        }
+
         const manager = PlatformManager.getInstance()
-        await manager.initialize()
-        
+        await manager.initialize(miniKitContext)
+
         const currentPlatform = manager.getCurrentPlatform()
         const currentProvider = manager.getCurrentProvider()
         const info = manager.getPlatformInfo()
-        
+
         setPlatform(currentPlatform)
         setProvider(currentProvider)
         setPlatformInfo(info)
         setIsInitialized(true)
-        
+
       } catch (err) {
         console.error('Failed to initialize platform:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')
@@ -59,7 +92,7 @@ export function PlatformProvider({ children }: PlatformProviderProps) {
         setIsLoading(false)
       }
     }
-    
+
     initializePlatform()
     
     return () => {
