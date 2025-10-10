@@ -9,6 +9,8 @@ import { NetworkStatus } from '@/components/lazy'
 import ErrorBoundary from '@/components/ui/error-boundary'
 import { StoreHydration } from '@/lib/store/hydration'
 import { MiniKitReady } from '@/components/providers/minikit-ready'
+import { MobileDevTools } from '@/components/debug/mobile-devtools'
+import { AuthErrorTracker } from '@/components/debug/auth-error-tracker'
 import { env } from '@/lib/env'
 import './globals.css'
 import React from 'react';
@@ -106,6 +108,8 @@ export default function RootLayout({
                     <StoreHydration />
                     <NetworkStatus />
                     <MiniKitReady />
+                    <MobileDevTools />
+                    <AuthErrorTracker />
                     {children}
                     <NotificationContainer />
                   </NavigationProvider>
