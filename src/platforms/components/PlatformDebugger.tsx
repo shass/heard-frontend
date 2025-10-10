@@ -10,6 +10,7 @@ import { useBaseAppAuth } from '../base-app/hooks/useBaseAppAuth'
 import { useBaseAppWallet } from '../base-app/hooks/useBaseAppWallet'
 import { useFarcasterAuth } from '../farcaster/hooks/useFarcasterAuth'
 import { useFarcasterWallet } from '../farcaster/hooks/useFarcasterWallet'
+import { Platform } from '../config'
 
 export function PlatformDebugger() {
   const { platform, provider, isLoading, error, platformInfo, isInitialized } = usePlatform()
@@ -42,13 +43,13 @@ export function PlatformDebugger() {
   return (
     <div className="space-y-4">
       <BasicPlatformInfo platformInfo={platformInfo} />
-      {platform === 'web' && provider instanceof WebPlatformProvider && (
+      {platform === Platform.WEB && provider instanceof WebPlatformProvider && (
         <WebPlatformDetails provider={provider} />
       )}
-      {platform === 'base-app' && provider instanceof BaseAppPlatformProvider && (
+      {platform === Platform.BASE_APP && provider instanceof BaseAppPlatformProvider && (
         <BaseAppPlatformDetails provider={provider} />
       )}
-      {platform === 'farcaster' && provider instanceof FarcasterPlatformProvider && (
+      {platform === Platform.FARCASTER && provider instanceof FarcasterPlatformProvider && (
         <FarcasterPlatformDetails provider={provider} />
       )}
     </div>
@@ -425,8 +426,8 @@ function BaseAppPlatformDetails({ provider }: { provider: BaseAppPlatformProvide
           </div>
           <div>
             <span className="font-medium">Has MiniKit:</span>{' '}
-            <span className={environmentInfo.hasMinKit ? 'text-green-600' : 'text-red-600'}>
-              {environmentInfo.hasMinKit ? 'Yes' : 'No'}
+            <span className={environmentInfo.hasMiniKit ? 'text-green-600' : 'text-red-600'}>
+              {environmentInfo.hasMiniKit ? 'Yes' : 'No'}
             </span>
           </div>
           <div>

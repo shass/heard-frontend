@@ -1,10 +1,11 @@
-import { 
-  IAuthProvider, 
-  AuthResult, 
-  Session, 
-  User, 
-  AuthState 
+import {
+  IAuthProvider,
+  AuthResult,
+  Session,
+  User,
+  AuthState
 } from '../../shared/interfaces/IAuthProvider'
+import { Platform } from '../../config'
 
 // MiniKit specific imports
 import { useMiniKit, useAuthenticate } from '@coinbase/onchainkit/minikit'
@@ -55,7 +56,7 @@ export class BaseAppAuthProvider implements IAuthProvider {
       const user: User = {
         id: (authResult as any).fid?.toString() || (this.miniKitContext.context?.user as any)?.fid?.toString() || 'unknown',
         walletAddress: (authResult as any).address,
-        platform: 'base-app',
+        platform: Platform.BASE_APP,
         metadata: {
           fid: (authResult as any).fid,
           username: (authResult as any).username,
@@ -100,7 +101,7 @@ export class BaseAppAuthProvider implements IAuthProvider {
       id: `minikit-session-${this.miniKitContext.context.user.fid}`,
       userId: this.miniKitContext.context.user.fid?.toString() || 'unknown',
       walletAddress: (this.miniKitContext.context.user as any)?.custody?.address,
-      platform: 'base-app',
+      platform: Platform.BASE_APP,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
     }
   }
@@ -115,7 +116,7 @@ export class BaseAppAuthProvider implements IAuthProvider {
     return {
       id: contextUser.fid?.toString() || 'unknown',
       walletAddress: (contextUser as any).custody?.address,
-      platform: 'base-app',
+      platform: Platform.BASE_APP,
       metadata: {
         fid: contextUser.fid,
         username: contextUser.username,
@@ -180,7 +181,71 @@ export class BaseAppAuthProvider implements IAuthProvider {
     return {
       clientFid: this.miniKitContext.context?.client?.clientFid,
       clientName: (this.miniKitContext.context?.client as any)?.name,
-      platform: 'base-app'
+      platform: Platform.BASE_APP
     }
+  }
+
+  // IAuthProvider required alias methods
+  async authenticate(): Promise<AuthResult> {
+    return this.connect()
+  }
+
+  async logout(): Promise<void> {
+    return this.disconnect()
+  }
+
+  async checkAuthStatus(): Promise<void> {
+    // Re-check authentication state
+    const user = await this.getCurrentUser()
+    if (user) {
+      this.setState(AuthState.AUTHENTICATED)
+    } else {
+      this.setState(AuthState.UNAUTHENTICATED)
+    }
+  }
+
+  // IAuthProvider required getters
+  get isAuthenticated(): boolean {
+    return this.currentState === AuthState.AUTHENTICATED
+  }
+
+  get isLoading(): boolean {
+    return this.currentState === AuthState.LOADING
+  }
+
+  get error(): string | null {
+    return null // This provider doesn't track errors in the same way
+  }
+
+  get user(): User | null {
+    // Return current user synchronously based on context
+    const contextUser = this.miniKitContext.context?.user
+    if (!contextUser) return null
+
+    return {
+      id: contextUser.fid?.toString() || 'unknown',
+      walletAddress: (contextUser as any).custody?.address,
+      platform: Platform.BASE_APP,
+      metadata: {
+        fid: contextUser.fid,
+        username: contextUser.username,
+        displayName: contextUser.displayName,
+        pfpUrl: contextUser.pfpUrl,
+        custody: (contextUser as any).custody,
+        verifications: (contextUser as any).verifications
+      }
+    }
+  }
+
+  get platform(): string {
+    return Platform.BASE_APP
+  }
+
+  get authState(): AuthState {
+    return this.currentState
+  }
+
+  get canAuthenticate(): boolean {
+    return !!this.miniKitContext.context
   }
 }

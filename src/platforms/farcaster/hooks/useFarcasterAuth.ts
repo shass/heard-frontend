@@ -44,21 +44,26 @@ export function useFarcasterAuth() {
   
   const authenticate = useCallback(async () => {
     if (!authProvider) {
-      setError('Farcaster platform not initialized')
-      return
+      const error = 'Farcaster platform not initialized'
+      setError(error)
+      return { success: false, error }
     }
-    
+
     try {
       setError(null)
       const result = await authProvider.connect()
-      
+
       if (result.success) {
         setUser(result.user || null)
+        return { success: true, user: result.user }
       } else {
         setError(result.error || 'Authentication failed')
+        return { success: false, error: result.error }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed')
+      const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
+      setError(errorMessage)
+      return { success: false, error: errorMessage }
     }
   }, [authProvider])
   

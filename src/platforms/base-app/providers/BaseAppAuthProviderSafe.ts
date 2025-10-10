@@ -1,10 +1,11 @@
-import { 
-  IAuthProvider, 
-  AuthResult, 
-  Session, 
-  User, 
-  AuthState 
+import {
+  IAuthProvider,
+  AuthResult,
+  Session,
+  User,
+  AuthState
 } from '../../shared/interfaces/IAuthProvider'
+import { Platform, platformToApiValue } from '../../config'
 
 // Type definitions for MiniKit hooks (when available)
 interface MiniKitContext {
@@ -238,7 +239,7 @@ export class BaseAppAuthProviderSafe implements IAuthProvider {
         signature: siweSignature,
         message: siweMessage, // Используем SIWE сообщение от MiniKit
         jwtToken,
-        platform: 'base', // Specify Base App platform
+        platform: platformToApiValue(Platform.BASE_APP), // Convert enum to API value ('base')
         metadata: {
           fid: this.miniKitContext?.context?.user?.fid,
           username: this.miniKitContext?.context?.user?.username,
@@ -276,7 +277,7 @@ export class BaseAppAuthProviderSafe implements IAuthProvider {
       const user: User = {
         id: backendUser.id || this.miniKitContext?.context?.user?.fid?.toString() || 'unknown',
         walletAddress: backendUser.walletAddress || walletAddress,
-        platform: 'base-app',
+        platform: Platform.BASE_APP,
         metadata: {
           ...backendUser,
           fid: this.miniKitContext?.context?.user?.fid,
@@ -327,12 +328,12 @@ export class BaseAppAuthProviderSafe implements IAuthProvider {
     if (!this.isAvailable || !this.miniKitContext?.context?.user) {
       return null
     }
-    
+
     return {
       id: `minikit-session-${this.miniKitContext.context.user.fid}`,
       userId: this.miniKitContext.context.user.fid?.toString() || 'unknown',
       walletAddress: this.miniKitContext.context.user.custody?.address,
-      platform: 'base-app',
+      platform: Platform.BASE_APP,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
     }
   }
@@ -341,13 +342,13 @@ export class BaseAppAuthProviderSafe implements IAuthProvider {
     if (!this.isAvailable || !this.miniKitContext?.context?.user) {
       return null
     }
-    
+
     const contextUser = this.miniKitContext.context.user
-    
+
     return {
       id: contextUser.fid?.toString() || 'unknown',
       walletAddress: contextUser.custody?.address,
-      platform: 'base-app',
+      platform: Platform.BASE_APP,
       metadata: {
         fid: contextUser.fid,
         username: contextUser.username,
@@ -413,7 +414,7 @@ export class BaseAppAuthProviderSafe implements IAuthProvider {
   }
 
   get platform(): string {
-    return 'base-app'
+    return Platform.BASE_APP
   }
 
   get authState(): AuthState {
@@ -479,15 +480,15 @@ export class BaseAppAuthProviderSafe implements IAuthProvider {
       return {
         clientFid: undefined,
         clientName: undefined,
-        platform: 'base-app',
+        platform: Platform.BASE_APP,
         available: false
       }
     }
-    
+
     return {
       clientFid: this.miniKitContext?.context?.client?.clientFid,
       clientName: this.miniKitContext?.context?.client?.name,
-      platform: 'base-app',
+      platform: Platform.BASE_APP,
       available: true
     }
   }

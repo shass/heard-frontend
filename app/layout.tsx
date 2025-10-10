@@ -11,6 +11,7 @@ import { StoreHydration } from '@/lib/store/hydration'
 import { MiniKitReady } from '@/components/providers/minikit-ready'
 import { MobileDevTools } from '@/components/debug/mobile-devtools'
 import { NetworkErrorTracker } from '@/components/debug/network-error-tracker'
+import { PlatformDebugBanner } from '@/components/debug/platform-debug-banner'
 import { env } from '@/lib/env'
 import './globals.css'
 import React from 'react';
@@ -105,6 +106,7 @@ export default function RootLayout({
               <AuthProvider>
                 <CreateSurveyModalProvider>
                   <NavigationProvider>
+                    <PlatformDebugBanner />
                     <StoreHydration />
                     <NetworkStatus />
                     <MiniKitReady />

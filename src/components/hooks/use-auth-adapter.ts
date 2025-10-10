@@ -2,33 +2,35 @@
 
 import { usePlatform } from '@/src/platforms/PlatformContext'
 import { useWebAuth } from '@/src/platforms/web/hooks/useWebAuth'
-import { useBaseAppAuth } from '@/src/platforms/base-app/hooks/useBaseAppAuth'  
+import { useBaseAppAuth } from '@/src/platforms/base-app/hooks/useBaseAppAuth'
 import { useFarcasterAuth } from '@/src/platforms/farcaster/hooks/useFarcasterAuth'
 import { AuthResult, AuthState } from '@/src/platforms/shared/interfaces/IAuthProvider'
+import { Platform } from '@/src/platforms/config'
 
 export function useAuthAdapter() {
-  let platform = 'web', provider = null
-  
+  let platform: Platform | string | null = Platform.WEB
+  let provider = null
+
   try {
     const platformContext = usePlatform()
     platform = platformContext.platform
     provider = platformContext.provider
   } catch (error) {
     // Fallback to web platform if context is not available
-    platform = 'web'
+    platform = Platform.WEB
   }
-  
+
   const webAuth = useWebAuth()
   const baseAppAuth = useBaseAppAuth()
   const farcasterAuth = useFarcasterAuth()
 
   const currentAuth = (() => {
     switch (platform) {
-      case 'base-app':
+      case Platform.BASE_APP:
         return baseAppAuth
-      case 'farcaster':
+      case Platform.FARCASTER:
         return farcasterAuth
-      case 'web':
+      case Platform.WEB:
       default:
         return webAuth
     }
@@ -55,9 +57,6 @@ export function useAuthAdapter() {
       if (currentAuth?.checkAuthStatus) {
         await currentAuth.checkAuthStatus()
       }
-    },
-    getWalletAddress: (): string | null => {
-      return currentAuth?.getWalletAddress?.() || null
     }
   }
 }

@@ -8,6 +8,7 @@ import { useAccount } from 'wagmi'
 import { PlatformProvider, usePlatform } from '@/src/platforms/PlatformContext'
 import { useAuthAdapter } from '@/src/components/hooks/use-auth-adapter'
 import { useAuthStore } from '@/lib/store'
+import { Platform } from '@/src/platforms/config'
 
 interface AuthContextType {
   login: () => Promise<void>
@@ -136,7 +137,7 @@ function AuthProviderImpl({ children }: AuthProviderProps) {
               console.error('[AuthProvider] ❌ Failed to fetch full user data:', error)
             }
           }
-        } else if (platform === 'web' && isConnected) {
+        } else if (platform === Platform.WEB && isConnected) {
           console.log('[AuthProvider] 💻 Using web fallback auth')
           // Fallback to direct web authentication for admin panel
           await webLogin()

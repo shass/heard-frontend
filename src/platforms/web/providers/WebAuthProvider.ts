@@ -1,11 +1,12 @@
-import { 
-  IAuthProvider, 
-  AuthResult, 
-  Session, 
-  User, 
-  AuthState 
+import {
+  IAuthProvider,
+  AuthResult,
+  Session,
+  User,
+  AuthState
 } from '../../shared/interfaces/IAuthProvider'
 import { authApi } from '@/lib/api/auth'
+import { Platform } from '../../config'
 
 export class WebAuthProvider implements IAuthProvider {
   private authStateCallbacks: Set<(state: AuthState) => void> = new Set()
@@ -46,7 +47,7 @@ export class WebAuthProvider implements IAuthProvider {
       const user: User = {
         id: userData.id,
         walletAddress: userData.walletAddress,
-        platform: 'web',
+        platform: Platform.WEB,
         metadata: userData
       }
 
@@ -91,7 +92,7 @@ export class WebAuthProvider implements IAuthProvider {
           id: userData.sessionId || 'web-session',
           userId: userData.id,
           walletAddress: userData.walletAddress,
-          platform: 'web',
+          platform: Platform.WEB,
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
         }
       }
@@ -113,7 +114,7 @@ export class WebAuthProvider implements IAuthProvider {
         return {
           id: userData.id,
           walletAddress: userData.walletAddress,
-          platform: 'web',
+          platform: Platform.WEB,
           metadata: userData
         }
       }
@@ -153,10 +154,57 @@ export class WebAuthProvider implements IAuthProvider {
   
   updateWagmiAccount(account: { address?: string; isConnected: boolean }): void {
     this.wagmiAccount = account
-    
+
     // Update state based on connection status
     if (!account.isConnected) {
       this.setState(AuthState.UNAUTHENTICATED)
     }
+  }
+
+  // IAuthProvider required alias methods
+  async authenticate(): Promise<AuthResult> {
+    return this.connect()
+  }
+
+  async logout(): Promise<void> {
+    return this.disconnect()
+  }
+
+  async checkAuthStatus(): Promise<void> {
+    const user = await this.getCurrentUser()
+    if (user) {
+      this.setState(AuthState.AUTHENTICATED)
+    } else {
+      this.setState(AuthState.UNAUTHENTICATED)
+    }
+  }
+
+  // IAuthProvider required getters
+  get isAuthenticated(): boolean {
+    return this.currentState === AuthState.AUTHENTICATED
+  }
+
+  get isLoading(): boolean {
+    return this.currentState === AuthState.LOADING
+  }
+
+  get error(): string | null {
+    return null
+  }
+
+  get user(): User | null {
+    return null // Web provider doesn't cache user, use getCurrentUser() instead
+  }
+
+  get platform(): string {
+    return Platform.WEB
+  }
+
+  get authState(): AuthState {
+    return this.currentState
+  }
+
+  get canAuthenticate(): boolean {
+    return this.wagmiAccount.isConnected && !!this.wagmiAccount.address
   }
 }

@@ -42,6 +42,17 @@ export function PlatformProvider({ children }: PlatformProviderProps) {
     console.log('[PlatformContext] 🚀 useEffect started')
     console.log('[PlatformContext] MiniKit context:', miniKit.context ? 'available' : 'not available')
 
+    // Alert for debugging (will show before Eruda loads)
+    if (typeof window !== 'undefined') {
+      const hasContext = !!miniKit.context
+      const clientFid = (miniKit.context as any)?.client?.fid || (miniKit.context as any)?.client?.clientFid
+      window.localStorage.setItem('debug_platform_init', JSON.stringify({
+        hasContext,
+        clientFid,
+        timestamp: new Date().toISOString()
+      }))
+    }
+
     const initializePlatform = async () => {
       try {
         console.log('[PlatformContext] 🔧 Starting platform initialization')
@@ -81,6 +92,11 @@ export function PlatformProvider({ children }: PlatformProviderProps) {
         const currentPlatform = manager.getCurrentPlatform()
         const currentProvider = manager.getCurrentProvider()
         const info = manager.getPlatformInfo()
+
+        // Save detected platform to localStorage for debugging
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('debug_detected_platform', currentPlatform || 'null')
+        }
 
         setPlatform(currentPlatform)
         setProvider(currentProvider)

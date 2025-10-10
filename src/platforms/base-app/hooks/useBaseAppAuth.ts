@@ -5,6 +5,7 @@ import { useMiniKit, useAuthenticate } from '@coinbase/onchainkit/minikit'
 import { usePlatform } from '../../PlatformContext'
 import { BaseAppPlatformProvider } from '../BaseAppPlatformProvider'
 import { AuthState, User } from '../../shared/interfaces/IAuthProvider'
+import { Platform } from '../../config'
 
 export function useBaseAppAuth() {
   const { provider } = usePlatform()
@@ -58,7 +59,7 @@ export function useBaseAppAuth() {
       setUser({
         id: contextUser.fid?.toString() || 'unknown',
         walletAddress: (contextUser as any).custody?.address,
-        platform: 'base-app',
+        platform: Platform.BASE_APP,
         metadata: {
           fid: contextUser.fid,
           username: contextUser.username,

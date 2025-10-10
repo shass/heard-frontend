@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { usePlatform } from '@/src/platforms/PlatformContext'
+import { Platform } from '@/src/platforms/config'
 
 interface PlatformSwitchProps {
   web?: React.ReactNode
@@ -15,11 +16,11 @@ export function PlatformSwitch({ web, baseApp, farcaster, children }: PlatformSw
     const { platform } = usePlatform()
 
     switch (platform) {
-      case 'base-app':
+      case Platform.BASE_APP:
         return <>{baseApp || web || children}</>
-      case 'farcaster':
+      case Platform.FARCASTER:
         return <>{farcaster || web || children}</>
-      case 'web':
+      case Platform.WEB:
       default:
         // Web is always the default fallback
         return <>{web || children}</>
@@ -33,7 +34,7 @@ export function PlatformSwitch({ web, baseApp, farcaster, children }: PlatformSw
 export function useMigrationChoice() {
   try {
     const { platform } = usePlatform()
-    
+
     return {
       platform,
       shouldUseLegacy: false,
@@ -42,7 +43,7 @@ export function useMigrationChoice() {
   } catch (error) {
     // Fallback to web platform if context is not available
     return {
-      platform: 'web' as const,
+      platform: Platform.WEB,
       shouldUseLegacy: false,
       shouldUseNew: true,
     }

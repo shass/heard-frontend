@@ -1,10 +1,11 @@
-import { 
-  IAuthProvider, 
-  AuthResult, 
-  Session, 
-  User, 
-  AuthState 
+import {
+  IAuthProvider,
+  AuthResult,
+  Session,
+  User,
+  AuthState
 } from '../../shared/interfaces/IAuthProvider'
+import { Platform } from '../../config'
 
 export class FarcasterAuthProvider implements IAuthProvider {
   private authStateCallbacks: Set<(state: AuthState) => void> = new Set()
@@ -26,7 +27,7 @@ export class FarcasterAuthProvider implements IAuthProvider {
         const user: User = {
           id: contextData.user.fid?.toString() || 'unknown',
           walletAddress: undefined, // Context doesn't provide wallet address directly
-          platform: 'farcaster',
+          platform: Platform.FARCASTER,
           metadata: {
             fid: contextData.user.fid,
             username: contextData.user.username,
@@ -102,7 +103,7 @@ export class FarcasterAuthProvider implements IAuthProvider {
       const user: User = {
         id: userData.fid?.toString() || 'unknown',
         walletAddress: undefined, // Quick Auth doesn't provide wallet address
-        platform: 'farcaster',
+        platform: Platform.FARCASTER,
         metadata: {
           fid: userData.fid,
           username: userData.username,
@@ -113,13 +114,13 @@ export class FarcasterAuthProvider implements IAuthProvider {
           quickAuthToken: token
         }
       }
-      
+
       // Create session
       this.currentSession = {
         id: `farcaster-session-${userData.fid}`,
         userId: userData.fid?.toString() || 'unknown',
         walletAddress: undefined,
-        platform: 'farcaster',
+        platform: Platform.FARCASTER,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
       }
       
@@ -195,7 +196,7 @@ export class FarcasterAuthProvider implements IAuthProvider {
       return {
         id: contextData.user.fid?.toString() || 'unknown',
         walletAddress: undefined,
-        platform: 'farcaster',
+        platform: Platform.FARCASTER,
         metadata: {
           fid: contextData.user.fid,
           username: contextData.user.username,
@@ -279,9 +280,9 @@ export class FarcasterAuthProvider implements IAuthProvider {
   getSocialContext() {
     const user = this.currentUser
     if (!user) return null
-    
+
     return {
-      platform: 'farcaster',
+      platform: Platform.FARCASTER,
       fid: user.metadata?.fid,
       username: user.metadata?.username,
       displayName: user.metadata?.displayName,
@@ -337,7 +338,7 @@ export class FarcasterAuthProvider implements IAuthProvider {
   }
 
   get platform(): string {
-    return 'farcaster'
+    return Platform.FARCASTER
   }
 
   get authState(): AuthState {

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { usePlatform } from '../../PlatformContext'
 import { BaseAppPlatformProvider } from '../BaseAppPlatformProvider'
 import { AuthState, User } from '../../shared/interfaces/IAuthProvider'
+import { Platform } from '../../config'
 
 // Safe imports with availability checks
 let useMiniKit: any = null
@@ -107,7 +108,7 @@ export function useBaseAppAuthSafe(): BaseAppAuthHookResult {
       setUser({
         id: contextUser.fid?.toString() || 'unknown',
         walletAddress: (contextUser as any).custody?.address,
-        platform: 'base-app',
+        platform: Platform.BASE_APP,
         metadata: {
           fid: contextUser.fid,
           username: contextUser.username,

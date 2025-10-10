@@ -1,8 +1,9 @@
-import { 
-  IWalletProvider, 
-  WalletConnection, 
-  TransactionRequest 
+import {
+  IWalletProvider,
+  WalletConnection,
+  TransactionRequest
 } from '../../shared/interfaces/IWalletProvider'
+import { Platform } from '../../config'
 
 // MiniKit and OnchainKit imports
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
@@ -144,7 +145,7 @@ export class BaseAppWalletProvider implements IWalletProvider {
       hasContext: !!this.miniKitContext.context,
       userAddress: (this.miniKitContext.context?.user as any)?.custody?.address,
       clientFid: this.miniKitContext.context?.client?.clientFid,
-      platform: 'base-app'
+      platform: Platform.BASE_APP
     }
   }
   

@@ -6,6 +6,26 @@ export enum Platform {
   UNKNOWN = 'unknown'
 }
 
+/**
+ * Maps Platform enum values to API platform identifiers
+ * Used when sending platform info to backend
+ */
+export function platformToApiValue(platform: Platform | string | null): string {
+  switch (platform) {
+    case Platform.BASE_APP:
+    case 'base-app':
+      return 'base'
+    case Platform.FARCASTER:
+      return 'farcaster'
+    case Platform.WEB:
+      return 'web'
+    case Platform.TELEGRAM:
+      return 'telegram'
+    default:
+      return 'web' // default fallback
+  }
+}
+
 export interface PlatformConfig {
   name: Platform
   displayName: string

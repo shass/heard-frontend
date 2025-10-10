@@ -3,6 +3,7 @@
 import { useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePlatform } from '@/src/platforms'
+import { Platform } from '@/src/platforms/config'
 
 export function useNavigationFix() {
   const router = useRouter()
@@ -11,16 +12,16 @@ export function useNavigationFix() {
   const handleNavigationClick = useCallback((event: MouseEvent) => {
     const target = event.target as HTMLElement
     const link = target.closest('a[href]') as HTMLAnchorElement
-    
+
     if (!link) return
-    
+
     const href = link.getAttribute('href')
     if (!href) return
-    
+
     // Only handle internal links
     if (href.startsWith('/') && !href.startsWith('//')) {
       // Prevent default navigation for mini apps to avoid reload
-      if (platform === 'base-app' || platform === 'farcaster') {
+      if (platform === Platform.BASE_APP || platform === Platform.FARCASTER) {
         event.preventDefault()
         
         console.log(`[Navigation] Intercepted click to ${href} on ${platform}`)
