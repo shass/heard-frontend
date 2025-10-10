@@ -39,10 +39,6 @@ export { useCompatibleAuth } from '../components/hooks/use-compatible-auth'
 export { useCompatibleWallet } from '../components/hooks/use-compatible-wallet'
 export { PlatformSwitch, useMigrationChoice } from '../components/PlatformSwitch'
 
-// Components
-export { PlatformDebugger } from './components/PlatformDebugger'
-
-
 // Shared interfaces
 export type { IPlatformProvider } from './shared/interfaces/IPlatformProvider'
 export type { IAuthProvider, AuthResult, Session, User } from './shared/interfaces/IAuthProvider'
