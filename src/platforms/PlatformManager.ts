@@ -23,17 +23,20 @@ export class PlatformManager {
    * @param miniKitContext - Optional MiniKit context for proper platform detection
    */
   async initialize(miniKitContext?: MiniKitContext): Promise<void> {
+    console.log('[PlatformManager] 🚀 initialize() called with context:', miniKitContext ? 'provided' : 'none')
+
     if (this.isInitialized) {
-      console.log('[PlatformManager] Already initialized')
+      console.log('[PlatformManager] Already initialized, returning cached:', this.currentPlatform)
       return
     }
 
     try {
       // Detect current platform with context
+      console.log('[PlatformManager] 🔍 Calling detector.detect()...')
       const detector = PlatformDetector.getInstance()
       this.currentPlatform = detector.detect(miniKitContext)
 
-      console.log('[PlatformManager] Detected platform:', this.currentPlatform)
+      console.log('[PlatformManager] ✅ Detected platform:', this.currentPlatform)
 
       // Create appropriate provider
       this.currentProvider = PlatformFactory.create(this.currentPlatform)

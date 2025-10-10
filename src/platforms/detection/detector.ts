@@ -31,20 +31,24 @@ export class PlatformDetector {
    * @param miniKitContext - MiniKit context from useMiniKit hook (if available)
    */
   detect(miniKitContext?: MiniKitContext): Platform {
+    console.log('[PlatformDetector] 🔍 Starting detection with context:', miniKitContext ? 'provided' : 'none')
+
     // Don't cache if we have new context - need to re-detect
     if (!miniKitContext && this.detectedPlatform) {
+      console.log('[PlatformDetector] Using cached platform:', this.detectedPlatform)
       return this.detectedPlatform
     }
 
     // Server-side rendering check
     if (typeof window === 'undefined') {
+      console.log('[PlatformDetector] SSR detected')
       return Platform.UNKNOWN
     }
 
     // Base App detection (requires MiniKit + clientFid check)
     if (this.isBaseApp(miniKitContext)) {
       this.detectedPlatform = Platform.BASE_APP
-      console.log('[PlatformDetector] Detected: Base App')
+      console.log('[PlatformDetector] ✅ Detected: Base App')
       return Platform.BASE_APP
     }
 
@@ -71,7 +75,7 @@ export class PlatformDetector {
 
     // Default to web
     this.detectedPlatform = Platform.WEB
-    console.log('[PlatformDetector] Detected: Web')
+    console.log('[PlatformDetector] ⚠️ Defaulting to: Web (no other platform matched)')
     return Platform.WEB
   }
 

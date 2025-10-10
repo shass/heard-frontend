@@ -35,17 +35,24 @@ export function PlatformProvider({ children }: PlatformProviderProps) {
   const [platformInfo, setPlatformInfo] = useState<PlatformContextValue['platformInfo']>(null)
 
   useEffect(() => {
+    console.log('[PlatformContext] 🚀 useEffect started')
+
     const initializePlatform = async () => {
       try {
+        console.log('[PlatformContext] 🔧 Starting platform initialization')
         setIsLoading(true)
         setError(null)
 
         // Try to get MiniKit context for platform detection
         let miniKitContext
         try {
+          console.log('[PlatformContext] 🔍 Attempting to load MiniKit SDK')
           if (typeof window !== 'undefined') {
             const { sdk } = await import('@farcaster/miniapp-sdk')
+            console.log('[PlatformContext] ✅ MiniKit SDK loaded, getting context...')
             const context = await sdk.context // await Promise
+            console.log('[PlatformContext] Raw context received:', context)
+
             if (context) {
               // Map MiniAppContext to our MiniKitContext format
               // Using any due to type differences between SDK versions
@@ -62,15 +69,17 @@ export function PlatformProvider({ children }: PlatformProviderProps) {
                   } : undefined
                 }
               }
-              console.log('[PlatformContext] Got MiniKit context:', {
+              console.log('[PlatformContext] ✅ Got MiniKit context:', {
                 clientFid: ctx.client?.fid || ctx.client?.clientFid,
                 clientName: ctx.client?.displayName || ctx.client?.name,
                 userFid: ctx.user?.fid
               })
+            } else {
+              console.log('[PlatformContext] ⚠️ Context is null/undefined')
             }
           }
         } catch (e) {
-          console.log('[PlatformContext] No MiniKit available:', e)
+          console.error('[PlatformContext] ❌ Error loading MiniKit:', e)
         }
 
         const manager = PlatformManager.getInstance()
