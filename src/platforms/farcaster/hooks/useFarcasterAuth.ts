@@ -160,10 +160,13 @@ export function useFarcasterAuth() {
     return (authProvider as any).getSocialContext()
   }, [authProvider])
   
-  // Check auth status on mount
+  // Check auth status on mount and when authProvider changes
   useEffect(() => {
+    if (!authProvider) return
+
     checkAuthStatus()
-  }, [checkAuthStatus])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authProvider])
   
   return {
     user,
