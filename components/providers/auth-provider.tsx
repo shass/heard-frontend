@@ -59,7 +59,7 @@ function AuthProviderImpl({ children }: AuthProviderProps) {
   })
   
   useAuthCleanup()
-  useAuthEffects({ isConnected, address })
+  useAuthEffects({ isConnected, address: address ?? undefined })
 
   // Fallback login for web platform (admin panel)
   const webLogin = async () => {
@@ -77,9 +77,9 @@ function AuthProviderImpl({ children }: AuthProviderProps) {
       const { message, jwtToken } = await authApi.getNonce(address)
       
       // Sign message with wallet
-      const signature = await wagmiActions.signMessage(config, { 
-        account: address,
-        message 
+      const signature = await wagmiActions.signMessage(config, {
+        account: address as `0x${string}`,
+        message
       })
       
       // Connect wallet and get user data
