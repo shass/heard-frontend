@@ -3,9 +3,9 @@
 import { useEffect } from 'react'
 import { useIsAuthenticated, useAuthLoading } from '@/lib/store'
 import { useAuthActions } from '@/components/providers/auth-provider'
-import { useAccount } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Button } from '@/components/ui/button'
+import { useCompatibleWallet } from '@/src/platforms'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -15,10 +15,11 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const isAuthenticated = useIsAuthenticated()
   const loading = useAuthLoading()
-  
-  // Get auth actions and wallet connection status
+
+  // Get auth actions and wallet connection status (platform-aware)
   const { login, checkAuth } = useAuthActions()
-  const { isConnected } = useAccount()
+  const wallet = useCompatibleWallet()
+  const isConnected = wallet?.isConnected || false
 
   // Check authentication on mount
   useEffect(() => {

@@ -4,7 +4,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useAuthCleanup } from '@/hooks/use-auth-cleanup'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { useAuthEffects } from '@/hooks/use-auth-effects'
-import { useAccount } from 'wagmi'
 import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvider'
 import { useAuthAdapter } from '@/src/components/hooks/use-auth-adapter'
 import { useAuthStore } from '@/lib/store'
@@ -41,13 +40,16 @@ interface AuthProviderProps {
 }
 
 function AuthProviderImpl({ children }: AuthProviderProps) {
-  const { address, isConnected } = useAccount()
   const { platform } = usePlatformDetector()
   const auth = useAuthAdapter()
   const authSession = useAuthSession()
-  
+
   // Import auth store directly for fallback
   const { user, isAuthenticated, isLoading, error, setUser, setLoading, logout: storeLogout } = useAuthStore()
+
+  // Get address and connection status from auth adapter (works for all platforms)
+  const address = auth.user?.walletAddress || null
+  const isConnected = auth.isAuthenticated
   
   const [platformInfo] = useState({
     isMobile: typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),

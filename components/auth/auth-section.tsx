@@ -4,7 +4,6 @@ import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Button } from "@/components/ui/button"
 import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
 import { useAuthActions } from "@/components/providers/auth-provider"
-import { useAccount } from 'wagmi'
 import { useNotifications } from "@/components/ui/notifications"
 import { LogOut, ChevronDown, Wallet } from 'lucide-react'
 import { useCompatibleWallet, PlatformSwitch } from '@/src/platforms'
@@ -19,12 +18,13 @@ import { formatAddress } from '@/lib/utils';
 
 export function AuthSection() {
   const { logout, isAuthenticated, user, isLoading } = useAuthActions()
-  const { isConnected, address } = useAccount()
   const { openConnectModal } = useConnectModal()
   const notifications = useNotifications()
 
   // Use compatible wallet hook for platform-aware functionality
   const compatibleWallet = useCompatibleWallet()
+  const isConnected = compatibleWallet?.isConnected || false
+  const address = compatibleWallet?.address || null
 
   const handleLogout = async () => {
     try {
