@@ -4,7 +4,7 @@ import {
   Session,
   User,
   AuthState
-} from '../_core/shared/interfaces/IAuthProvider'
+} from '../../_core/shared/interfaces/IAuthProvider'
 import { Platform, platformToApiValue } from '../../config'
 
 // Type definitions for MiniKit hooks (when available)

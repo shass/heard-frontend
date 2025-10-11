@@ -1,4 +1,4 @@
-import { Platform } from '../config'
+import { Platform } from '../../config'
 
 export interface MiniKitContext {
   context?: {

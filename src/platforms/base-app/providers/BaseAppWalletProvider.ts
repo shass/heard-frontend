@@ -2,7 +2,7 @@ import {
   IWalletProvider,
   WalletConnection,
   TransactionRequest
-} from '../_core/shared/interfaces/IWalletProvider'
+} from '../../_core/shared/interfaces/IWalletProvider'
 import { Platform } from '../../config'
 
 // MiniKit and OnchainKit imports

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useMiniKit, useAuthenticate } from '@coinbase/onchainkit/minikit'
 import { BaseAppAuthProvider } from '../providers/BaseAppAuthProvider'
-import { AuthState, User } from '../_core/shared/interfaces/IAuthProvider'
+import { AuthState, User } from '../../_core/shared/interfaces/IAuthProvider'
 import { Platform } from '../../config'
 
 export function useBaseAppAuth() {

@@ -2,7 +2,7 @@ import {
   IWalletProvider, 
   WalletConnection, 
   TransactionRequest 
-} from '../_core/shared/interfaces/IWalletProvider'
+} from '../../_core/shared/interfaces/IWalletProvider'
 import { useAccount, useConnect, useDisconnect, useSignMessage, useBalance, useSendTransaction } from 'wagmi'
 import { parseEther } from 'viem'
 
