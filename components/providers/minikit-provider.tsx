@@ -1,7 +1,7 @@
 'use client';
 
 import { MiniKitProvider } from '@coinbase/onchainkit/minikit';
-import { base } from 'wagmi/chains';
+import { base } from 'viem/chains';
 import React from 'react';
 import env from '@/lib/env';
 
