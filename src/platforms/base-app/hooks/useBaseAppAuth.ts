@@ -32,6 +32,9 @@ export function useBaseAppAuth() {
     return unsubscribe
   }, [authProvider])
   
+  // Stable reference to user FID for dependency tracking
+  const userFid = miniKit.context?.user?.fid
+
   // Update user when authenticated or when context changes
   useEffect(() => {
     if (authState === AuthState.AUTHENTICATED && authProvider) {
@@ -56,7 +59,8 @@ export function useBaseAppAuth() {
     } else {
       setUser(null)
     }
-  }, [authState, authProvider, miniKit.context?.user])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authState, authProvider, userFid])
   
   const authenticate = useCallback(async () => {
     console.log('[useBaseAppAuth] 🚀 Authenticate called')

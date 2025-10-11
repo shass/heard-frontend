@@ -21,7 +21,8 @@ export function useWebAuth() {
       { address, isConnected },
       async (message: string) => signMessageAsync({ message })
     )
-  }, [address, isConnected, signMessageAsync])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, isConnected])
   
   // Set up auth state listener
   useEffect(() => {
