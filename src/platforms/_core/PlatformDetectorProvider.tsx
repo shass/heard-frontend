@@ -21,19 +21,46 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
 
   useEffect(() => {
     const detectPlatform = () => {
+      console.log('[PlatformDetector] 🔍 Starting detection...')
+
       // Check for MiniKit context
       const clientFid = (miniKit.context as any)?.client?.fid ||
                         (miniKit.context as any)?.client?.clientFid
 
-      if (clientFid) {
-        if (clientFid === '309857') {
+      console.log('[PlatformDetector] clientFid:', clientFid, 'type:', typeof clientFid)
+      console.log('[PlatformDetector] Full context:', miniKit.context)
+
+      // Convert clientFid to string for comparison
+      const clientFidStr = clientFid?.toString()
+
+      // Check for Base App by clientFid
+      if (clientFidStr === '309857') {
+        console.log('[PlatformDetector] ✅ Detected Base App (by clientFid)')
+        return Platform.BASE_APP
+      }
+
+      // Check for Farcaster by clientFid
+      if (clientFidStr === '1') {
+        console.log('[PlatformDetector] ✅ Detected Farcaster (by clientFid)')
+        return Platform.FARCASTER
+      }
+
+      // Check for MiniKit APIs presence
+      if (typeof window !== 'undefined') {
+        const hasMiniKit = !!(
+          (window as any)?.webkit?.messageHandlers?.minikit ||
+          (window as any)?.MiniKit
+        )
+
+        if (hasMiniKit) {
+          console.log('[PlatformDetector] ⚠️ MiniKit APIs detected but no platform identified')
+          console.log('[PlatformDetector] Assuming Base App (MiniKit present)')
           return Platform.BASE_APP
-        } else if (clientFid === '1') {
-          return Platform.FARCASTER
         }
       }
 
       // Fallback to web
+      console.log('[PlatformDetector] ℹ️ Defaulting to Web platform')
       return Platform.WEB
     }
 
@@ -45,8 +72,7 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
     // Debug logging
     if (typeof window !== 'undefined') {
       localStorage.setItem('debug_detected_platform', detected)
-      console.log('[PlatformDetector] Detected platform:', detected)
-      console.log('[PlatformDetector] MiniKit context:', miniKit.context)
+      console.log('[PlatformDetector] 🎯 Final platform:', detected)
     }
   }, [miniKit.context])
 
