@@ -4,32 +4,20 @@ export type { PlatformConfig } from './config'
 
 export { PlatformDetector } from './_core/detection/detector'
 export type { MiniKitContext } from './_core/detection/detector'
-export { PlatformFactory } from './_core/factory'
-export { PlatformManager } from './_core/PlatformManager'
-export { PlatformProvider, usePlatform } from './_core/PlatformContext'
 export { PlatformDetectorProvider, usePlatformDetector } from './_core/PlatformDetectorProvider'
-export { PlatformRegistry } from './_core/registry'
-
-// Platform providers
-export { WebPlatformProvider } from './web/WebPlatformProvider'
-export { BaseAppPlatformProvider } from './base-app/BaseAppPlatformProvider'
-export { FarcasterPlatformProvider } from './farcaster/FarcasterPlatformProvider'
 
 // Web platform specific exports
 export { WebAuthProvider } from './web/providers/WebAuthProvider'
-export { WebWalletProvider } from './web/providers/WebWalletProvider'
 export { useWebAuth } from './web/hooks/useWebAuth'
 export { useWebWallet } from './web/hooks/useWebWallet'
 
 // Base App platform specific exports
 export { BaseAppAuthProvider } from './base-app/providers/BaseAppAuthProvider'
-export { BaseAppWalletProvider } from './base-app/providers/BaseAppWalletProvider'
 export { useBaseAppAuth } from './base-app/hooks/useBaseAppAuth'
 export { useBaseAppWallet } from './base-app/hooks/useBaseAppWallet'
 
 // Farcaster platform specific exports
 export { FarcasterAuthProvider } from './farcaster/providers/FarcasterAuthProvider'
-export { FarcasterWalletProvider } from './farcaster/providers/FarcasterWalletProvider'
 export { useFarcasterAuth } from './farcaster/hooks/useFarcasterAuth'
 export { useFarcasterWallet } from './farcaster/hooks/useFarcasterWallet'
 
@@ -40,7 +28,8 @@ export { useCompatibleWallet } from '../components/hooks/use-compatible-wallet'
 export { PlatformSwitch, useMigrationChoice } from '../components/PlatformSwitch'
 
 // Shared interfaces
-export type { IPlatformProvider } from './_core/shared/interfaces/IPlatformProvider'
 export type { IAuthProvider, AuthResult, Session, User } from './_core/shared/interfaces/IAuthProvider'
 export { AuthState } from './_core/shared/interfaces/IAuthProvider'
-export type { IWalletProvider, WalletConnection, TransactionRequest } from './_core/shared/interfaces/IWalletProvider'
+
+// Shared types
+export type { TransactionRequest, WalletConnection } from './_core/shared/types'

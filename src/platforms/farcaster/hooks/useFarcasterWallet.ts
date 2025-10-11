@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
-import { TransactionRequest } from '../../_core/shared/interfaces/IWalletProvider'
+import { TransactionRequest } from '../../_core/shared/types'
 
 export function useFarcasterWallet() {
   const miniKit = useMiniKit()

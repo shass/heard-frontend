@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useAccount, useConnect, useDisconnect, useBalance, useSendTransaction, useSignMessage } from 'wagmi'
-import { TransactionRequest } from '../../_core/shared/interfaces/IWalletProvider'
+import { TransactionRequest } from '../../_core/shared/types'
 
 export function useWebWallet() {
   const { address, isConnected, chainId } = useAccount()
