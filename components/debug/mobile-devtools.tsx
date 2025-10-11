@@ -1,8 +1,11 @@
 'use client'
 
 import { useEffect } from 'react'
+import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvider'
 
 export function MobileDevTools() {
+  const { platform, isInitialized } = usePlatformDetector()
+
   useEffect(() => {
     // Only load in development or when explicitly enabled
     const shouldLoadDevTools =
@@ -25,6 +28,14 @@ export function MobileDevTools() {
         console.log('')
         console.log('%c✅ Eruda DevTools активированы!', 'font-size: 14px; color: #00ff88;')
         console.log('')
+
+        // Show detected platform
+        if (isInitialized) {
+          console.log('%c🎯 Определенная платформа:', 'font-size: 14px; font-weight: bold; color: #ffaa00;')
+          console.log(`%c   Platform: ${platform}`, 'font-size: 14px; color: #ffaa00;')
+          console.log('')
+        }
+
         console.log('%c🔧 Как использовать:', 'font-size: 14px; font-weight: bold;')
         console.log('  1. Найдите плавающую кнопку в правом нижнем углу')
         console.log('  2. Нажмите на кнопку чтобы открыть DevTools')
@@ -44,10 +55,16 @@ export function MobileDevTools() {
     document.body.appendChild(script)
 
     return () => {
-      // Cleanup on unmount
-      document.body.removeChild(script)
+      // Cleanup on unmount - remove the specific script element we created
+      try {
+        if (script.parentNode) {
+          script.parentNode.removeChild(script)
+        }
+      } catch (e) {
+        // Ignore errors during cleanup
+      }
     }
-  }, [])
+  }, [platform, isInitialized])
 
   return null
 }
