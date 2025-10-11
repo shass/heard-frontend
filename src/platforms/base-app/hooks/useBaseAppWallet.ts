@@ -2,23 +2,20 @@
 
 import { useState, useCallback } from 'react'
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
-import { useAccount, useSendTransaction, useSignMessage } from 'wagmi'
 import { TransactionRequest } from '../../_core/shared/interfaces/IWalletProvider'
 
 export function useBaseAppWallet() {
   const miniKit = useMiniKit()
-  const wagmiAccount = useAccount()
-  const { sendTransactionAsync } = useSendTransaction()
-  const { signMessageAsync } = useSignMessage()
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Get address from MiniKit context or wagmi
+  // Get address from MiniKit context
   const custodyAddress = (miniKit.context?.user as any)?.custody?.address
-  const address = custodyAddress || wagmiAccount.address || null
+  const verifiedAddresses = (miniKit.context?.user as any)?.verifications || []
+  const address = custodyAddress || verifiedAddresses[0] || null
   const isConnected = !!address
-  const chainId = wagmiAccount.chainId || 8453 // Base mainnet
+  const chainId = 8453 // Base mainnet
 
   const connectWallet = useCallback(async () => {
     if (!isConnected) {
@@ -37,25 +34,24 @@ export function useBaseAppWallet() {
   const signMessage = useCallback(async (message: string) => {
     try {
       setError(null)
-      return await signMessageAsync({ message })
+      // Use MiniKit's sign message functionality
+      // Note: MiniKit doesn't have direct signMessage API, would need to implement via provider
+      throw new Error('Sign message not yet implemented for Base App')
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to sign message'
       setError(errorMsg)
       throw new Error(errorMsg)
     }
-  }, [signMessageAsync])
+  }, [])
 
   const sendTransaction = useCallback(async (tx: TransactionRequest) => {
     try {
       setIsLoading(true)
       setError(null)
 
-      const hash = await sendTransactionAsync({
-        to: tx.to as `0x${string}`,
-        value: tx.value ? BigInt(tx.value) : undefined,
-        data: tx.data as `0x${string}` | undefined,
-      })
-      return hash
+      // Use MiniKit's send transaction functionality
+      // Note: This would use MiniKit SDK methods when available
+      throw new Error('Send transaction not yet implemented for Base App')
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to send transaction'
       setError(errorMsg)
@@ -63,7 +59,7 @@ export function useBaseAppWallet() {
     } finally {
       setIsLoading(false)
     }
-  }, [sendTransactionAsync])
+  }, [])
 
   const getUserProfile = useCallback(() => {
     const user = miniKit.context?.user
