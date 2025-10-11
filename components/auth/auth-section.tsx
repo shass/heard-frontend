@@ -1,12 +1,11 @@
 'use client'
 
-import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Button } from "@/components/ui/button"
 import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
 import { useAuthActions } from "@/components/providers/auth-provider"
 import { useNotifications } from "@/components/ui/notifications"
 import { LogOut, ChevronDown, Wallet } from 'lucide-react'
-import { useCompatibleWallet, PlatformSwitch } from '@/src/platforms'
+import { useCompatibleWallet, PlatformSwitch, usePlatformDetector } from '@/src/platforms'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,12 +13,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { FarcasterAuthButton } from "@/components/farcaster-auth-button"
-import { formatAddress } from '@/lib/utils';
+import { formatAddress } from '@/lib/utils'
+import { Platform } from '@/src/platforms/config'
+
+// Dynamic import for RainbowKit to avoid loading in non-Web platforms
+const useWebConnectModal = () => {
+  const { platform } = usePlatformDetector()
+
+  if (platform === Platform.WEB) {
+    // Only import and use RainbowKit in Web platform
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { useConnectModal } = require('@rainbow-me/rainbowkit')
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useConnectModal()
+  }
+
+  return { openConnectModal: undefined }
+}
 
 export function AuthSection() {
   const { logout, isAuthenticated, user, isLoading } = useAuthActions()
-  const { openConnectModal } = useConnectModal()
   const notifications = useNotifications()
+  const { openConnectModal } = useWebConnectModal()
 
   // Use compatible wallet hook for platform-aware functionality
   const compatibleWallet = useCompatibleWallet()

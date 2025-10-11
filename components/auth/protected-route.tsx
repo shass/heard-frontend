@@ -3,13 +3,28 @@
 import { useEffect } from 'react'
 import { useIsAuthenticated, useAuthLoading } from '@/lib/store'
 import { useAuthActions } from '@/components/providers/auth-provider'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Button } from '@/components/ui/button'
-import { useCompatibleWallet } from '@/src/platforms'
+import { useCompatibleWallet, PlatformSwitch, usePlatformDetector } from '@/src/platforms'
+import { Platform } from '@/src/platforms/config'
+import { Wallet } from 'lucide-react'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
   fallback?: React.ReactNode
+}
+
+// Hook to safely use RainbowKit only on Web platform
+const useWebConnectModal = () => {
+  const { platform } = usePlatformDetector()
+
+  if (platform === Platform.WEB) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { useConnectModal } = require('@rainbow-me/rainbowkit')
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useConnectModal()
+  }
+
+  return { openConnectModal: undefined }
 }
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
@@ -20,6 +35,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const { login, checkAuth } = useAuthActions()
   const wallet = useCompatibleWallet()
   const isConnected = wallet?.isConnected || false
+  const { openConnectModal } = useWebConnectModal()
 
   // Check authentication on mount
   useEffect(() => {
@@ -69,7 +85,37 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
 
           <div className="space-y-3">
             {!isConnected ? (
-              <ConnectButton />
+              <PlatformSwitch
+                web={
+                  <Button
+                    onClick={() => openConnectModal?.()}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 flex items-center space-x-2"
+                  >
+                    <Wallet className="w-4 h-4" />
+                    <span>Connect Wallet</span>
+                  </Button>
+                }
+                baseApp={
+                  <Button
+                    onClick={() => wallet.connect()}
+                    disabled={wallet.isConnecting}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 flex items-center space-x-2"
+                  >
+                    <Wallet className="w-4 h-4" />
+                    <span>{wallet.isConnecting ? 'Connecting...' : 'Connect Base'}</span>
+                  </Button>
+                }
+                farcaster={
+                  <Button
+                    onClick={() => wallet.connect()}
+                    disabled={wallet.isConnecting}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 flex items-center space-x-2"
+                  >
+                    <Wallet className="w-4 h-4" />
+                    <span>{wallet.isConnecting ? 'Connecting...' : 'Quick Connect'}</span>
+                  </Button>
+                }
+              />
             ) : (
               <Button
                 onClick={login}

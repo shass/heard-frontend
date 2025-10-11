@@ -8,8 +8,8 @@ import { Footer } from "@/components/footer"
 import { useSurvey, useSurveyEligibility } from "@/hooks/use-surveys"
 import { useUserReward } from "@/hooks/use-reward"
 import { useAuthActions } from "@/components/providers/auth-provider"
-import { useCompatibleWallet } from "@/src/platforms"
-import { useConnectModal } from '@rainbow-me/rainbowkit'
+import { useCompatibleWallet, usePlatformDetector } from "@/src/platforms"
+import { Platform } from "@/src/platforms/config"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
@@ -26,6 +26,20 @@ interface SurveyInfoPageProps {
   }>
 }
 
+// Hook to safely use RainbowKit only on Web platform
+const useWebConnectModal = () => {
+  const { platform } = usePlatformDetector()
+
+  if (platform === Platform.WEB) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { useConnectModal } = require('@rainbow-me/rainbowkit')
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useConnectModal()
+  }
+
+  return { openConnectModal: undefined }
+}
+
 export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
   const openUrl = useOpenUrl()
@@ -33,7 +47,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const wallet = useCompatibleWallet()
   const isConnected = wallet?.isConnected || false
   const address = wallet?.address || null
-  const { openConnectModal } = useConnectModal()
+  const { openConnectModal } = useWebConnectModal()
   const { id } = use(params)
 
   // Force auth check on component mount to ensure localStorage state is synced with server
