@@ -4,20 +4,13 @@ import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvi
 import { useWebAuth } from '@/src/platforms/web/hooks/useWebAuth'
 import { useBaseAppAuth } from '@/src/platforms/base-app/hooks/useBaseAppAuth'
 import { useFarcasterAuth } from '@/src/platforms/farcaster/hooks/useFarcasterAuth'
-import { AuthResult, AuthState } from '@/src/platforms/_core/shared/interfaces/IAuthProvider'
+import { AuthResult } from '@/src/platforms/_core/shared/interfaces/IAuthProvider'
 import { Platform } from '@/src/platforms/config'
 
 export function useAuthAdapter() {
-  let platform: Platform | string | null = Platform.WEB
+  const { platform } = usePlatformDetector()
 
-  try {
-    const platformContext = usePlatformDetector()
-    platform = platformContext.platform
-  } catch (error) {
-    // Fallback to web platform if context is not available
-    platform = Platform.WEB
-  }
-
+  // Always call all hooks (React rules), but only use the one for current platform
   const webAuth = useWebAuth()
   const baseAppAuth = useBaseAppAuth()
   const farcasterAuth = useFarcasterAuth()

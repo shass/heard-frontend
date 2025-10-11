@@ -14,23 +14,34 @@ export function useFarcasterAuth() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Check if we're in Farcaster context
+  const isFarcaster = useMemo(() => {
+    const clientFid = (miniKit.context as any)?.client?.fid ||
+                      (miniKit.context as any)?.client?.clientFid
+    return clientFid === '1' // Farcaster clientFid
+  }, [miniKit.context])
+
   // Load Farcaster SDK for quickAuth (Farcaster-specific feature)
   useEffect(() => {
     if (typeof window === 'undefined') return
+    if (!isFarcaster) return // Don't load SDK if not on Farcaster
 
+    console.log('[FarcasterAuth] Loading Farcaster SDK')
     import('@farcaster/miniapp-sdk').then((module) => {
       const sdk = module.default || module
       setMiniAppSdk(sdk)
+      console.log('[FarcasterAuth] Farcaster SDK loaded')
     }).catch((err) => {
       console.error('[useFarcasterAuth] Failed to load Farcaster SDK:', err)
     })
-  }, [])
+  }, [isFarcaster])
 
   // Create auth provider with both MiniKit context (OnChainKit) and Farcaster SDK (quickAuth)
   const authProvider = useMemo(() => {
-    if (!miniAppSdk) return null
+    if (!isFarcaster || !miniAppSdk) return null
+    console.log('[FarcasterAuth] Creating auth provider')
     return new FarcasterAuthProvider(miniKit, miniAppSdk)
-  }, [miniKit, miniAppSdk])
+  }, [isFarcaster, miniKit, miniAppSdk])
   
   // Set up auth state listener
   useEffect(() => {
