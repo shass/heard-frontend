@@ -1,6 +1,6 @@
-import { IPlatformProvider } from '../shared/interfaces/IPlatformProvider'
-import { IAuthProvider } from '../shared/interfaces/IAuthProvider'
-import { IWalletProvider } from '../shared/interfaces/IWalletProvider'
+import { IPlatformProvider } from '../_core/shared/interfaces/IPlatformProvider'
+import { IAuthProvider } from '../_core/shared/interfaces/IAuthProvider'
+import { IWalletProvider } from '../_core/shared/interfaces/IWalletProvider'
 import { FarcasterAuthProvider } from './providers/FarcasterAuthProvider'
 import { FarcasterWalletProvider } from './providers/FarcasterWalletProvider'
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode, lazy, Suspense } from 'react'
-import { usePlatformDetector } from '@/src/platforms/PlatformDetectorProvider'
+import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvider'
 import { Platform } from '@/src/platforms/config'
 
 // Dynamic imports для code splitting

@@ -2,13 +2,13 @@
 export { Platform, platformToApiValue } from './config'
 export type { PlatformConfig } from './config'
 
-export { PlatformDetector } from './detection/detector'
-export type { MiniKitContext } from './detection/detector'
-export { PlatformFactory } from './factory'
-export { PlatformManager } from './PlatformManager'
-export { PlatformProvider, usePlatform } from './PlatformContext'
-export { PlatformDetectorProvider, usePlatformDetector } from './PlatformDetectorProvider'
-export { PlatformRegistry } from './registry'
+export { PlatformDetector } from './_core/detection/detector'
+export type { MiniKitContext } from './_core/detection/detector'
+export { PlatformFactory } from './_core/factory'
+export { PlatformManager } from './_core/PlatformManager'
+export { PlatformProvider, usePlatform } from './_core/PlatformContext'
+export { PlatformDetectorProvider, usePlatformDetector } from './_core/PlatformDetectorProvider'
+export { PlatformRegistry } from './_core/registry'
 
 // Platform providers
 export { WebPlatformProvider } from './web/WebPlatformProvider'
@@ -40,7 +40,7 @@ export { useCompatibleWallet } from '../components/hooks/use-compatible-wallet'
 export { PlatformSwitch, useMigrationChoice } from '../components/PlatformSwitch'
 
 // Shared interfaces
-export type { IPlatformProvider } from './shared/interfaces/IPlatformProvider'
-export type { IAuthProvider, AuthResult, Session, User } from './shared/interfaces/IAuthProvider'
-export { AuthState } from './shared/interfaces/IAuthProvider'
-export type { IWalletProvider, WalletConnection, TransactionRequest } from './shared/interfaces/IWalletProvider'
+export type { IPlatformProvider } from './_core/shared/interfaces/IPlatformProvider'
+export type { IAuthProvider, AuthResult, Session, User } from './_core/shared/interfaces/IAuthProvider'
+export { AuthState } from './_core/shared/interfaces/IAuthProvider'
+export type { IWalletProvider, WalletConnection, TransactionRequest } from './_core/shared/interfaces/IWalletProvider'

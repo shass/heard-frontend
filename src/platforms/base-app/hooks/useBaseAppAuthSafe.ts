@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { usePlatform } from '../../PlatformContext'
 import { BaseAppPlatformProvider } from '../BaseAppPlatformProvider'
-import { AuthState, User } from '../../shared/interfaces/IAuthProvider'
+import { AuthState, User } from '../_core/shared/interfaces/IAuthProvider'
 import { Platform } from '../../config'
 
 // Safe imports with availability checks

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
-import { Platform } from './config'
+import { Platform } from '../config'
 import { IPlatformProvider } from './shared/interfaces/IPlatformProvider'
 import { PlatformManager } from './PlatformManager'
 

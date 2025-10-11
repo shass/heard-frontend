@@ -2,7 +2,7 @@ import {
   IWalletProvider, 
   WalletConnection, 
   TransactionRequest 
-} from '../../shared/interfaces/IWalletProvider'
+} from '../_core/shared/interfaces/IWalletProvider'
 
 export class FarcasterWalletProvider implements IWalletProvider {
   private accountChangeCallbacks: Set<(account: string | null) => void> = new Set()

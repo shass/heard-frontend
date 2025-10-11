@@ -1,10 +1,10 @@
 'use client'
 
-import { usePlatformDetector } from '@/src/platforms/PlatformDetectorProvider'
+import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvider'
 import { useWebAuth } from '@/src/platforms/web/hooks/useWebAuth'
 import { useBaseAppAuth } from '@/src/platforms/base-app/hooks/useBaseAppAuth'
 import { useFarcasterAuth } from '@/src/platforms/farcaster/hooks/useFarcasterAuth'
-import { AuthResult, AuthState } from '@/src/platforms/shared/interfaces/IAuthProvider'
+import { AuthResult, AuthState } from '@/src/platforms/_core/shared/interfaces/IAuthProvider'
 import { Platform } from '@/src/platforms/config'
 
 export function useAuthAdapter() {

@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { Platform } from './config'
+import { Platform } from '../config'
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
 
 interface PlatformDetectorContext {

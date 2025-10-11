@@ -1,8 +1,8 @@
-import { Platform } from './config'
+import { Platform } from '../config'
 import { IPlatformProvider } from './shared/interfaces/IPlatformProvider'
-import { WebPlatformProvider } from './web/WebPlatformProvider'
-import { BaseAppPlatformProvider } from './base-app/BaseAppPlatformProvider'
-import { FarcasterPlatformProvider } from './farcaster/FarcasterPlatformProvider'
+import { WebPlatformProvider } from '../web/WebPlatformProvider'
+import { BaseAppPlatformProvider } from '../base-app/BaseAppPlatformProvider'
+import { FarcasterPlatformProvider } from '../farcaster/FarcasterPlatformProvider'
 
 export class PlatformFactory {
   static create(platform: Platform): IPlatformProvider {

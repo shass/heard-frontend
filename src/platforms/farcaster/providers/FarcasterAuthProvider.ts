@@ -4,7 +4,7 @@ import {
   Session,
   User,
   AuthState
-} from '../../shared/interfaces/IAuthProvider'
+} from '../_core/shared/interfaces/IAuthProvider'
 import { Platform } from '../../config'
 
 export class FarcasterAuthProvider implements IAuthProvider {

@@ -1,4 +1,4 @@
-import { Platform, PlatformConfig } from './config'
+import { Platform, PlatformConfig } from '../config'
 
 export class PlatformRegistry {
   private static configs: Map<Platform, PlatformConfig> = new Map()

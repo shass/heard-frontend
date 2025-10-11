@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { usePlatformDetector } from '@/src/platforms/PlatformDetectorProvider'
+import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvider'
 import { Platform } from '@/src/platforms/config'
 
 export function useNavigationFix() {

@@ -1,4 +1,4 @@
-import { Platform } from './config'
+import { Platform } from '../config'
 import { IPlatformProvider } from './shared/interfaces/IPlatformProvider'
 import { PlatformDetector, MiniKitContext } from './detection/detector'
 import { PlatformFactory } from './factory'

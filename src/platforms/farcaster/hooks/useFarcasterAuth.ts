@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
 import { FarcasterAuthProvider } from '../providers/FarcasterAuthProvider'
-import { AuthState, User } from '../../shared/interfaces/IAuthProvider'
+import { AuthState, User } from '../_core/shared/interfaces/IAuthProvider'
 
 export function useFarcasterAuth() {
   const miniKit = useMiniKit()

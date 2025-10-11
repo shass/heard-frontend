@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { usePlatformDetector } from '@/src/platforms/PlatformDetectorProvider'
+import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvider'
 
 export function PlatformDebugBanner() {
   const [mounted, setMounted] = useState(false)

@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
 import { useAccount, useSendTransaction, useSignMessage } from 'wagmi'
-import { TransactionRequest } from '../../shared/interfaces/IWalletProvider'
+import { TransactionRequest } from '../_core/shared/interfaces/IWalletProvider'
 
 export function useBaseAppWallet() {
   const miniKit = useMiniKit()

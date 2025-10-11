@@ -4,7 +4,7 @@ import {
   Session,
   User,
   AuthState
-} from '../../shared/interfaces/IAuthProvider'
+} from '../_core/shared/interfaces/IAuthProvider'
 import { authApi } from '@/lib/api/auth'
 import { Platform } from '../../config'
 

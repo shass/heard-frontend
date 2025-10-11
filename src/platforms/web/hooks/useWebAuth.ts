@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { WebAuthProvider } from '../providers/WebAuthProvider'
-import { AuthState, User } from '../../shared/interfaces/IAuthProvider'
+import { AuthState, User } from '../_core/shared/interfaces/IAuthProvider'
 
 export function useWebAuth() {
   const { address, isConnected } = useAccount()
