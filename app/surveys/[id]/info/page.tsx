@@ -8,7 +8,7 @@ import { Footer } from "@/components/footer"
 import { useSurvey, useSurveyEligibility } from "@/hooks/use-surveys"
 import { useUserReward } from "@/hooks/use-reward"
 import { useAuthActions } from "@/components/providers/auth-provider"
-import { useAccount } from 'wagmi'
+import { useCompatibleWallet } from "@/src/platforms"
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -30,7 +30,9 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
   const openUrl = useOpenUrl()
   const { login, isAuthenticated, isLoading: isAuthLoading, checkAuth, user, error: authError } = useAuthActions()
-  const { isConnected, address } = useAccount()
+  const wallet = useCompatibleWallet()
+  const isConnected = wallet?.isConnected || false
+  const address = wallet?.address || null
   const { openConnectModal } = useConnectModal()
   const { id } = use(params)
 
