@@ -7,17 +7,16 @@ import { Platform } from '../../config'
 
 // MiniKit and OnchainKit imports
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
-import { useAccount, useSendTransaction, useSignMessage } from 'wagmi'
 
 export class BaseAppWalletProvider implements IWalletProvider {
   private accountChangeCallbacks: Set<(account: string | null) => void> = new Set()
   private chainChangeCallbacks: Set<(chainId: number) => void> = new Set()
-  
+
   constructor(
     private miniKitContext: ReturnType<typeof useMiniKit>,
-    private wagmiAccount: ReturnType<typeof useAccount>,
-    private wagmiSendTransaction: ReturnType<typeof useSendTransaction>,
-    private wagmiSignMessage: ReturnType<typeof useSignMessage>
+    private wagmiAccount: any,
+    private wagmiSendTransaction: any,
+    private wagmiSignMessage: any
   ) {
     this.setupEventListeners()
   }
