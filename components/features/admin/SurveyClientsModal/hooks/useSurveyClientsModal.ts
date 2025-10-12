@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useOpenUrl } from '@coinbase/onchainkit/minikit'
+import { useOpenUrl } from '@/src/platforms/base-app/hooks/useOpenUrl'
 import { toast } from 'sonner'
 import { 
   useSurveyClients, 

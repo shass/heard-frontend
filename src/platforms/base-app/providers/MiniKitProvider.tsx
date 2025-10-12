@@ -1,21 +1,18 @@
-'use client';
+'use client'
 
-import { MiniKitProvider } from '@coinbase/onchainkit/minikit';
-import { base } from 'viem/chains';
-import React from 'react';
-import env from '@/lib/env';
+import React from 'react'
 
 interface MiniKitContextProviderProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
+/**
+ * MiniKit provider wrapper for @farcaster/miniapp-sdk
+ *
+ * Note: @farcaster/miniapp-sdk uses a singleton pattern (sdk export),
+ * so no provider context is needed. This component exists for backwards
+ * compatibility and can be removed if all code is refactored.
+ */
 export function MiniKitContextProvider({ children }: MiniKitContextProviderProps) {
-  return (
-    <MiniKitProvider
-      apiKey={env.CDP_CLIENT_API_KEY}
-      chain={base}
-    >
-      {children}
-    </MiniKitProvider>
-  );
+  return <>{children}</>
 }

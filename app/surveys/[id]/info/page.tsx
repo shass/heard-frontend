@@ -2,7 +2,7 @@
 
 import { use, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useOpenUrl } from '@coinbase/onchainkit/minikit'
+import { useOpenUrl } from '@/src/platforms/base-app/hooks/useOpenUrl'
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useSurvey, useSurveyEligibility } from "@/hooks/use-surveys"

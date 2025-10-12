@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { Platform } from '../config'
-import { useMiniKit } from '@coinbase/onchainkit/minikit'
+import { sdk } from '@farcaster/miniapp-sdk'
 
 interface PlatformDetectorContext {
   platform: Platform
@@ -17,19 +17,19 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
   const [isInitialized, setIsInitialized] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  const miniKit = useMiniKit()
-
   useEffect(() => {
     // Set loading state at the start of detection
     setIsLoading(true)
 
-    const detectPlatform = () => {
+    const detectPlatform = async () => {
       const timestamp = new Date().toISOString()
       console.log('[PlatformDetector] 🔍 Starting detection...')
 
+      // Get MiniKit context
+      const context = await sdk.context
+
       // Check for MiniKit context
-      const clientFid = (miniKit.context as any)?.client?.fid ||
-                        (miniKit.context as any)?.client?.clientFid
+      const clientFid = context?.client?.fid || context?.client?.clientFid
 
       // Save to localStorage for debugging (survives Eruda init)
       if (typeof window !== 'undefined') {
@@ -38,8 +38,8 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
           timestamp,
           clientFid,
           clientFidType: typeof clientFid,
-          hasContext: !!miniKit.context,
-          contextKeys: miniKit.context ? Object.keys(miniKit.context) : [],
+          hasContext: !!context,
+          contextKeys: context ? Object.keys(context) : [],
           hasMiniKitAPI: !!(
             (window as any)?.webkit?.messageHandlers?.minikit ||
             (window as any)?.MiniKit
@@ -51,7 +51,7 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
       }
 
       console.log('[PlatformDetector] clientFid:', clientFid, 'type:', typeof clientFid)
-      console.log('[PlatformDetector] Full context:', miniKit.context)
+      console.log('[PlatformDetector] Full context:', context)
 
       // Convert clientFid to string for comparison
       const clientFidStr = clientFid?.toString()
@@ -87,21 +87,21 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
       return Platform.WEB
     }
 
-    const detected = detectPlatform()
+    detectPlatform().then((detected) => {
+      console.log('[PlatformDetector] 🔄 Setting platform to:', detected)
+      setPlatform(detected)
+      setIsInitialized(true)
+      setIsLoading(false)
 
-    console.log('[PlatformDetector] 🔄 Setting platform to:', detected)
-    setPlatform(detected)
-    setIsInitialized(true)
-    setIsLoading(false)
-
-    // Debug logging
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('debug_detected_platform', detected)
-      console.log('[PlatformDetector] 🎯 Final platform:', detected)
-      console.log('[PlatformDetector] ✅ isLoading set to false, platform state updated')
-      console.log('[PlatformDetector] 💡 To see full detection history, run: JSON.parse(localStorage.getItem("debug_platform_logs"))')
-    }
-  }, [miniKit.context])
+      // Debug logging
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('debug_detected_platform', detected)
+        console.log('[PlatformDetector] 🎯 Final platform:', detected)
+        console.log('[PlatformDetector] ✅ isLoading set to false, platform state updated')
+        console.log('[PlatformDetector] 💡 To see full detection history, run: JSON.parse(localStorage.getItem("debug_platform_logs"))')
+      }
+    })
+  }, [])
 
   return (
     <Context.Provider value={{ platform, isInitialized, isLoading }}>

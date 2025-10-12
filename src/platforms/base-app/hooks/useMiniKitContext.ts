@@ -1,38 +1,55 @@
-'use client';
+'use client'
 
-import { useMiniKit } from '@coinbase/onchainkit/minikit';
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react'
+import { sdk } from '@farcaster/miniapp-sdk'
+import type { Context } from '@farcaster/miniapp-core'
 
 export interface MiniKitContext {
-  isBaseApp: boolean;
-  isFarcasterApp: boolean;
-  isWebsite: boolean;
-  clientFid?: string | number;
-  contextInfo: any;
+  isBaseApp: boolean
+  isFarcasterApp: boolean
+  isWebsite: boolean
+  clientFid?: number
+  context?: Context.MiniAppContext
 }
 
 export function useMiniKitContext(): MiniKitContext {
-  const { context } = useMiniKit();
+  const [context, setContext] = useState<Context.MiniAppContext | undefined>()
+  const [isLoading, setIsLoading] = useState(true)
 
-  return useMemo(() => {
-    // Determine if we're running in Base App
-    const isBaseApp = Boolean(context?.client?.clientFid);
-    
-    // Determine if we're in Farcaster context (different from Base)
-    const isFarcasterApp = Boolean(
-      typeof window !== 'undefined' && 
-      (window as any).Farcaster?.SDK
-    );
-    
-    // If neither, we're a regular website
-    const isWebsite = !isBaseApp && !isFarcasterApp;
+  useEffect(() => {
+    sdk.context.then((ctx) => {
+      setContext(ctx)
+      setIsLoading(false)
+    }).catch(() => {
+      setIsLoading(false)
+    })
+  }, [])
 
+  if (isLoading || !context) {
     return {
-      isBaseApp,
-      isFarcasterApp,
-      isWebsite,
-      clientFid: context?.client?.clientFid ? String(context.client.clientFid) : undefined,
-      contextInfo: context
-    };
-  }, [context]);
+      isBaseApp: false,
+      isFarcasterApp: false,
+      isWebsite: true,
+      context: undefined,
+    }
+  }
+
+  const clientFid = context.client?.fid || context.client?.clientFid
+  const clientFidStr = clientFid?.toString()
+
+  // Check for Base App by clientFid
+  const isBaseApp = clientFidStr === '309857'
+
+  // Check for Farcaster by clientFid
+  const isFarcasterApp = clientFidStr === '1'
+
+  const isWebsite = !isBaseApp && !isFarcasterApp
+
+  return {
+    isBaseApp,
+    isFarcasterApp,
+    isWebsite,
+    clientFid: clientFid ? Number(clientFid) : undefined,
+    context,
+  }
 }

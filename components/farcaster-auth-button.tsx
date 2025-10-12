@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { LogIn } from 'lucide-react';
-import { useAuthenticate } from '@coinbase/onchainkit/minikit';
+import { useAuthenticate } from '@/src/platforms/base-app/hooks/useAuthenticate';
 import { useMiniKitContext } from '@/src/platforms/base-app/hooks/useMiniKitContext';
 import { useNotifications } from '@/components/ui/notifications';
 import { env } from '@/lib/env';
