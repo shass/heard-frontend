@@ -43,13 +43,7 @@ export function MobileDevTools() {
         console.log('')
         console.log('%c✅ Eruda DevTools активированы!', 'font-size: 14px; color: #00ff88;')
         console.log('')
-
-        // Show detected platform (wait a bit for platform detection to complete)
-        setTimeout(() => {
-          console.log('%c🎯 Определенная платформа:', 'font-size: 14px; font-weight: bold; color: #ffaa00;')
-          console.log(`%c   Platform: ${platform}`, 'font-size: 14px; color: #ffaa00;')
-          console.log('')
-        }, 100)
+        console.log('%c⏳ Ожидание определения платформы...', 'font-size: 14px; color: #ffaa00;')
 
         console.log('%c🔧 Как использовать:', 'font-size: 14px; font-weight: bold;')
         console.log('  1. Найдите плавающую кнопку в правом нижнем углу')
@@ -69,6 +63,20 @@ export function MobileDevTools() {
     }
     document.body.appendChild(script)
   }, []) // Пустой массив зависимостей - выполнится только один раз
+
+  // Separate effect to log platform when it's finally determined
+  useEffect(() => {
+    if (isInitialized && platform) {
+      // Wait a bit to ensure it logs after other detection logs
+      setTimeout(() => {
+        console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #00ff88;')
+        console.log('%c🎯 Определенная платформа:', 'font-size: 14px; font-weight: bold; color: #ffaa00;')
+        console.log(`%c   Platform: ${platform}`, 'font-size: 14px; color: #ffaa00;')
+        console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #00ff88;')
+        console.log('')
+      }, 50)
+    }
+  }, [isInitialized, platform])
 
   return null
 }
