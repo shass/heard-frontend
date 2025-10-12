@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { sdk } from '@farcaster/miniapp-sdk'
-import type { Context } from '@farcaster/miniapp-core'
+import type { Context } from '@farcaster/miniapp-sdk'
 
 export interface MiniKitContext {
   isBaseApp: boolean
@@ -34,7 +34,7 @@ export function useMiniKitContext(): MiniKitContext {
     }
   }
 
-  const clientFid = context.client?.fid || context.client?.clientFid
+  const clientFid = (context.client as any)?.clientFid
   const clientFidStr = clientFid?.toString()
 
   // Check for Base App by clientFid

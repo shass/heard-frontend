@@ -108,9 +108,11 @@ export class WebAuthProvider implements IAuthProvider {
       const response = await fetch('/api/auth/me', {
         credentials: 'include'
       })
-      
+
       if (response.ok) {
-        const userData = await response.json()
+        const data = await response.json()
+        // Backend returns { user: User }
+        const userData = data.user || data
         return {
           id: userData.id,
           walletAddress: userData.walletAddress,
@@ -121,7 +123,7 @@ export class WebAuthProvider implements IAuthProvider {
     } catch (error) {
       console.warn('Failed to get current user:', error)
     }
-    
+
     return null
   }
   

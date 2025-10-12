@@ -1,7 +1,7 @@
 'use client'
 
 import { sdk } from '@farcaster/miniapp-sdk'
-import type { ComposeCast } from '@farcaster/miniapp-core'
+import type { ComposeCast } from '@farcaster/miniapp-sdk'
 
 /**
  * Hook to compose casts in Base App / Farcaster
