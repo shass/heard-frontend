@@ -75,7 +75,7 @@ function AuthProviderImpl({ children }: AuthProviderProps) {
     try {
       const { authApi } = await import('@/lib/api/auth')
       const wagmiActions = await import('wagmi/actions')
-      const { config } = await import('@/components/providers/web3-provider')
+      const { config } = await import('@/src/platforms/web/providers/Web3Provider')
       
       // Get nonce from backend
       const { message, jwtToken } = await authApi.getNonce(address)
