@@ -32,9 +32,10 @@ const useWebConnectModal = () => {
 }
 
 export function AuthSection() {
-  const { logout, isAuthenticated, user, isLoading } = useAuthActions()
+  const { login, logout, isAuthenticated, user, isLoading } = useAuthActions()
   const notifications = useNotifications()
   const { openConnectModal } = useWebConnectModal()
+  const { platform } = usePlatformDetector()
 
   // Use compatible wallet hook for platform-aware functionality
   const compatibleWallet = useCompatibleWallet()
@@ -66,7 +67,13 @@ export function AuthSection() {
   if (!isConnected && !compatibleWallet.isConnected) {
     const handleConnect = async () => {
       try {
-        if (compatibleWallet.connect) {
+        // Base App and Farcaster use auth.login() instead of wallet.connect()
+        if (platform === Platform.BASE_APP || platform === Platform.FARCASTER) {
+          console.log('[AuthSection] Base App/Farcaster - calling login()')
+          await login()
+          notifications.success('Authentication successful', 'You have been authenticated successfully')
+        } else if (compatibleWallet.connect) {
+          // Web platform - connect wallet first
           await compatibleWallet.connect()
           notifications.success('Wallet Connected', 'Your wallet has been connected successfully')
         } else if (openConnectModal) {
@@ -76,8 +83,9 @@ export function AuthSection() {
           notifications.error('Connection failed', 'No connection method available')
         }
       } catch (error: any) {
+        console.error('[AuthSection] Connection/Login error:', error)
         // Additional fallback to RainbowKit modal for web platform
-        if (openConnectModal) {
+        if (openConnectModal && platform === Platform.WEB) {
           openConnectModal()
         } else {
           notifications.error('Connection failed', error.message || 'Please try again')
