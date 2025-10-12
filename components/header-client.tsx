@@ -9,13 +9,13 @@ import { useUser, useIsAuthenticated, useAuthLoading } from "@/lib/store"
 import { useCreateSurveyModal } from "@/hooks/use-create-survey-modal"
 import { Settings } from "lucide-react"
 
-// Dynamically import Web3 components to avoid SSR issues
+// Dynamically import AuthSection to avoid SSR issues
 const AuthSection = dynamic(
-  () => import('./auth/auth-section').then((mod) => ({ 
+  () => import('./auth/AuthSectionSwitch').then((mod) => ({
     default: function WrappedAuthSection(props: any) {
       return (
         <React.Suspense fallback={<div className="h-10 w-32 bg-zinc-100 rounded-lg animate-pulse"></div>}>
-          <mod.AuthSection {...props} />
+          <mod.AuthSectionSwitch {...props} />
         </React.Suspense>
       )
     }

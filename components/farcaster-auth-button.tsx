@@ -86,12 +86,7 @@ function ModernFarcasterAuthButton({
         await auth.logout();
         notifications.success('Signed out successfully');
       } else {
-        // Try platform-specific auth first
-        if (auth.loginWithPlatform) {
-          await auth.loginWithPlatform();
-        } else {
-          await auth.login();
-        }
+        await auth.login();
         notifications.success('Authentication successful!');
         onSuccess?.(auth.user);
       }
