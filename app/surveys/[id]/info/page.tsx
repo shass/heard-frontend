@@ -8,7 +8,8 @@ import { Footer } from "@/components/footer"
 import { useSurvey, useSurveyEligibility } from "@/hooks/use-surveys"
 import { useUserReward } from "@/hooks/use-reward"
 import { useAuthActions } from "@/components/providers/auth-provider"
-import { useCompatibleWallet, usePlatformDetector } from "@/src/platforms"
+import { usePlatformDetector } from "@/src/platforms"
+import { useWallet } from "@/src/platforms/_core/hooks/useWallet"
 import { Platform } from "@/src/platforms/config"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -44,9 +45,9 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
   const openUrl = useOpenUrl()
   const { login, isAuthenticated, isLoading: isAuthLoading, checkAuth, user, error: authError } = useAuthActions()
-  const wallet = useCompatibleWallet()
-  const isConnected = wallet?.isConnected || false
-  const address = wallet?.address || null
+  const wallet = useWallet()
+  const isConnected = wallet.isConnected
+  const address = wallet.address || null
   const { openConnectModal } = useWebConnectModal()
   const { id } = use(params)
 
@@ -56,7 +57,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   }, [])
 
   const { data: survey, isLoading, error } = useSurvey(id)
-  const { data: eligibility } = useSurveyEligibility(id, address)
+  const { data: eligibility } = useSurveyEligibility(id, address ?? undefined)
   const { data: userReward } = useUserReward(id)
 
   const handleStartSurvey = () => {

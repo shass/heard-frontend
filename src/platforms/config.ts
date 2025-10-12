@@ -13,7 +13,6 @@ export enum Platform {
 export function platformToApiValue(platform: Platform | string | null): string {
   switch (platform) {
     case Platform.BASE_APP:
-    case 'base-app':
       return 'base'
     case Platform.FARCASTER:
       return 'farcaster'

@@ -6,7 +6,7 @@ import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/loading-states'
 import { Wallet, Shield, ArrowLeft } from 'lucide-react'
-import { useAdminAuth } from '@/hooks/use-admin-auth'
+import { useAdminAuth } from '@/src/platforms/web/hooks/useAdminAuth'
 import Link from 'next/link'
 
 interface AdminAuthWrapperProps {

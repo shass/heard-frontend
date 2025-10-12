@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { LogIn } from 'lucide-react';
 import { useAuthenticate } from '@coinbase/onchainkit/minikit';
-import { useMiniKitContext } from '@/hooks/use-minikit-context';
+import { useMiniKitContext } from '@/src/platforms/base-app/hooks/useMiniKitContext';
 import { useNotifications } from '@/components/ui/notifications';
 import { env } from '@/lib/env';
 import { 

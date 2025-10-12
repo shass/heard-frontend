@@ -4,41 +4,6 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { User, Survey, SurveyResponse } from '@/lib/types'
 
-// SSR-safe storage for UI preferences only
-const createSSRSafeStorage = () => {
-  if (typeof window === 'undefined') {
-    return {
-      getItem: () => null,
-      setItem: () => {},
-      removeItem: () => {},
-    }
-  }
-
-  return {
-    getItem: (name: string) => {
-      try {
-        return localStorage.getItem(name)
-      } catch {
-        return null
-      }
-    },
-    setItem: (name: string, value: string) => {
-      try {
-        localStorage.setItem(name, value)
-      } catch {
-        // Silently fail
-      }
-    },
-    removeItem: (name: string) => {
-      try {
-        localStorage.removeItem(name)
-      } catch {
-        // Silently fail
-      }
-    },
-  }
-}
-
 // Auth store
 interface AuthStore {
   user: User | null

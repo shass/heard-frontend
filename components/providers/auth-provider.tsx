@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useAuthCleanup } from '@/hooks/use-auth-cleanup'
 import { useAuthSession } from '@/hooks/use-auth-session'
-import { useAuthEffects } from '@/hooks/use-auth-effects'
+import { useAuthEffects } from '@/src/platforms/web/hooks/useAuthEffects'
 import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvider'
 import { useAuth } from '@/src/platforms/_core/hooks/useAuth'
 import { useAuthStore } from '@/lib/store'

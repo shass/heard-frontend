@@ -21,8 +21,9 @@ export { FarcasterAuthProvider } from './farcaster/providers/FarcasterAuthProvid
 export { useAuth } from './_core/hooks/useAuth'
 export { useWallet } from './_core/hooks/useWallet'
 export { useCompatibleAuth } from '../components/hooks/use-compatible-auth'
-export { useCompatibleWallet } from '../components/hooks/use-compatible-wallet'
-export { PlatformSwitch, useMigrationChoice } from '../components/PlatformSwitch'
+export { PlatformSwitch, useMigrationChoice } from './_core/components/PlatformSwitch'
+export { AuthSectionSwitch } from './_core/components/AuthSectionSwitch'
+export { PlatformLayoutSwitch } from './_core/components/PlatformLayoutSwitch'
 
 // Strategy interfaces
 export type { IAuthStrategy } from './_core/shared/interfaces/IAuthStrategy'

@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { Web3Provider } from '@/components/providers/web3-provider'
+import { Web3Provider } from '@/src/platforms/web/providers/Web3Provider'
 import { AuthProvider } from '@/components/providers/auth-provider'
 import { CreateSurveyModalProvider } from '@/components/providers/create-survey-modal-provider'
 import { NavigationProvider } from '@/components/providers/navigation-provider'

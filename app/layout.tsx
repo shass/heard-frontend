@@ -1,12 +1,10 @@
 import type { Metadata } from 'next'
 import ErrorBoundary from '@/components/ui/error-boundary'
-import { StoreHydration } from '@/lib/store/hydration'
 import { MobileDevTools } from '@/components/debug/mobile-devtools'
-import { NetworkErrorTracker } from '@/components/debug/network-error-tracker'
 import { PlatformDebugBanner } from '@/components/debug/platform-debug-banner'
 import { PlatformDetectorProvider } from '@/src/platforms/_core/PlatformDetectorProvider'
-import { MiniKitContextProvider } from '@/components/providers/minikit-provider'
-import { PlatformLayoutSwitch } from './_layouts/PlatformLayoutSwitch'
+import { MiniKitContextProvider } from '@/src/platforms/base-app/providers/MiniKitProvider'
+import { PlatformLayoutSwitch } from '@/src/platforms/_core/components/PlatformLayoutSwitch'
 import { env } from '@/lib/env'
 import './globals.css'
 import React from 'react';
@@ -100,9 +98,7 @@ export default function RootLayout({
             <PlatformDetectorProvider>
               {/* Debug tools - общие для всех платформ */}
               <PlatformDebugBanner />
-              <StoreHydration />
               <MobileDevTools />
-              <NetworkErrorTracker />
 
               {/* Platform-specific layout switch */}
               <PlatformLayoutSwitch>

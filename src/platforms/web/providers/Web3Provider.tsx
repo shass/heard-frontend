@@ -9,19 +9,6 @@ import { http } from 'wagmi'
 import { env } from '@/lib/env'
 import '@rainbow-me/rainbowkit/styles.css'
 
-// Функция определения контекста Base Mini App
-function isBaseAppContext(): boolean {
-  if (typeof window === 'undefined') return false
-
-  return (
-    window.location.hostname.includes('base.org') ||
-    window.location.hostname.includes('farcaster.xyz') ||
-    /Base|Farcaster|Warpcast/i.test(navigator.userAgent) ||
-    // Проверяем наличие MiniKit в window
-    'miniKit' in window
-  )
-}
-
 // Web3 configuration optimized for mobile
 export const config = getDefaultConfig({
   appName: env.APP_NAME,

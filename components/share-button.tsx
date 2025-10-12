@@ -4,7 +4,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Share2 } from 'lucide-react';
 import { useComposeCast } from '@coinbase/onchainkit/minikit';
-import { useMiniKitContext } from '@/hooks/use-minikit-context';
+import { useMiniKitContext } from '@/src/platforms/base-app/hooks/useMiniKitContext';
 
 interface ShareButtonProps {
   text: string;

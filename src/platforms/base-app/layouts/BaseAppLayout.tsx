@@ -5,7 +5,7 @@ import { AuthProvider } from '@/components/providers/auth-provider'
 import { CreateSurveyModalProvider } from '@/components/providers/create-survey-modal-provider'
 import { NavigationProvider } from '@/components/providers/navigation-provider'
 import { NotificationContainer } from '@/components/ui/notifications'
-import { MiniKitReady } from '@/components/providers/minikit-ready'
+import { MiniKitReady } from '@/src/platforms/base-app/components/MiniKitReady'
 
 interface BaseAppLayoutProps {
   children: ReactNode

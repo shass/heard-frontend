@@ -1,6 +1,6 @@
 'use client';
 
-import { useMiniKitReady } from '@/hooks/use-minikit-ready';
+import { useMiniKitReady } from '@/src/platforms/base-app/hooks/useMiniKitReady';
 
 export function MiniKitReady() {
   // Хук сам обрабатывает всю логику retry
