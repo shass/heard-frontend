@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, lazy, Suspense } from 'react'
+import { ReactNode, lazy, Suspense, useRef } from 'react'
 import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvider'
 import { Platform } from '@/src/platforms/config'
 
@@ -32,8 +32,10 @@ function LayoutLoadingFallback() {
 
 export function PlatformLayoutSwitch({ children }: PlatformLayoutSwitchProps) {
   const { platform, isLoading } = usePlatformDetector()
+  const renderCount = useRef(0)
+  renderCount.current++
 
-  console.log('[PlatformLayoutSwitch] 🎨 Rendering with - Platform:', platform, 'isLoading:', isLoading)
+  console.log(`[PlatformLayoutSwitch] 🎨 Rendering (render #${renderCount.current}) - Platform:`, platform, 'isLoading:', isLoading)
 
   // Show loading state during platform detection
   if (isLoading) {

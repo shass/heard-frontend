@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react'
 import { Platform } from '../config'
 import { sdk } from '@farcaster/miniapp-sdk'
 
@@ -16,6 +16,8 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
   const [platform, setPlatform] = useState<Platform>(Platform.WEB)
   const [isInitialized, setIsInitialized] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+
+  console.log('[PlatformDetectorProvider] 🔄 Component rendered - platform:', platform, 'isLoading:', isLoading, 'isInitialized:', isInitialized)
 
   useEffect(() => {
     console.log('[PlatformDetectorProvider] 🔄 useEffect called')
@@ -89,10 +91,12 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
     }
 
     detectPlatform().then((detected) => {
-      console.log('[PlatformDetector] 🔄 Setting platform to:', detected)
+      console.log('[PlatformDetector] 🔄 detectPlatform resolved with:', detected)
+      console.log('[PlatformDetector] 🔄 About to call setPlatform, setIsInitialized, setIsLoading')
       setPlatform(detected)
       setIsInitialized(true)
       setIsLoading(false)
+      console.log('[PlatformDetector] ✅ State updates called (platform, isInitialized, isLoading)')
 
       // Debug logging
       if (typeof window !== 'undefined') {
@@ -104,8 +108,14 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
     })
   }, [])
 
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => {
+    console.log('[PlatformDetectorProvider] 📦 Creating new context value:', { platform, isInitialized, isLoading })
+    return { platform, isInitialized, isLoading }
+  }, [platform, isInitialized, isLoading])
+
   return (
-    <Context.Provider value={{ platform, isInitialized, isLoading }}>
+    <Context.Provider value={contextValue}>
       {children}
     </Context.Provider>
   )
