@@ -33,12 +33,15 @@ function LayoutLoadingFallback() {
 export function PlatformLayoutSwitch({ children }: PlatformLayoutSwitchProps) {
   const { platform, isLoading } = usePlatformDetector()
 
-  console.log('[PlatformLayoutSwitch] Platform:', platform, 'Loading:', isLoading)
+  console.log('[PlatformLayoutSwitch] 🎨 Rendering with - Platform:', platform, 'isLoading:', isLoading)
 
   // Show loading state during platform detection
   if (isLoading) {
+    console.log('[PlatformLayoutSwitch] ⏳ Showing loading fallback')
     return <LayoutLoadingFallback />
   }
+
+  console.log('[PlatformLayoutSwitch] ✅ Rendering platform layout for:', platform)
 
   // Render appropriate layout based on platform
   return (

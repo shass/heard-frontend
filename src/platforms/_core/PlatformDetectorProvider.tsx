@@ -20,6 +20,9 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
   const miniKit = useMiniKit()
 
   useEffect(() => {
+    // Set loading state at the start of detection
+    setIsLoading(true)
+
     const detectPlatform = () => {
       const timestamp = new Date().toISOString()
       console.log('[PlatformDetector] 🔍 Starting detection...')
@@ -85,6 +88,8 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
     }
 
     const detected = detectPlatform()
+
+    console.log('[PlatformDetector] 🔄 Setting platform to:', detected)
     setPlatform(detected)
     setIsInitialized(true)
     setIsLoading(false)
@@ -93,6 +98,7 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
     if (typeof window !== 'undefined') {
       localStorage.setItem('debug_detected_platform', detected)
       console.log('[PlatformDetector] 🎯 Final platform:', detected)
+      console.log('[PlatformDetector] ✅ isLoading set to false, platform state updated')
       console.log('[PlatformDetector] 💡 To see full detection history, run: JSON.parse(localStorage.getItem("debug_platform_logs"))')
     }
   }, [miniKit.context])
