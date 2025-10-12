@@ -1,16 +1,50 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { useAccount, useConnect, useDisconnect, useBalance, useSendTransaction, useSignMessage } from 'wagmi'
 import { TransactionRequest } from '../../_core/shared/types'
+import { usePlatformDetector } from '../../_core/PlatformDetectorProvider'
+import { Platform } from '../../config'
+
+// Safe wrapper for wagmi hooks - only load on Web platform
+function useWagmiWalletSafe() {
+  const { platform } = usePlatformDetector()
+
+  if (platform !== Platform.WEB) {
+    // Return safe defaults for non-Web platforms
+    return {
+      address: undefined,
+      isConnected: false,
+      chainId: undefined,
+      connect: async () => {},
+      connectors: [],
+      disconnect: async () => {},
+      balance: undefined,
+      sendTransactionAsync: async () => { throw new Error('Wagmi not available') },
+      signMessageAsync: async () => { throw new Error('Wagmi not available') }
+    }
+  }
+
+  // Only import and use wagmi on Web platform
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { useAccount, useConnect, useDisconnect, useBalance, useSendTransaction, useSignMessage } = require('wagmi')
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { address, isConnected, chainId } = useAccount()
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { connect, connectors } = useConnect()
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { disconnect } = useDisconnect()
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { data: balance } = useBalance({ address })
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { sendTransactionAsync } = useSendTransaction()
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { signMessageAsync } = useSignMessage()
+
+  return { address, isConnected, chainId, connect, connectors, disconnect, balance, sendTransactionAsync, signMessageAsync }
+}
 
 export function useWebWallet() {
-  const { address, isConnected, chainId } = useAccount()
-  const { connect, connectors } = useConnect()
-  const { disconnect } = useDisconnect()
-  const { data: balance } = useBalance({ address })
-  const { sendTransactionAsync } = useSendTransaction()
-  const { signMessageAsync } = useSignMessage()
+  const { address, isConnected, chainId, connect, connectors, disconnect, balance, sendTransactionAsync, signMessageAsync } = useWagmiWalletSafe()
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -74,7 +108,7 @@ export function useWebWallet() {
   }, [sendTransactionAsync])
 
   const getConnectors = useCallback(() => {
-    return connectors.map(connector => ({
+    return connectors.map((connector: any) => ({
       id: connector.id,
       name: connector.name,
       icon: connector.icon,

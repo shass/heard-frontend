@@ -1,18 +1,33 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvider'
 
 export function MobileDevTools() {
   const { platform, isInitialized } = usePlatformDetector()
+  const isInitializedRef = useRef(false)
 
   useEffect(() => {
+    // Prevent double initialization
+    if (isInitializedRef.current) return
+
     // Only load in development or when explicitly enabled
     const shouldLoadDevTools =
       process.env.NODE_ENV === 'development' ||
       process.env.NEXT_PUBLIC_ENABLE_MOBILE_DEVTOOLS === 'true'
 
     if (!shouldLoadDevTools) return
+
+    // Check if Eruda is already loaded
+    // @ts-ignore
+    if (window.eruda) {
+      console.log('[MobileDevTools] Eruda already loaded, skipping initialization')
+      isInitializedRef.current = true
+      return
+    }
+
+    // Mark as initialized to prevent double load
+    isInitializedRef.current = true
 
     // Load Eruda from CDN
     const script = document.createElement('script')
@@ -29,12 +44,12 @@ export function MobileDevTools() {
         console.log('%c✅ Eruda DevTools активированы!', 'font-size: 14px; color: #00ff88;')
         console.log('')
 
-        // Show detected platform
-        if (isInitialized) {
+        // Show detected platform (wait a bit for platform detection to complete)
+        setTimeout(() => {
           console.log('%c🎯 Определенная платформа:', 'font-size: 14px; font-weight: bold; color: #ffaa00;')
           console.log(`%c   Platform: ${platform}`, 'font-size: 14px; color: #ffaa00;')
           console.log('')
-        }
+        }, 100)
 
         console.log('%c🔧 Как использовать:', 'font-size: 14px; font-weight: bold;')
         console.log('  1. Найдите плавающую кнопку в правом нижнем углу')
@@ -53,18 +68,7 @@ export function MobileDevTools() {
       }
     }
     document.body.appendChild(script)
-
-    return () => {
-      // Cleanup on unmount - remove the specific script element we created
-      try {
-        if (script.parentNode) {
-          script.parentNode.removeChild(script)
-        }
-      } catch (e) {
-        // Ignore errors during cleanup
-      }
-    }
-  }, [platform, isInitialized])
+  }, []) // Пустой массив зависимостей - выполнится только один раз
 
   return null
 }

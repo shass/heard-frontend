@@ -1,13 +1,37 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useAccount, useSignMessage } from 'wagmi'
 import { WebAuthProvider } from '../providers/WebAuthProvider'
 import { AuthState, User } from '../../_core/shared/interfaces/IAuthProvider'
+import { usePlatformDetector } from '../../_core/PlatformDetectorProvider'
+import { Platform } from '../../config'
+
+// Safe wrapper for wagmi hooks - only load on Web platform
+function useWagmiSafe() {
+  const { platform } = usePlatformDetector()
+
+  if (platform !== Platform.WEB) {
+    // Return safe defaults for non-Web platforms
+    return {
+      address: undefined,
+      isConnected: false,
+      signMessageAsync: async () => { throw new Error('Wagmi not available') }
+    }
+  }
+
+  // Only import and use wagmi on Web platform
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { useAccount, useSignMessage } = require('wagmi')
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { address, isConnected } = useAccount()
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { signMessageAsync } = useSignMessage()
+
+  return { address, isConnected, signMessageAsync }
+}
 
 export function useWebAuth() {
-  const { address, isConnected } = useAccount()
-  const { signMessageAsync } = useSignMessage()
+  const { address, isConnected, signMessageAsync } = useWagmiSafe()
 
   const [user, setUser] = useState<User | null>(null)
   const [authState, setAuthState] = useState<AuthState>(AuthState.UNAUTHENTICATED)
