@@ -1,62 +1,48 @@
-'use client';
+'use client'
 
-import { useEffect, useRef } from 'react';
-import { useMiniKit } from '@coinbase/onchainkit/minikit';
-
-const MAX_RETRY_TIME = 30000; // 30 секунд
-const RETRY_INTERVAL = 3000; // 3 секунды
+import { useEffect, useRef, useState } from 'react'
+import { sdk } from '@farcaster/miniapp-sdk'
 
 export function useMiniKitReady() {
-  const { setFrameReady, isFrameReady } = useMiniKit();
-  const startTimeRef = useRef<number>(Date.now());
-  const intervalRef = useRef<NodeJS.Timeout>(null);
+  const [isReady, setIsReady] = useState(false)
+  const hasCalledReady = useRef(false)
 
   useEffect(() => {
-    // Если уже готово, ничего не делаем
-    if (isFrameReady) {
-      return;
+    // Prevent double initialization
+    if (hasCalledReady.current) return
+
+    // Check if we're in a Mini App context
+    const isMiniApp = typeof window !== 'undefined' && (
+      window.location.hostname.includes('base.org') ||
+      window.location.hostname.includes('farcaster.xyz') ||
+      'miniKit' in window
+    )
+
+    if (!isMiniApp) {
+      console.log('[MiniKitReady] Not in Mini App context, skipping sdk.actions.ready()')
+      return
     }
 
-    const trySetReady = () => {
-      const elapsed = Date.now() - startTimeRef.current;
+    // Mark as called to prevent double calls
+    hasCalledReady.current = true
 
-      // Превышен лимит времени - прекращаем попытки
-      if (elapsed > MAX_RETRY_TIME) {
-        console.log('MiniKit ready timeout - running as regular website');
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-        }
-        return;
+    // Call sdk.actions.ready() as per Base documentation
+    // This hides the loading splash screen and signals the app is ready
+    const initializeSDK = async () => {
+      try {
+        console.log('[MiniKitReady] Calling sdk.actions.ready()')
+        await sdk.actions.ready()
+        console.log('[MiniKitReady] ✅ SDK ready called successfully')
+        setIsReady(true)
+      } catch (error) {
+        console.error('[MiniKitReady] ❌ Error calling sdk.actions.ready():', error)
+        // Even if there's an error, mark as ready to not block the UI
+        setIsReady(true)
       }
+    }
 
-      // Вызываем ready
-      setFrameReady();
-      console.log(`MiniKit frame ready called after ${elapsed}ms`);
+    initializeSDK()
+  }, [])
 
-      // Останавливаем интервал (setFrameReady должен изменить isFrameReady)
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-
-    // Первая попытка через 1 секунду (даём DOM загрузиться)
-    const initialTimer = setTimeout(() => {
-      trySetReady();
-
-      // Если не сработало с первого раза, запускаем retry
-      if (!isFrameReady) {
-        intervalRef.current = setInterval(trySetReady, RETRY_INTERVAL);
-      }
-    }, 1000);
-
-    // Cleanup
-    return () => {
-      clearTimeout(initialTimer);
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [setFrameReady, isFrameReady]);
-
-  return { isFrameReady };
+  return { isReady }
 }
