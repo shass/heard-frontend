@@ -1,10 +1,11 @@
 'use client'
 
-import { usePlatformDetector } from '../PlatformDetectorProvider'
+import { usePlatformDetector } from '@/src/platforms'
 import { Platform } from '../../config'
-import { IAuthStrategy } from '../shared/interfaces/IAuthStrategy'
+import { IAuthStrategy } from '@/src/platforms'
 
 export function useAuth(): IAuthStrategy {
+  console.log('[useAuth] 🔄 Hook called')
   const { platform } = usePlatformDetector()
 
   // Strategy pattern: select implementation BEFORE calling any hooks

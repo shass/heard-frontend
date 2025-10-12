@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
 import { useAuth } from "@/src/platforms/_core/hooks/useAuth"
@@ -14,14 +15,16 @@ import {
 import { formatAddress } from '@/lib/utils'
 
 export function BaseAppAuthSection() {
+  const renderCount = useRef(0)
+  renderCount.current++
+  console.log(`[BaseAppAuthSection] 🔄 Component rendered (render #${renderCount.current})`)
   const auth = useAuth()
-  const { authenticate: login, logout, isAuthenticated, user, isLoading } = auth
   const notifications = useNotifications()
 
   const handleLogin = async () => {
     try {
       console.log('[BaseAppAuthSection] Initiating Base App login via MiniKit')
-      await login()
+      await auth.authenticate()
       notifications.success('Authentication successful', 'You have been authenticated successfully')
     } catch (error: any) {
       console.error('[BaseAppAuthSection] Login error:', error)
@@ -31,7 +34,7 @@ export function BaseAppAuthSection() {
 
   const handleLogout = async () => {
     try {
-      await logout()
+      await auth.logout()
       notifications.success('Logged out', 'You have been successfully logged out')
     } catch (error: any) {
       notifications.error('Logout failed', error.message || 'Please try again')
@@ -50,23 +53,23 @@ export function BaseAppAuthSection() {
   }
 
   // Not authenticated state
-  if (!isAuthenticated) {
+  if (!auth.isAuthenticated) {
     return (
       <div className="flex items-center space-x-2">
         <Button
           onClick={handleLogin}
-          disabled={isLoading}
+          disabled={auth.isLoading}
           className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-medium flex items-center space-x-2"
         >
           <Wallet className="w-4 h-4" />
-          <span>{isLoading ? 'Connecting...' : 'Connect Base'}</span>
+          <span>{auth.isLoading ? 'Connecting...' : 'Connect Base'}</span>
         </Button>
       </div>
     )
   }
 
   // Authenticated state
-  if (isAuthenticated && user) {
+  if (auth.isAuthenticated && auth.user) {
     return (
       <div className="flex items-center space-x-3">
         <DropdownMenu>
@@ -78,7 +81,7 @@ export function BaseAppAuthSection() {
                 </svg>
               </div>
               <span className="text-sm font-medium text-zinc-700">
-                {formatAddress(user.walletAddress)}
+                {auth.user.walletAddress ? formatAddress(auth.user.walletAddress) : 'No address'}
               </span>
               <div className="h-4 w-px bg-zinc-300 mx-2"></div>
               <HeardPointsBalance

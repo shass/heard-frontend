@@ -18,6 +18,7 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    console.log('[PlatformDetectorProvider] 🔄 useEffect called')
     // Set loading state at the start of detection
     setIsLoading(true)
 
