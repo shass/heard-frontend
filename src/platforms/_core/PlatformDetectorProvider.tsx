@@ -21,11 +21,31 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
 
   useEffect(() => {
     const detectPlatform = () => {
+      const timestamp = new Date().toISOString()
       console.log('[PlatformDetector] 🔍 Starting detection...')
 
       // Check for MiniKit context
       const clientFid = (miniKit.context as any)?.client?.fid ||
                         (miniKit.context as any)?.client?.clientFid
+
+      // Save to localStorage for debugging (survives Eruda init)
+      if (typeof window !== 'undefined') {
+        const logs = JSON.parse(localStorage.getItem('debug_platform_logs') || '[]')
+        logs.push({
+          timestamp,
+          clientFid,
+          clientFidType: typeof clientFid,
+          hasContext: !!miniKit.context,
+          contextKeys: miniKit.context ? Object.keys(miniKit.context) : [],
+          hasMiniKitAPI: !!(
+            (window as any)?.webkit?.messageHandlers?.minikit ||
+            (window as any)?.MiniKit
+          )
+        })
+        // Keep last 10 logs
+        if (logs.length > 10) logs.shift()
+        localStorage.setItem('debug_platform_logs', JSON.stringify(logs, null, 2))
+      }
 
       console.log('[PlatformDetector] clientFid:', clientFid, 'type:', typeof clientFid)
       console.log('[PlatformDetector] Full context:', miniKit.context)
@@ -73,6 +93,7 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
     if (typeof window !== 'undefined') {
       localStorage.setItem('debug_detected_platform', detected)
       console.log('[PlatformDetector] 🎯 Final platform:', detected)
+      console.log('[PlatformDetector] 💡 To see full detection history, run: JSON.parse(localStorage.getItem("debug_platform_logs"))')
     }
   }, [miniKit.context])
 

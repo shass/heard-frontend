@@ -47,19 +47,23 @@ function AuthProviderImpl({ children }: AuthProviderProps) {
   // Import auth store directly for fallback
   const { user, isAuthenticated, isLoading, error, setUser, setLoading, logout: storeLogout } = useAuthStore()
 
-  // Get address and connection status from auth adapter (works for all platforms)
-  const address = auth.user?.walletAddress || null
-  const isConnected = auth.isAuthenticated
-  
   const [platformInfo] = useState({
     isMobile: typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
     isIOS: typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent),
     isAndroid: typeof navigator !== 'undefined' && /Android/.test(navigator.userAgent),
     isDesktop: typeof navigator !== 'undefined' && !/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
   })
-  
+
   useAuthCleanup()
-  useAuthEffects({ isConnected, address: address ?? undefined })
+
+  // useAuthEffects is only needed for Web platform - monitors wallet address changes
+  // Base App and Farcaster don't have wallet switching during session
+  const address = auth.user?.walletAddress || null
+  const isConnected = auth.isAuthenticated
+  useAuthEffects({
+    isConnected: platform === Platform.WEB ? isConnected : false,
+    address: platform === Platform.WEB ? address ?? undefined : undefined
+  })
 
   // Fallback login for web platform (admin panel)
   const webLogin = async () => {
