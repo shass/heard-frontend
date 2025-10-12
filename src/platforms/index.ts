@@ -8,14 +8,10 @@ export { PlatformDetectorProvider, usePlatformDetector } from './_core/PlatformD
 
 // Web platform specific exports
 export { WebAuthProvider } from './web/providers/WebAuthProvider'
-export { useBaseAppWallet } from './base-app/hooks/useBaseAppWallet'
-export { useFarcasterWallet } from './farcaster/hooks/useFarcasterWallet'
 
-// Base App platform specific exports
-export { BaseAppAuthProvider } from './base-app/providers/BaseAppAuthProvider'
-
-// Farcaster platform specific exports
-export { FarcasterAuthProvider } from './farcaster/providers/FarcasterAuthProvider'
+// Note: BaseAppAuthProvider, FarcasterAuthProvider, useBaseAppWallet, useFarcasterWallet
+// are deprecated - they use old @coinbase/onchainkit/minikit SDK
+// Use useAuth() and useWallet() instead with new @farcaster/miniapp-sdk
 
 // Integration layer - unified hooks with Strategy pattern
 export { useAuth } from './_core/hooks/useAuth'

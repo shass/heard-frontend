@@ -19,13 +19,18 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
 
   // Get SDK context
   useEffect(() => {
-    sdk.context.then(setSdkContext).catch(console.error)
+    console.log('[useBaseAppAuthStrategy] Fetching SDK context...')
+    sdk.context
+      .then((ctx) => {
+        console.log('[useBaseAppAuthStrategy] SDK context loaded:', ctx)
+        setSdkContext(ctx)
+      })
+      .catch((error) => {
+        console.error('[useBaseAppAuthStrategy] Failed to get SDK context:', error)
+      })
   }, [])
 
-  // Stable reference to user FID for dependency tracking
-  const userFid = sdkContext?.user?.fid
-
-  // Update user when context changes
+  // Update user when context changes (only once when sdkContext loads)
   useEffect(() => {
     if (sdkContext?.user) {
       const contextUser = sdkContext.user
@@ -46,7 +51,9 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
     } else {
       setUser(null)
     }
-  }, [sdkContext, userFid])
+    // Only run when sdkContext changes, not when user.fid changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sdkContext])
 
   const authenticate = useCallback(async (): Promise<AuthResult> => {
     console.log('[useBaseAppAuthStrategy] 🚀 Authenticate called')
