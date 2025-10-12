@@ -8,24 +8,25 @@ export { PlatformDetectorProvider, usePlatformDetector } from './_core/PlatformD
 
 // Web platform specific exports
 export { WebAuthProvider } from './web/providers/WebAuthProvider'
-export { useWebAuth } from './web/hooks/useWebAuth'
-export { useWebWallet } from './web/hooks/useWebWallet'
+export { useBaseAppWallet } from './base-app/hooks/useBaseAppWallet'
+export { useFarcasterWallet } from './farcaster/hooks/useFarcasterWallet'
 
 // Base App platform specific exports
 export { BaseAppAuthProvider } from './base-app/providers/BaseAppAuthProvider'
-export { useBaseAppAuth } from './base-app/hooks/useBaseAppAuth'
-export { useBaseAppWallet } from './base-app/hooks/useBaseAppWallet'
 
 // Farcaster platform specific exports
 export { FarcasterAuthProvider } from './farcaster/providers/FarcasterAuthProvider'
-export { useFarcasterAuth } from './farcaster/hooks/useFarcasterAuth'
-export { useFarcasterWallet } from './farcaster/hooks/useFarcasterWallet'
 
-// Integration layer (only what remains)
-export { useAuthAdapter } from '../components/hooks/use-auth-adapter'
+// Integration layer - unified hooks with Strategy pattern
+export { useAuth } from './_core/hooks/useAuth'
+export { useWallet } from './_core/hooks/useWallet'
 export { useCompatibleAuth } from '../components/hooks/use-compatible-auth'
 export { useCompatibleWallet } from '../components/hooks/use-compatible-wallet'
 export { PlatformSwitch, useMigrationChoice } from '../components/PlatformSwitch'
+
+// Strategy interfaces
+export type { IAuthStrategy } from './_core/shared/interfaces/IAuthStrategy'
+export type { IWalletStrategy } from './_core/shared/interfaces/IWalletStrategy'
 
 // Shared interfaces
 export type { IAuthProvider, AuthResult, Session, User } from './_core/shared/interfaces/IAuthProvider'

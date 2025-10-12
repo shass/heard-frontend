@@ -1,83 +1,76 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { WebAuthProvider } from '../providers/WebAuthProvider'
+import { useMiniKit } from '@coinbase/onchainkit/minikit'
+import { FarcasterAuthProvider } from '../providers/FarcasterAuthProvider'
 import { AuthState, User } from '../../_core/shared/interfaces/IAuthProvider'
-import { usePlatformDetector } from '../../_core/PlatformDetectorProvider'
-import { Platform } from '../../config'
+import { IAuthStrategy, AuthResult } from '../../_core/shared/interfaces/IAuthStrategy'
 
-// Safe wrapper for wagmi hooks - only load on Web platform
-function useWagmiSafe() {
-  const { platform } = usePlatformDetector()
-
-  if (platform !== Platform.WEB) {
-    // Return safe defaults for non-Web platforms
-    return {
-      address: undefined,
-      isConnected: false,
-      signMessageAsync: async () => { throw new Error('Wagmi not available') }
-    }
-  }
-
-  // Only import and use wagmi on Web platform
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const { useAccount, useSignMessage } = require('wagmi')
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const { address, isConnected } = useAccount()
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const { signMessageAsync } = useSignMessage()
-
-  return { address, isConnected, signMessageAsync }
-}
-
-export function useWebAuth() {
-  const { address, isConnected, signMessageAsync } = useWagmiSafe()
+export function useFarcasterAuthStrategy(): IAuthStrategy {
+  const miniKit = useMiniKit()
+  const [miniAppSdk, setMiniAppSdk] = useState<any>(null)
 
   const [user, setUser] = useState<User | null>(null)
   const [authState, setAuthState] = useState<AuthState>(AuthState.UNAUTHENTICATED)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Create auth provider instance directly
+  // Check if we're in Farcaster context
+  const isFarcaster = useMemo(() => {
+    const clientFid = (miniKit.context as any)?.client?.fid ||
+                      (miniKit.context as any)?.client?.clientFid
+    return clientFid === '1' // Farcaster clientFid
+  }, [miniKit.context])
+
+  // Load Farcaster SDK for quickAuth (Farcaster-specific feature)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!isFarcaster) return // Don't load SDK if not on Farcaster
+
+    console.log('[FarcasterAuthStrategy] Loading Farcaster SDK')
+    import('@farcaster/miniapp-sdk').then((module) => {
+      const sdk = module.default || module
+      setMiniAppSdk(sdk)
+      console.log('[FarcasterAuthStrategy] Farcaster SDK loaded')
+    }).catch((err) => {
+      console.error('[useFarcasterAuthStrategy] Failed to load Farcaster SDK:', err)
+    })
+  }, [isFarcaster])
+
+  // Create auth provider with both MiniKit context (OnChainKit) and Farcaster SDK (quickAuth)
   const authProvider = useMemo(() => {
-    if (!address) return null
-    return new WebAuthProvider(
-      { address, isConnected },
-      async (message: string) => signMessageAsync({ message })
-    )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address, isConnected])
-  
+    if (!isFarcaster || !miniAppSdk) return null
+    console.log('[FarcasterAuthStrategy] Creating auth provider')
+    return new FarcasterAuthProvider(miniKit, miniAppSdk)
+  }, [isFarcaster, miniKit, miniAppSdk])
+
   // Set up auth state listener
   useEffect(() => {
     if (!authProvider) return
-    
+
     const unsubscribe = authProvider.onAuthStateChange((state) => {
       setAuthState(state)
       setIsLoading(state === AuthState.LOADING)
     })
-    
+
     return unsubscribe
   }, [authProvider])
-  
-  // Update user when authenticated
+
+  // Update user when authenticated or when context changes
   useEffect(() => {
     if (authState === AuthState.AUTHENTICATED && authProvider) {
       authProvider.getCurrentUser().then(setUser).catch(console.error)
+    } else if (authProvider) {
+      // Try to get user from context even if not authenticated
+      authProvider.getCurrentUser().then(setUser).catch(() => setUser(null))
     } else {
       setUser(null)
     }
   }, [authState, authProvider])
-  
-  const authenticate = useCallback(async () => {
-    if (!authProvider) {
-      const error = 'Web platform not initialized'
-      setError(error)
-      return { success: false, error }
-    }
 
-    if (!isConnected || !address) {
-      const error = 'Wallet not connected'
+  const authenticate = useCallback(async (): Promise<AuthResult> => {
+    if (!authProvider) {
+      const error = 'Farcaster platform not initialized'
       setError(error)
       return { success: false, error }
     }
@@ -98,11 +91,11 @@ export function useWebAuth() {
       setError(errorMessage)
       return { success: false, error: errorMessage }
     }
-  }, [authProvider, isConnected, address])
-  
+  }, [authProvider])
+
   const logout = useCallback(async () => {
     if (!authProvider) return
-    
+
     try {
       setError(null)
       await authProvider.disconnect()
@@ -111,10 +104,10 @@ export function useWebAuth() {
       setError(err instanceof Error ? err.message : 'Logout failed')
     }
   }, [authProvider])
-  
+
   const checkAuthStatus = useCallback(async () => {
     if (!authProvider) return
-    
+
     try {
       const currentUser = await authProvider.getCurrentUser()
       setUser(currentUser)
@@ -124,12 +117,15 @@ export function useWebAuth() {
       setError(err instanceof Error ? err.message : 'Failed to check auth status')
     }
   }, [authProvider])
-  
-  // Check auth status on mount
+
+  // Check auth status on mount and when authProvider changes
   useEffect(() => {
+    if (!authProvider) return
+
     checkAuthStatus()
-  }, [checkAuthStatus])
-  
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authProvider])
+
   return {
     user,
     authState,
@@ -139,10 +135,6 @@ export function useWebAuth() {
     authenticate,
     logout,
     checkAuthStatus,
-    
-    // Web-specific properties
-    walletAddress: address,
-    isWalletConnected: isConnected,
-    canAuthenticate: isConnected && !!address && !!authProvider,
+    canAuthenticate: !!authProvider && !!miniAppSdk,
   }
 }

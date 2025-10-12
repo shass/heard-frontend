@@ -5,7 +5,7 @@ import { useAuthCleanup } from '@/hooks/use-auth-cleanup'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { useAuthEffects } from '@/hooks/use-auth-effects'
 import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvider'
-import { useAuthAdapter } from '@/src/components/hooks/use-auth-adapter'
+import { useAuth } from '@/src/platforms/_core/hooks/useAuth'
 import { useAuthStore } from '@/lib/store'
 import { Platform } from '@/src/platforms/config'
 
@@ -41,7 +41,7 @@ interface AuthProviderProps {
 
 function AuthProviderImpl({ children }: AuthProviderProps) {
   const { platform } = usePlatformDetector()
-  const auth = useAuthAdapter()
+  const auth = useAuth()
   const authSession = useAuthSession()
 
   // Import auth store directly for fallback
