@@ -15,7 +15,7 @@ import {
   type SurveyResultsResponse,
   type QuestionWithAnswers
 } from '@/lib/api/survey-clients'
-import { useCompatibleAuth } from '@/src/platforms'
+import { useAuth } from '@/src/platforms'
 import { toast } from 'sonner'
 
 // Query keys for cache management
@@ -29,8 +29,8 @@ export const surveyClientKeys = {
 
 // Admin hooks for managing survey clients
 export function useSurveyClients(surveyId: string) {
-  const { user } = useCompatibleAuth()
-  const isAdmin = user?.role === 'admin'
+  const auth = useAuth()
+  const isAdmin = auth.user?.metadata?.role === 'admin'
 
   return useQuery({
     queryKey: surveyClientKeys.clients(surveyId),
@@ -99,8 +99,8 @@ export function useRemoveSurveyClient() {
 
 // Visibility management hooks
 export function useSurveyVisibility(surveyId: string) {
-  const { user } = useCompatibleAuth()
-  const isAdmin = user?.role === 'admin'
+  const auth = useAuth()
+  const isAdmin = auth.user?.metadata?.role === 'admin'
 
   return useQuery({
     queryKey: surveyClientKeys.visibility(surveyId),
@@ -198,7 +198,7 @@ export function useSurveyVisibilityInfo(surveyId: string) {
 
 // Utility hooks
 export function useCanViewResults(surveyId: string, token?: string) {
-  const { user } = useCompatibleAuth()
+  const auth = useAuth()
   const visibilityQuery = useSurveyVisibilityInfo(surveyId)
   
   const canView = React.useMemo(() => {
@@ -214,12 +214,12 @@ export function useCanViewResults(surveyId: string, token?: string) {
     
     // Private surveys require authentication and client status
     if (visibilityMode === 'private') {
-      return user?.role === 'admin' || 
-             (user?.walletAddress && surveyId) // Will be checked by backend
+      return auth.user?.metadata?.role === 'admin' ||
+             (auth.user?.walletAddress && surveyId) // Will be checked by backend
     }
-    
+
     return false
-  }, [visibilityQuery.data, token, user, surveyId])
+  }, [visibilityQuery.data, token, auth.user, surveyId])
   
   return {
     canView,

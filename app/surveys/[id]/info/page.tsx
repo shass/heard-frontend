@@ -7,7 +7,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useSurvey, useSurveyEligibility } from "@/hooks/use-surveys"
 import { useUserReward } from "@/hooks/use-reward"
-import { useAuthActions } from "@/components/providers/auth-provider"
+import { useAuth } from "@/src/platforms/_core/hooks/useAuth"
 import { usePlatformDetector } from "@/src/platforms"
 import { useWallet } from "@/src/platforms/_core/hooks/useWallet"
 import { Platform } from "@/src/platforms/config"
@@ -44,17 +44,15 @@ const useWebConnectModal = () => {
 export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
   const openUrl = useOpenUrl()
-  const { login, isAuthenticated, isLoading: isAuthLoading, checkAuth, user, error: authError } = useAuthActions()
+  const auth = useAuth()
+  const { authenticate: login, isAuthenticated, isLoading: isAuthLoading, user, error: authError } = auth
   const wallet = useWallet()
   const isConnected = wallet.isConnected
   const address = wallet.address || null
   const { openConnectModal } = useWebConnectModal()
   const { id } = use(params)
 
-  // Force auth check on component mount to ensure localStorage state is synced with server
-  useEffect(() => {
-    checkAuth().then()
-  }, [])
+  // Note: checkAuth is handled by auth strategies internally
 
   const { data: survey, isLoading, error } = useSurvey(id)
   const { data: eligibility } = useSurveyEligibility(id, address ?? undefined)
@@ -82,30 +80,20 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
     try {
       console.log('[Survey] 🔄 Calling login()...')
-      await login()
+      const result = await login()
 
-      console.log('[Survey] ✅ login() completed, checking auth state')
-
-      // Force auth check to ensure state is synced
-      console.log('[Survey] 🔍 Calling checkAuth()...')
-      const authCheckResult = await checkAuth()
-      console.log('[Survey] checkAuth result:', authCheckResult)
+      console.log('[Survey] ✅ login() completed, result:', result)
 
       // Wait a bit for all state updates to propagate
       await new Promise(resolve => setTimeout(resolve, 500))
 
       console.log('[Survey] 📊 Auth state after login:', {
-        isAuthenticated,
-        authCheckResult,
-        user: !!user,
+        isAuthenticated: auth.isAuthenticated,
+        user: !!auth.user,
         authError
       })
 
-      // Check if authentication was successful before proceeding
-      const finalAuthCheck = await checkAuth()
-      console.log('[Survey] 🔍 Final auth check:', finalAuthCheck)
-
-      if (isAuthenticated || finalAuthCheck) {
+      if (auth.isAuthenticated) {
         console.log('[Survey] ✅ User authenticated successfully')
 
         // Wait for eligibility check to update

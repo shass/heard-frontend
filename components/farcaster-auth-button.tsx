@@ -7,9 +7,9 @@ import { useAuthenticate } from '@/src/platforms/base-app/hooks/useAuthenticate'
 import { useMiniKitContext } from '@/src/platforms/base-app/hooks/useMiniKitContext';
 import { useNotifications } from '@/components/ui/notifications';
 import { env } from '@/lib/env';
-import { 
-  useCompatibleAuth, 
-  useMigrationChoice, 
+import {
+  useAuth,
+  useMigrationChoice,
   PlatformSwitch
 } from '@/src/platforms';
 
@@ -71,13 +71,13 @@ function LegacyFarcasterAuthButton({
 }
 
 // Modern platform-aware implementation
-function ModernFarcasterAuthButton({ 
+function ModernFarcasterAuthButton({
   onSuccess,
-  variant = 'outline', 
+  variant = 'outline',
   size = 'default',
-  className 
+  className
 }: FarcasterAuthButtonProps) {
-  const auth = useCompatibleAuth();
+  const auth = useAuth();
   const notifications = useNotifications();
 
   const handleAuth = async () => {
@@ -86,7 +86,7 @@ function ModernFarcasterAuthButton({
         await auth.logout();
         notifications.success('Signed out successfully');
       } else {
-        await auth.login();
+        await auth.authenticate();
         notifications.success('Authentication successful!');
         onSuccess?.(auth.user);
       }

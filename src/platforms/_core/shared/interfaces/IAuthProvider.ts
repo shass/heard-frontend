@@ -44,7 +44,19 @@ export interface User {
   id: string
   walletAddress?: string
   platform: string
-  metadata?: Record<string, any>
+  metadata?: BackendUser | Record<string, any>
+}
+
+// Backend User type (from /lib/types)
+export interface BackendUser {
+  id: string
+  walletAddress: string
+  role: 'respondent' | 'admin'
+  heardPointsBalance: number
+  isActive: boolean
+  lastLoginAt?: string
+  createdAt: string
+  updatedAt: string
 }
 
 export enum AuthState {

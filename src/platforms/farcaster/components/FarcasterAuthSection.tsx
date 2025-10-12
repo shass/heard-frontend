@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
-import { useAuthActions } from "@/components/providers/auth-provider"
+import { useAuth } from "@/src/platforms/_core/hooks/useAuth"
 import { useNotifications } from "@/components/ui/notifications"
 import { LogOut, ChevronDown, Wallet } from 'lucide-react'
 import {
@@ -14,7 +14,8 @@ import {
 import { formatAddress } from '@/lib/utils'
 
 export function FarcasterAuthSection() {
-  const { login, logout, isAuthenticated, user, isLoading } = useAuthActions()
+  const auth = useAuth()
+  const { authenticate: login, logout, isAuthenticated, user, isLoading } = auth
   const notifications = useNotifications()
 
   const handleLogin = async () => {

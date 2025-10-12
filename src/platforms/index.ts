@@ -20,7 +20,6 @@ export { FarcasterAuthProvider } from './farcaster/providers/FarcasterAuthProvid
 // Integration layer - unified hooks with Strategy pattern
 export { useAuth } from './_core/hooks/useAuth'
 export { useWallet } from './_core/hooks/useWallet'
-export { useCompatibleAuth } from '../components/hooks/use-compatible-auth'
 export { PlatformSwitch, useMigrationChoice } from './_core/components/PlatformSwitch'
 export { AuthSectionSwitch } from './_core/components/AuthSectionSwitch'
 export { PlatformLayoutSwitch } from './_core/components/PlatformLayoutSwitch'

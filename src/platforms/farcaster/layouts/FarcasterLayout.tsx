@@ -1,7 +1,6 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { AuthProvider } from '@/components/providers/auth-provider'
 import { CreateSurveyModalProvider } from '@/components/providers/create-survey-modal-provider'
 import { NavigationProvider } from '@/components/providers/navigation-provider'
 import { NotificationContainer } from '@/components/ui/notifications'
@@ -15,14 +14,12 @@ export default function FarcasterLayout({ children }: FarcasterLayoutProps) {
   console.log('[FarcasterLayout] Rendering Farcaster layout')
 
   return (
-    <AuthProvider>
-      <CreateSurveyModalProvider>
-        <NavigationProvider>
-          <MiniKitReady />
-          {children}
-          <NotificationContainer />
-        </NavigationProvider>
-      </CreateSurveyModalProvider>
-    </AuthProvider>
+    <CreateSurveyModalProvider>
+      <NavigationProvider>
+        <MiniKitReady />
+        {children}
+        <NotificationContainer />
+      </NavigationProvider>
+    </CreateSurveyModalProvider>
   )
 }
