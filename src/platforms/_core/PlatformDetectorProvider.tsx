@@ -29,7 +29,7 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
       const context = await sdk.context
 
       // Check for MiniKit context
-      const clientFid = context?.client?.fid || context?.client?.clientFid
+      const clientFid = (context?.client as any)?.clientFid
 
       // Save to localStorage for debugging (survives Eruda init)
       if (typeof window !== 'undefined') {

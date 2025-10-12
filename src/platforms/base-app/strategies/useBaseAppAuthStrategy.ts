@@ -3,13 +3,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { sdk } from '@farcaster/miniapp-sdk'
 import type { Context } from '@farcaster/miniapp-sdk'
-import { useMiniKitContext } from '../hooks/useMiniKitContext'
 import { AuthState, User } from '@/src/platforms'
 import { IAuthStrategy, AuthResult } from '../../_core/shared/interfaces/IAuthStrategy'
 import { Platform } from '../../config'
 
 export function useBaseAppAuthStrategy(): IAuthStrategy {
-  const miniKitContext = useMiniKitContext()
 
   const [user, setUser] = useState<User | null>(null)
   const [authState, setAuthState] = useState<AuthState>(AuthState.UNAUTHENTICATED)
@@ -17,17 +15,25 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
   const [error, setError] = useState<string | null>(null)
   const [sdkContext, setSdkContext] = useState<Context.MiniAppContext | null>(null)
 
-  // Get SDK context
+  // Get SDK context (only once on mount)
   useEffect(() => {
     console.log('[useBaseAppAuthStrategy] Fetching SDK context...')
+    let mounted = true
+
     sdk.context
       .then((ctx) => {
+        if (!mounted) return
         console.log('[useBaseAppAuthStrategy] SDK context loaded:', ctx)
         setSdkContext(ctx)
       })
       .catch((error) => {
+        if (!mounted) return
         console.error('[useBaseAppAuthStrategy] Failed to get SDK context:', error)
       })
+
+    return () => {
+      mounted = false
+    }
   }, [])
 
   // Update user when context changes (only once when sdkContext loads)
