@@ -143,7 +143,9 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       console.log('[BaseAppAuthStrategy] Wallet address:', walletAddress)
 
       // Step 2: Get nonce from backend for JWT token generation
+      console.log('[BaseAppAuthStrategy] Getting nonce from backend...')
       const { message: backendMessage, jwtToken } = await authApi.getNonce(walletAddress)
+      console.log('[BaseAppAuthStrategy] Got nonce, message:', backendMessage)
 
       // Step 3: Sign the backend message using Base Account
       const provider = sdk.wallet.ethProvider
@@ -151,12 +153,38 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         throw new Error('Ethereum provider not available')
       }
 
-      const backendSignature = await provider.request({
-        method: 'personal_sign',
-        params: [backendMessage as `0x${string}`, walletAddress as `0x${string}`]
-      }) as string
+      console.log('[BaseAppAuthStrategy] Signing message with Base Account...')
+      console.log('[BaseAppAuthStrategy] Message to sign:', backendMessage)
+      console.log('[BaseAppAuthStrategy] Wallet address:', walletAddress)
 
-      console.log('[BaseAppAuthStrategy] Signed backend message')
+      let backendSignature: string
+      try {
+        // Try different parameter formats
+        // Some providers expect [message, address], others [address, message]
+        const sig = await provider.request({
+          method: 'personal_sign',
+          params: [backendMessage as any, walletAddress as any]
+        })
+        backendSignature = sig as string
+        console.log('[BaseAppAuthStrategy] Signature obtained:', backendSignature)
+      } catch (signError) {
+        console.error('[BaseAppAuthStrategy] personal_sign failed:', signError)
+        // Try eth_sign as fallback
+        try {
+          console.log('[BaseAppAuthStrategy] Trying eth_sign instead...')
+          const sig = await provider.request({
+            method: 'eth_sign',
+            params: [walletAddress as any, backendMessage as any]
+          })
+          backendSignature = sig as string
+          console.log('[BaseAppAuthStrategy] eth_sign signature obtained:', backendSignature)
+        } catch (ethSignError) {
+          console.error('[BaseAppAuthStrategy] eth_sign also failed:', ethSignError)
+          throw new Error(`Failed to sign message: ${signError instanceof Error ? signError.message : String(signError)}`)
+        }
+      }
+
+      console.log('[BaseAppAuthStrategy] Successfully signed backend message')
 
       // Step 4: Connect wallet to backend and get JWT cookie
       const { user: userData } = await authApi.connectWallet({
