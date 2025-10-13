@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useSurveyQuestions, useStartSurvey } from "@/hooks/use-surveys"
 import { useSurveyResponseState, useAnswerValidation } from "@/hooks/use-survey-response"
 import { useIsAuthenticated } from "@/lib/store"
@@ -39,15 +39,23 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
   // Start survey mutation with callbacks
   const startSurvey = useStartSurvey({
     onSuccess: (data) => {
+      console.log('[useSurveyPage] Survey started successfully:', data)
       setResponseId(data?.responseId || '')
       setInitStatus('ready')
       notifications?.success('Survey started', 'Your progress will be saved automatically')
     },
     onError: (error: any) => {
+      console.error('[useSurveyPage] Failed to start survey:', error)
+      console.error('[useSurveyPage] Error details:', {
+        message: error?.message,
+        error: error?.error,
+        status: error?.status,
+        fullError: error
+      })
       setInitStatus('idle')
       // Only show error if it's not because survey is already completed
       if (!error?.message?.includes('already completed')) {
-        notifications?.error('Failed to start survey', error?.message || 'Unknown error')
+        notifications?.error('Failed to start survey', error?.message || error?.error?.message || 'Unknown error')
       }
     }
   })
@@ -64,7 +72,7 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
 
   const currentQuestion = Array.isArray(questions) ? questions[currentQuestionIndex] : undefined
   const questionsArray = Array.isArray(questions) ? questions : []
-  
+
   // Calculate progress based on submitted answers (questions that have been processed via Next/Submit)
   // Progress should only update after successful submission, not on answer selection
   const submittedQuestionsCount = currentQuestionIndex
@@ -90,11 +98,11 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
 
     const initializeSurvey = async () => {
       setInitStatus('checking')
-      
+
       try {
         // Check if user has any progress on this survey
         const progressData = await surveyApi.getUserSurveyProgress(survey.id)
-        
+
         if (progressData.hasCompletedResponse) {
           // Survey already completed - redirect to rewards
           setInitStatus('completed')
@@ -102,12 +110,12 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
           onSubmit()
           return
         }
-        
+
         if (progressData.hasIncompleteResponse && progressData.progress) {
           // Resume incomplete survey
           setResponseId(progressData.progress.responseId)
           setCurrentQuestionIndex(progressData.progress.currentQuestionOrder - 1)
-          
+
           // Restore previous answers
           if (progressData.progress.responses) {
             const previousAnswers: Record<string, string[]> = {}
@@ -116,7 +124,7 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
             })
             setAnswers(previousAnswers)
           }
-          
+
           setInitStatus('ready')
           notifications?.success('Resuming survey', 'Continuing from where you left off')
         } else {
@@ -247,7 +255,7 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
     isSubmittingFinalSurvey,
     isRedirecting,
     isAuthenticated,
-    
+
     // Data
     questionsData,
     questionsLoading,
@@ -256,17 +264,17 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
     questionsArray,
     currentQuestion,
     progress,
-    
+
     // Computed values
     canProceed,
     isLastQuestion,
     shouldShowOverlay,
     overlayMessage,
-    
+
     // Mutations
     startSurvey,
     responseState,
-    
+
     // Handlers
     handleAnswerChange,
     handleNext,

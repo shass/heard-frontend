@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
-import { WebAuthProvider } from '../providers/WebAuthProvider'
-import { AuthState, User } from '../../_core/shared/interfaces/IAuthProvider'
+import { WebAuthProvider, AuthState, User } from '@/src/platforms'
 import { IAuthStrategy, AuthResult } from '../../_core/shared/interfaces/IAuthStrategy'
+import { useAuthStore } from '@/lib/store'
 
 export function useWebAuthStrategy(): IAuthStrategy {
   const { address, isConnected } = useAccount()
@@ -31,7 +31,10 @@ export function useWebAuthStrategy(): IAuthStrategy {
 
     const unsubscribe = authProvider.onAuthStateChange((state) => {
       setAuthState(state)
-      setIsLoading(state === AuthState.LOADING)
+      const loading = state === AuthState.LOADING
+      setIsLoading(loading)
+      // Sync loading state with Zustand store
+      useAuthStore.getState().setLoading(loading)
     })
 
     return unsubscribe
@@ -40,9 +43,15 @@ export function useWebAuthStrategy(): IAuthStrategy {
   // Update user when authenticated
   useEffect(() => {
     if (authState === AuthState.AUTHENTICATED && authProvider) {
-      authProvider.getCurrentUser().then(setUser).catch(console.error)
+      authProvider.getCurrentUser().then((user) => {
+        setUser(user)
+        // Sync with Zustand store
+        useAuthStore.getState().setUser(user as any)
+      }).catch(console.error)
     } else {
       setUser(null)
+      // Sync with Zustand store
+      useAuthStore.getState().setUser(null)
     }
   }, [authState, authProvider])
 
@@ -65,6 +74,8 @@ export function useWebAuthStrategy(): IAuthStrategy {
 
       if (result.success) {
         setUser(result.user || null)
+        // Sync with Zustand store
+        useAuthStore.getState().setUser(result.user as any || null)
         return { success: true, user: result.user }
       } else {
         setError(result.error || 'Authentication failed')
@@ -84,6 +95,8 @@ export function useWebAuthStrategy(): IAuthStrategy {
       setError(null)
       await authProvider.disconnect()
       setUser(null)
+      // Sync with Zustand store
+      useAuthStore.getState().logout()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Logout failed')
     }
@@ -96,6 +109,8 @@ export function useWebAuthStrategy(): IAuthStrategy {
       const currentUser = await authProvider.getCurrentUser()
       setUser(currentUser)
       setAuthState(currentUser ? AuthState.AUTHENTICATED : AuthState.UNAUTHENTICATED)
+      // Sync with Zustand store
+      useAuthStore.getState().setUser(currentUser as any)
     } catch (err) {
       setAuthState(AuthState.ERROR)
       setError(err instanceof Error ? err.message : 'Failed to check auth status')
