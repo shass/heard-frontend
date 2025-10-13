@@ -6,10 +6,32 @@ import type { ApiResponse, ApiError } from '@/lib/types'
 class ApiClient {
   private baseURL: string
   private timeout: number
+  private authToken: string | null = null
 
   constructor() {
     this.baseURL = env.API_URL
     this.timeout = env.API_TIMEOUT
+  }
+
+  // Set auth token for Authorization header (used by Base App)
+  setAuthToken(token: string | null) {
+    this.authToken = token
+    if (token && typeof window !== 'undefined') {
+      localStorage.setItem('auth_token', token)
+    } else if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_token')
+    }
+  }
+
+  // Get auth token from memory or localStorage
+  getAuthToken(): string | null {
+    if (this.authToken) {
+      return this.authToken
+    }
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('auth_token')
+    }
+    return null
   }
 
   private async fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
@@ -28,6 +50,12 @@ class ApiClient {
 
       if (shouldSetContentType && !(options.body instanceof FormData)) {
         headers['Content-Type'] = 'application/json'
+      }
+
+      // Add Authorization header if token exists (for Base App)
+      const token = this.getAuthToken()
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
       }
 
       const response = await fetch(url, {

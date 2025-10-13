@@ -146,6 +146,37 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
 
         console.log('[BaseAppAuthStrategy] Backend authentication successful:', userData)
 
+        // Extract JWT token from cookie and store it for Authorization header
+        // Since cookies don't work reliably in Base App iframe, we need to manually extract
+        // the token and use Authorization header for subsequent requests
+        if (typeof document !== 'undefined') {
+          const cookies = document.cookie.split(';')
+          let authToken = null
+          for (const cookie of cookies) {
+            const [name, value] = cookie.trim().split('=')
+            if (name === 'auth_token') {
+              authToken = value
+              break
+            }
+          }
+
+          if (authToken) {
+            console.log('[BaseAppAuthStrategy] Extracted token from cookie, storing for Authorization header')
+            const { apiClient } = await import('@/lib/api/client')
+            apiClient.setAuthToken(authToken)
+
+            // Verify token works
+            try {
+              const testAuth = await authApi.checkAuth()
+              console.log('[BaseAppAuthStrategy] Token verification SUCCESS:', testAuth)
+            } catch (err) {
+              console.error('[BaseAppAuthStrategy] Token verification failed:', err)
+            }
+          } else {
+            console.warn('[BaseAppAuthStrategy] Could not extract auth_token from cookies')
+          }
+        }
+
         const authenticatedUser: User = {
           id: userData.id,
           walletAddress: userData.walletAddress,
@@ -192,6 +223,13 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       setError(null)
       setUser(null)
       setAuthState(AuthState.UNAUTHENTICATED)
+
+      // Clear stored token
+      if (typeof window !== 'undefined') {
+        const { apiClient } = await import('@/lib/api/client')
+        apiClient.setAuthToken(null)
+      }
+
       useAuthStore.getState().logout()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Logout failed')
