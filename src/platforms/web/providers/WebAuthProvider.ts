@@ -27,14 +27,16 @@ export class WebAuthProvider implements IAuthProvider {
 
     try {
       this.setState(AuthState.LOADING)
-      
-      console.log('[WebAuth] Starting authentication on Web platform')
-      
+
+      console.log('[WebAuth] Starting authentication on Web platform for address:', this.wagmiAccount.address)
+
       // Step 1: Get nonce from backend
       const { message, jwtToken } = await authApi.getNonce(this.wagmiAccount.address)
+      console.log('[WebAuth] Got nonce and jwtToken')
 
       // Step 2: Sign message with wagmi
       const signature = await this.signMessage(message)
+      console.log('[WebAuth] Message signed')
 
       // Step 3: Verify signature with backend using JWT token
       const { user: userData } = await authApi.connectWallet({
@@ -43,6 +45,7 @@ export class WebAuthProvider implements IAuthProvider {
         message,
         jwtToken,
       })
+      console.log('[WebAuth] Backend verified signature, user:', userData)
 
       const user: User = {
         id: userData.id,
@@ -52,9 +55,17 @@ export class WebAuthProvider implements IAuthProvider {
       }
 
       this.setState(AuthState.AUTHENTICATED)
-      
-      console.log('[WebAuth] Success on Web platform')
-      
+
+      console.log('[WebAuth] Success on Web platform, checking if user is saved...')
+
+      // Verify that JWT cookie was set by trying to get current user
+      try {
+        const verifyUser = await authApi.checkAuth()
+        console.log('[WebAuth] JWT cookie verification - user from /auth/me:', verifyUser)
+      } catch (err) {
+        console.error('[WebAuth] JWT cookie verification failed:', err)
+      }
+
       return {
         success: true,
         user

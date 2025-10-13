@@ -73,16 +73,20 @@ export function useWebAuthStrategy(): IAuthStrategy {
       const result = await authProvider.connect()
 
       if (result.success) {
+        console.log('[WebAuthStrategy] Authentication successful, user:', result.user)
         setUser(result.user || null)
         // Sync with Zustand store
         useAuthStore.getState().setUser(result.user as any || null)
+        console.log('[WebAuthStrategy] User set in store:', useAuthStore.getState().user)
         return { success: true, user: result.user }
       } else {
+        console.error('[WebAuthStrategy] Authentication failed:', result.error)
         setError(result.error || 'Authentication failed')
         return { success: false, error: result.error }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
+      console.error('[WebAuthStrategy] Authentication error:', err)
       setError(errorMessage)
       return { success: false, error: errorMessage }
     }

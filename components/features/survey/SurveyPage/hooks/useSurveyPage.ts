@@ -141,7 +141,8 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
     }
 
     initializeSurvey()
-  }, [isAuthenticated, initStatus, survey.id, notifications, onSubmit, startSurvey])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, initStatus, survey.id])
 
   const handleAnswerChange = (questionId: string, answer: string, isMultiple: boolean = false) => {
     setAnswers((prev) => {

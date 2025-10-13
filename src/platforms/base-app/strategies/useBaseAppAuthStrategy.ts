@@ -118,11 +118,13 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
           }
         }
 
+        console.log('[BaseAppAuthStrategy] Authentication successful, user:', authenticatedUser)
         setUser(authenticatedUser)
         setAuthState(AuthState.AUTHENTICATED)
         setIsLoading(false)
         useAuthStore.getState().setUser(authenticatedUser as any)
         useAuthStore.getState().setLoading(false)
+        console.log('[BaseAppAuthStrategy] User set in store:', useAuthStore.getState().user)
 
         return { success: true, user: authenticatedUser }
       } else {

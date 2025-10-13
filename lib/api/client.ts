@@ -22,10 +22,10 @@ class ApiClient {
         options.method !== 'DELETE' && 
         (options.body !== undefined || options.method === 'POST')
       
-      const headers: HeadersInit = {
-        ...options.headers,
+      const headers: Record<string, string> = {
+        ...(options.headers as Record<string, string>),
       }
-      
+
       if (shouldSetContentType && !(options.body instanceof FormData)) {
         headers['Content-Type'] = 'application/json'
       }
@@ -53,6 +53,7 @@ class ApiClient {
 
   private async handleResponse<T>(response: Response): Promise<T> {
     if (response.status === 401) {
+      console.error('[ApiClient] 401 Unauthorized:', response.url)
       // Handle unauthorized - HttpOnly cookie will be cleared by server
       // No action needed on client side
     }
@@ -61,6 +62,11 @@ class ApiClient {
       let errorData: ApiError
       try {
         errorData = await response.json()
+        console.error('[ApiClient] Request failed:', {
+          url: response.url,
+          status: response.status,
+          error: errorData
+        })
       } catch {
         errorData = this.formatError(new Error(`HTTP ${response.status}: ${response.statusText}`))
       }
