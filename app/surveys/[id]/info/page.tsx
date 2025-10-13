@@ -44,11 +44,16 @@ const useWebConnectModal = () => {
 export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
   const openUrl = useOpenUrl()
+  const { platform } = usePlatformDetector()
   const auth = useAuth()
   const { authenticate: login, isAuthenticated, isLoading: isAuthLoading, user, error: authError } = auth
   const wallet = useWallet()
-  const isConnected = wallet.isConnected
-  const address = wallet.address || null
+
+  // In Base App, user is always "connected" if they have a user object
+  // In Web, check wallet connection
+  const isConnected = platform === Platform.BASE_APP ? !!user : wallet.isConnected
+  const address = user?.walletAddress || wallet.address || null
+
   const { openConnectModal } = useWebConnectModal()
   const { id } = use(params)
 
