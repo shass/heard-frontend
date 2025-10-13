@@ -33,10 +33,19 @@ interface HeaderClientProps {
 }
 
 export function HeaderClient({ onCreateSurvey }: HeaderClientProps) {
+  const renderCount = React.useRef(0)
+  renderCount.current++
+
   const user = useUser()
   const isAuthenticated = useIsAuthenticated()
   const isAuthLoading = useAuthLoading()
   const { openModal } = useCreateSurveyModal()
+
+  console.log(`[HeaderClient] 🔄 Rendering (render #${renderCount.current})`, {
+    hasUser: !!user,
+    isAuthenticated,
+    isAuthLoading
+  })
 
   const isAuthenticatedAdmin = !isAuthLoading && isAuthenticated && user?.role === 'admin'
 

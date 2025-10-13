@@ -6,6 +6,7 @@ import type { Context } from '@farcaster/miniapp-sdk'
 import { AuthState, User } from '@/src/platforms'
 import { IAuthStrategy, AuthResult } from '../../_core/shared/interfaces/IAuthStrategy'
 import { Platform } from '../../config'
+import { useAuthStore } from '@/lib/store'
 
 export function useBaseAppAuthStrategy(): IAuthStrategy {
   console.log('[useBaseAppAuthStrategy] 🔄 Hook called/re-rendered')
@@ -44,7 +45,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
     if (sdkContext?.user) {
       const contextUser = sdkContext.user
       console.log('[useBaseAppAuthStrategy] Setting user from context')
-      setUser({
+      const newUser: User = {
         id: contextUser.fid?.toString() || 'unknown',
         walletAddress: (contextUser as any).custody?.address,
         platform: Platform.BASE_APP,
@@ -57,10 +58,16 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
           verifications: (contextUser as any).verifications,
           isFromContext: true
         }
-      })
+      }
+      setUser(newUser)
+
+      // Sync with Zustand store (without subscribing to avoid re-renders)
+      console.log('[useBaseAppAuthStrategy] Syncing user to Zustand store')
+      useAuthStore.getState().setUser(newUser as any)
     } else {
       console.log('[useBaseAppAuthStrategy] Setting user to null')
       setUser(null)
+      useAuthStore.getState().setUser(null)
     }
     // Only run when sdkContext changes, not when user.fid changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -80,6 +87,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       setError(null)
       setIsLoading(true)
       setAuthState(AuthState.LOADING)
+      useAuthStore.getState().setLoading(true)
 
       const result = await sdk.actions.signIn({
         nonce: crypto.randomUUID()
@@ -107,6 +115,8 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         setUser(authenticatedUser)
         setAuthState(AuthState.AUTHENTICATED)
         setIsLoading(false)
+        useAuthStore.getState().setUser(authenticatedUser as any)
+        useAuthStore.getState().setLoading(false)
 
         return { success: true, user: authenticatedUser }
       } else {
@@ -114,6 +124,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         setError('Authentication failed')
         setAuthState(AuthState.ERROR)
         setIsLoading(false)
+        useAuthStore.getState().setLoading(false)
         return { success: false, error: 'Authentication failed' }
       }
     } catch (err: any) {
@@ -123,6 +134,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       setError(errorMessage)
       setAuthState(AuthState.ERROR)
       setIsLoading(false)
+      useAuthStore.getState().setLoading(false)
       return { success: false, error: errorMessage }
     }
   }, [sdkContext])
@@ -132,6 +144,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       setError(null)
       setUser(null)
       setAuthState(AuthState.UNAUTHENTICATED)
+      useAuthStore.getState().logout()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Logout failed')
     }
