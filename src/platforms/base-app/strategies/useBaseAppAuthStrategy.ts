@@ -22,6 +22,9 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
     console.log('[useBaseAppAuthStrategy] useEffect[1] for SDK context triggered')
     let mounted = true
 
+    // Set loading to false initially since we're checking context
+    useAuthStore.getState().setLoading(false)
+
     sdk.context
       .then((ctx) => {
         if (!mounted) return
@@ -31,6 +34,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       .catch((error) => {
         if (!mounted) return
         console.error('[useBaseAppAuthStrategy] Failed to get SDK context:', error)
+        useAuthStore.getState().setLoading(false)
       })
 
     return () => {

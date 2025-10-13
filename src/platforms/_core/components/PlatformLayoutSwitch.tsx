@@ -3,9 +3,10 @@
 import { ReactNode, lazy, Suspense, useRef } from 'react'
 import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvider'
 import { Platform } from '@/src/platforms/config'
+import BaseAppLayout from '@/src/platforms/base-app/layouts/BaseAppLayout'
 
 // Dynamic imports for code splitting
-const BaseAppLayout = lazy(() => import('@/src/platforms/base-app/layouts/BaseAppLayout'))
+// const BaseAppLayout = lazy(() => import('@/src/platforms/base-app/layouts/BaseAppLayout'))
 const FarcasterLayout = lazy(() => import('@/src/platforms/farcaster/layouts/FarcasterLayout'))
 const WebLayout = lazy(() => import('@/src/platforms/web/layouts/WebLayout'))
 
@@ -46,11 +47,14 @@ export function PlatformLayoutSwitch({ children }: PlatformLayoutSwitchProps) {
   console.log('[PlatformLayoutSwitch] ✅ Rendering platform layout for:', platform)
 
   // Render appropriate layout based on platform
+  // Base App: direct import (no lazy loading to avoid remounting issues)
+  if (platform === Platform.BASE_APP) {
+    return <BaseAppLayout>{children}</BaseAppLayout>
+  }
+
+  // Other platforms: lazy loaded with Suspense
   return (
     <Suspense fallback={<LayoutLoadingFallback />}>
-      {platform === Platform.BASE_APP && (
-        <BaseAppLayout>{children}</BaseAppLayout>
-      )}
       {platform === Platform.FARCASTER && (
         <FarcasterLayout>{children}</FarcasterLayout>
       )}
