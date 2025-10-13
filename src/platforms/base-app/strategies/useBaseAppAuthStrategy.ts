@@ -119,7 +119,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         // Extract wallet address from signIn message
         const signInMessage = (result as any).message as string
         const addressMatch = signInMessage.match(/0x[a-fA-F0-9]{40}/)
-        const walletAddress = addressMatch ? addressMatch[0] : null
+        const walletAddress = addressMatch ? addressMatch[0].toLowerCase() : null
 
         if (!walletAddress) {
           throw new Error('Could not extract wallet address from signIn message')
@@ -127,16 +127,21 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
 
         console.log('[BaseAppAuthStrategy] Wallet address from signIn:', walletAddress)
 
+        // Get jwtToken from backend (required for verification flow)
+        console.log('[BaseAppAuthStrategy] Getting jwtToken from backend...')
+        const { jwtToken } = await authApi.getNonce(walletAddress)
+        console.log('[BaseAppAuthStrategy] Got jwtToken')
+
         const signInSignature = (result as any).signature as string
         console.log('[BaseAppAuthStrategy] Using signIn signature')
 
-        // Send signIn result directly to backend
-        // Backend needs to verify SIWE signature format
+        // Send signIn result to backend
+        // Backend will verify SIWE signature format
         const { user: userData } = await authApi.connectWallet({
           walletAddress,
           signature: signInSignature,
           message: signInMessage,
-          jwtToken: '', // signIn doesn't use our jwtToken flow
+          jwtToken, // Required by backend
           platform: 'base',
           metadata: {
             fid: (result as any).fid || sdkContext.user?.fid,
