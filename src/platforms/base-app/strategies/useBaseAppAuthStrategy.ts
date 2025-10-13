@@ -9,8 +9,6 @@ import { Platform } from '../../config'
 import { useAuthStore } from '@/lib/store'
 
 export function useBaseAppAuthStrategy(): IAuthStrategy {
-  console.log('[useBaseAppAuthStrategy] 🔄 Hook called/re-rendered')
-
   const [user, setUser] = useState<User | null>(null)
   const [authState, setAuthState] = useState<AuthState>(AuthState.UNAUTHENTICATED)
   const [isLoading, setIsLoading] = useState(false)
@@ -43,12 +41,9 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
     }
   }, [])
 
-  // Update user when context changes (only once when sdkContext loads)
   useEffect(() => {
-    console.log('[useBaseAppAuthStrategy] useEffect[2] for user update triggered, sdkContext:', !!sdkContext)
     if (sdkContext?.user) {
       const contextUser = sdkContext.user
-      console.log('[useBaseAppAuthStrategy] Setting user from context')
       const newUser: User = {
         id: contextUser.fid?.toString() || 'unknown',
         walletAddress: (contextUser as any).custody?.address,
@@ -64,44 +59,28 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         }
       }
       setUser(newUser)
-
-      // Sync with Zustand store (without subscribing to avoid re-renders)
-      console.log('[useBaseAppAuthStrategy] Syncing user to Zustand store')
       useAuthStore.getState().setUser(newUser as any)
     } else {
-      console.log('[useBaseAppAuthStrategy] Setting user to null')
       setUser(null)
       useAuthStore.getState().setUser(null)
     }
-    // Only run when sdkContext changes, not when user.fid changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sdkContext])
 
   const authenticate = useCallback(async (): Promise<AuthResult> => {
-    console.log('[useBaseAppAuthStrategy] 🚀 Authenticate called')
-
     if (!sdkContext) {
-      console.error('[useBaseAppAuthStrategy] ❌ SDK context not available')
       setError('Base App platform not initialized')
       return { success: false, error: 'Base App platform not initialized' }
     }
 
     try {
-      console.log('[useBaseAppAuthStrategy] 🔄 Calling sdk.actions.signIn()')
       setError(null)
       setIsLoading(true)
       setAuthState(AuthState.LOADING)
       useAuthStore.getState().setLoading(true)
 
-      const result = await sdk.actions.signIn({
-        nonce: crypto.randomUUID()
-      })
-
-      console.log('[useBaseAppAuthStrategy] 📥 SignIn result:', result)
+      const result = await sdk.actions.signIn({ nonce: crypto.randomUUID() })
 
       if (result) {
-        console.log('[useBaseAppAuthStrategy] ✅ Authentication successful')
-
         const authenticatedUser: User = {
           id: (result as any).fid?.toString() || sdkContext.user?.fid?.toString() || 'unknown',
           walletAddress: (result as any).address || (sdkContext.user as any)?.custody?.address,
@@ -124,7 +103,6 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
 
         return { success: true, user: authenticatedUser }
       } else {
-        console.error('[useBaseAppAuthStrategy] ❌ No result from signIn')
         setError('Authentication failed')
         setAuthState(AuthState.ERROR)
         setIsLoading(false)
@@ -132,8 +110,6 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         return { success: false, error: 'Authentication failed' }
       }
     } catch (err: any) {
-      console.error('[useBaseAppAuthStrategy] ❌ Exception during authentication:', err)
-
       const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
       setError(errorMessage)
       setAuthState(AuthState.ERROR)
@@ -154,48 +130,22 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
     }
   }, [])
 
-  // Check auth status when sdkContext changes (only once when loaded)
   useEffect(() => {
-    console.log('[useBaseAppAuthStrategy] useEffect[3] for auth status check triggered, sdkContext:', !!sdkContext)
-
-    if (!sdkContext) {
-      console.log('[useBaseAppAuthStrategy] No sdkContext yet, skipping auth check')
-      return
-    }
-
-    try {
-      if (sdkContext.user) {
-        console.log('[useBaseAppAuthStrategy] Setting authState to AUTHENTICATED')
-        setAuthState(AuthState.AUTHENTICATED)
-      } else {
-        console.log('[useBaseAppAuthStrategy] Setting authState to UNAUTHENTICATED')
-        setAuthState(AuthState.UNAUTHENTICATED)
-      }
-    } catch (err) {
-      console.error('[useBaseAppAuthStrategy] Error in auth status check:', err)
-      setAuthState(AuthState.ERROR)
-      setError(err instanceof Error ? err.message : 'Failed to check auth status')
-    }
+    if (!sdkContext) return
+    setAuthState(sdkContext.user ? AuthState.AUTHENTICATED : AuthState.UNAUTHENTICATED)
   }, [sdkContext])
 
   const checkAuthStatus = useCallback(async () => {
-    console.log('[useBaseAppAuthStrategy] checkAuthStatus called manually')
-    // This is only for manual checks, not automatic ones
-    // Re-fetch context to get latest state
     try {
       const ctx = await sdk.context
-      if (ctx.user) {
-        setAuthState(AuthState.AUTHENTICATED)
-      } else {
-        setAuthState(AuthState.UNAUTHENTICATED)
-      }
+      setAuthState(ctx.user ? AuthState.AUTHENTICATED : AuthState.UNAUTHENTICATED)
     } catch (err) {
       setAuthState(AuthState.ERROR)
       setError(err instanceof Error ? err.message : 'Failed to check auth status')
     }
   }, [])
 
-  const result = {
+  return {
     user,
     authState,
     isAuthenticated: authState === AuthState.AUTHENTICATED,
@@ -206,13 +156,4 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
     checkAuthStatus,
     canAuthenticate: !!sdkContext,
   }
-
-  console.log('[useBaseAppAuthStrategy] 📦 Returning strategy object:', {
-    hasUser: !!user,
-    authState,
-    isAuthenticated: result.isAuthenticated,
-    isLoading: result.isLoading
-  })
-
-  return result
 }

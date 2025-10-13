@@ -33,18 +33,8 @@ function LayoutLoadingFallback() {
 
 export function PlatformLayoutSwitch({ children }: PlatformLayoutSwitchProps) {
   const { platform, isLoading } = usePlatformDetector()
-  const renderCount = useRef(0)
-  renderCount.current++
 
-  console.log(`[PlatformLayoutSwitch] 🎨 Rendering (render #${renderCount.current}) - Platform:`, platform, 'isLoading:', isLoading)
-
-  // Show loading state during platform detection
-  if (isLoading) {
-    console.log('[PlatformLayoutSwitch] ⏳ Showing loading fallback')
-    return <LayoutLoadingFallback />
-  }
-
-  console.log('[PlatformLayoutSwitch] ✅ Rendering platform layout for:', platform)
+  if (isLoading) return <LayoutLoadingFallback />
 
   // Render appropriate layout based on platform
   // Base App: direct import (no lazy loading to avoid remounting issues)

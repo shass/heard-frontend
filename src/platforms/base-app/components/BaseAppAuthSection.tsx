@@ -1,6 +1,5 @@
 'use client'
 
-import { useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
 import { useAuth } from "@/src/platforms/_core/hooks/useAuth"
@@ -15,9 +14,6 @@ import {
 import { formatAddress } from '@/lib/utils'
 
 export function BaseAppAuthSection() {
-  const renderCount = useRef(0)
-  renderCount.current++
-  console.log(`[BaseAppAuthSection] 🔄 Component rendered (render #${renderCount.current})`)
   const auth = useAuth()
   const notifications = useNotifications()
 
