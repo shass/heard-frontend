@@ -112,151 +112,99 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         result = null
       }
 
-      // Get wallet address from signIn result OR directly from Base Account
-      let walletAddress: string | undefined
+      // If signIn succeeded, we already have signature and message!
+      if (result && (result as any).signature && (result as any).message) {
+        console.log('[BaseAppAuthStrategy] Using signature from signIn result')
 
-      if (result) {
-        const custody = (result as any).custody || (sdkContext.user as any)?.custody
-        const verifications = (result as any).verifications || (sdkContext.user as any)?.verifications || []
-        walletAddress = (result as any).address ||
-                       custody?.address ||
-                       verifications[0]?.address ||
-                       verifications.find((v: any) => v.protocol === 'ethereum')?.address
-      }
+        // Extract wallet address from signIn message
+        const signInMessage = (result as any).message as string
+        const addressMatch = signInMessage.match(/0x[a-fA-F0-9]{40}/)
+        const walletAddress = addressMatch ? addressMatch[0] : null
 
-      // If signIn failed or didn't provide wallet, get it from Base Account directly
-      if (!walletAddress) {
-        console.log('[BaseAppAuthStrategy] Getting wallet from Base Account...')
-        const provider = sdk.wallet.ethProvider
-        if (!provider) {
-          throw new Error('Ethereum provider not available')
+        if (!walletAddress) {
+          throw new Error('Could not extract wallet address from signIn message')
         }
 
-        const accounts = await provider.request({ method: 'eth_accounts' }) as string[]
-        walletAddress = accounts[0]
-      }
+        console.log('[BaseAppAuthStrategy] Wallet address from signIn:', walletAddress)
 
-      if (!walletAddress) {
-        throw new Error('No wallet address found')
-      }
+        const signInSignature = (result as any).signature as string
+        console.log('[BaseAppAuthStrategy] Using signIn signature')
 
-      console.log('[BaseAppAuthStrategy] Wallet address:', walletAddress)
-
-      // Step 2: Get nonce from backend for JWT token generation
-      console.log('[BaseAppAuthStrategy] Getting nonce from backend...')
-      const { message: backendMessage, jwtToken } = await authApi.getNonce(walletAddress)
-      console.log('[BaseAppAuthStrategy] Got nonce, message:', backendMessage)
-
-      // Step 3: Sign the backend message using Base Account
-      const provider = sdk.wallet.ethProvider
-      if (!provider) {
-        throw new Error('Ethereum provider not available')
-      }
-
-      console.log('[BaseAppAuthStrategy] Signing message with Base Account...')
-      console.log('[BaseAppAuthStrategy] Message to sign:', backendMessage)
-      console.log('[BaseAppAuthStrategy] Wallet address:', walletAddress)
-
-      let backendSignature: string
-      try {
-        // Try different parameter formats
-        // Some providers expect [message, address], others [address, message]
-        const sig = await provider.request({
-          method: 'personal_sign',
-          params: [backendMessage as any, walletAddress as any]
+        // Send signIn result directly to backend
+        // Backend needs to verify SIWE signature format
+        const { user: userData } = await authApi.connectWallet({
+          walletAddress,
+          signature: signInSignature,
+          message: signInMessage,
+          jwtToken: '', // signIn doesn't use our jwtToken flow
+          platform: 'base',
+          metadata: {
+            fid: (result as any).fid || sdkContext.user?.fid,
+            username: (result as any).username || sdkContext.user?.username,
+            displayName: (result as any).displayName || sdkContext.user?.displayName,
+            pfpUrl: (result as any).pfpUrl || sdkContext.user?.pfpUrl,
+            authMethod: (result as any).authMethod,
+          }
         })
-        backendSignature = sig as string
-        console.log('[BaseAppAuthStrategy] Signature obtained:', backendSignature)
-      } catch (signError) {
-        console.error('[BaseAppAuthStrategy] personal_sign failed:', signError)
-        // Try eth_sign as fallback
-        try {
-          console.log('[BaseAppAuthStrategy] Trying eth_sign instead...')
-          const sig = await provider.request({
-            method: 'eth_sign',
-            params: [walletAddress as any, backendMessage as any]
-          })
-          backendSignature = sig as string
-          console.log('[BaseAppAuthStrategy] eth_sign signature obtained:', backendSignature)
-        } catch (ethSignError) {
-          console.error('[BaseAppAuthStrategy] eth_sign also failed:', ethSignError)
-          throw new Error(`Failed to sign message: ${signError instanceof Error ? signError.message : String(signError)}`)
-        }
-      }
 
-      console.log('[BaseAppAuthStrategy] Successfully signed backend message')
+        console.log('[BaseAppAuthStrategy] Backend authentication successful with signIn:', userData)
 
-      // Step 4: Connect wallet to backend and get JWT cookie
-      const { user: userData } = await authApi.connectWallet({
-        walletAddress,
-        signature: backendSignature,
-        message: backendMessage,
-        jwtToken,
-        platform: 'base',
-        metadata: {
-          fid: result ? (result as any).fid : sdkContext.user?.fid,
-          username: result ? (result as any).username : sdkContext.user?.username,
-          displayName: result ? (result as any).displayName : sdkContext.user?.displayName,
-          pfpUrl: result ? (result as any).pfpUrl : sdkContext.user?.pfpUrl,
-        }
-      })
+        // Extract JWT token from cookie and store it for Authorization header
+        if (typeof document !== 'undefined') {
+          const cookies = document.cookie.split(';')
+          let authToken = null
+          for (const cookie of cookies) {
+            const [name, value] = cookie.trim().split('=')
+            if (name === 'auth_token') {
+              authToken = value
+              break
+            }
+          }
 
-      console.log('[BaseAppAuthStrategy] Backend authentication successful:', userData)
+          if (authToken) {
+            console.log('[BaseAppAuthStrategy] Extracted token from cookie, storing for Authorization header')
+            const { apiClient } = await import('@/lib/api/client')
+            apiClient.setAuthToken(authToken)
 
-      // Extract JWT token from cookie and store it for Authorization header
-      // Since cookies don't work reliably in Base App iframe, we need to manually extract
-      // the token and use Authorization header for subsequent requests
-      if (typeof document !== 'undefined') {
-        const cookies = document.cookie.split(';')
-        let authToken = null
-        for (const cookie of cookies) {
-          const [name, value] = cookie.trim().split('=')
-          if (name === 'auth_token') {
-            authToken = value
-            break
+            // Verify token works
+            try {
+              const testAuth = await authApi.checkAuth()
+              console.log('[BaseAppAuthStrategy] Token verification SUCCESS:', testAuth)
+            } catch (err) {
+              console.error('[BaseAppAuthStrategy] Token verification failed:', err)
+            }
+          } else {
+            console.warn('[BaseAppAuthStrategy] Could not extract auth_token from cookies')
           }
         }
 
-        if (authToken) {
-          console.log('[BaseAppAuthStrategy] Extracted token from cookie, storing for Authorization header')
-          const { apiClient } = await import('@/lib/api/client')
-          apiClient.setAuthToken(authToken)
-
-          // Verify token works
-          try {
-            const testAuth = await authApi.checkAuth()
-            console.log('[BaseAppAuthStrategy] Token verification SUCCESS:', testAuth)
-          } catch (err) {
-            console.error('[BaseAppAuthStrategy] Token verification failed:', err)
+        const authenticatedUser: User = {
+          id: userData.id,
+          walletAddress: userData.walletAddress,
+          platform: Platform.BASE_APP,
+          metadata: {
+            ...userData,
+            fid: (result as any).fid || sdkContext.user?.fid,
+            username: (result as any).username || sdkContext.user?.username,
+            displayName: (result as any).displayName || sdkContext.user?.displayName,
+            pfpUrl: (result as any).pfpUrl || sdkContext.user?.pfpUrl,
+            isAuthenticated: true
           }
-        } else {
-          console.warn('[BaseAppAuthStrategy] Could not extract auth_token from cookies')
         }
+
+        console.log('[BaseAppAuthStrategy] Authentication successful, user:', authenticatedUser)
+        setUser(authenticatedUser)
+        setAuthState(AuthState.AUTHENTICATED)
+        setIsLoading(false)
+        useAuthStore.getState().setUser(authenticatedUser as any)
+        useAuthStore.getState().setLoading(false)
+        console.log('[BaseAppAuthStrategy] User set in store:', useAuthStore.getState().user)
+
+        return { success: true, user: authenticatedUser }
+      } else {
+        // signIn failed - cannot proceed without signature
+        throw new Error('Failed to get signature from Base App signIn')
       }
-
-      const authenticatedUser: User = {
-        id: userData.id,
-        walletAddress: userData.walletAddress,
-        platform: Platform.BASE_APP,
-        metadata: {
-          ...userData,
-          fid: result ? (result as any).fid : sdkContext.user?.fid,
-          username: result ? (result as any).username : sdkContext.user?.username,
-          displayName: result ? (result as any).displayName : sdkContext.user?.displayName,
-          pfpUrl: result ? (result as any).pfpUrl : sdkContext.user?.pfpUrl,
-          isAuthenticated: true
-        }
-      }
-
-      console.log('[BaseAppAuthStrategy] Authentication successful, user:', authenticatedUser)
-      setUser(authenticatedUser)
-      setAuthState(AuthState.AUTHENTICATED)
-      setIsLoading(false)
-      useAuthStore.getState().setUser(authenticatedUser as any)
-      useAuthStore.getState().setLoading(false)
-      console.log('[BaseAppAuthStrategy] User set in store:', useAuthStore.getState().user)
-
-      return { success: true, user: authenticatedUser }
     } catch (err: any) {
       const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
       console.error('[BaseAppAuthStrategy] Authentication error:', err)
