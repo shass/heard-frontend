@@ -80,7 +80,7 @@ export function WebAuthSection() {
                 </svg>
               </div>
               <span className="text-sm font-medium text-zinc-700">
-                {formatAddress(user.walletAddress)}
+                {user.walletAddress ? formatAddress(user.walletAddress) : (address ? formatAddress(address) : 'Wallet')}
               </span>
               <div className="h-4 w-px bg-zinc-300 mx-2"></div>
               <HeardPointsBalance

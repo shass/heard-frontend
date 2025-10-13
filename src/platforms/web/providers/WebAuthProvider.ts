@@ -82,14 +82,10 @@ export class WebAuthProvider implements IAuthProvider {
   async getSession(): Promise<Session | null> {
     // Check if we have a valid JWT token in cookies
     try {
-      const response = await fetch('/api/auth/me', {
-        credentials: 'include' // Include cookies
-      })
-      
-      if (response.ok) {
-        const userData = await response.json()
+      const userData = await authApi.checkAuth()
+      if (userData) {
         return {
-          id: userData.sessionId || 'web-session',
+          id: 'web-session',
           userId: userData.id,
           walletAddress: userData.walletAddress,
           platform: Platform.WEB,
@@ -99,20 +95,14 @@ export class WebAuthProvider implements IAuthProvider {
     } catch (error) {
       console.warn('Failed to get session:', error)
     }
-    
+
     return null
   }
   
   async getCurrentUser(): Promise<User | null> {
     try {
-      const response = await fetch('/api/auth/me', {
-        credentials: 'include'
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        // Backend returns { user: User }
-        const userData = data.user || data
+      const userData = await authApi.checkAuth()
+      if (userData) {
         return {
           id: userData.id,
           walletAddress: userData.walletAddress,
