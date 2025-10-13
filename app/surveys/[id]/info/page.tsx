@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useEffect } from "react"
+import { use } from "react"
 import { useRouter } from "next/navigation"
 import { useOpenUrl } from '@/src/platforms/base-app/hooks/useOpenUrl'
 import { Header } from "@/components/header"
@@ -44,15 +44,13 @@ const useWebConnectModal = () => {
 export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
   const openUrl = useOpenUrl()
-  const { platform } = usePlatformDetector()
   const auth = useAuth()
   const { authenticate: login, isAuthenticated, isLoading: isAuthLoading, user, error: authError } = auth
   const wallet = useWallet()
 
-  // In Base App, user is always "connected" if they have a user object
-  // In Web, check wallet connection
-  const isConnected = platform === Platform.BASE_APP ? !!user : wallet.isConnected
-  const address = user?.walletAddress || wallet.address || null
+  // Wallet connection is handled by platform-specific strategies
+  const isConnected = wallet.isConnected
+  const address = wallet.address || user?.walletAddress || null
 
   const { openConnectModal } = useWebConnectModal()
   const { id } = use(params)

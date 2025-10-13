@@ -1,8 +1,7 @@
 'use client'
 
-import { usePlatformDetector } from '../PlatformDetectorProvider'
+import { usePlatformDetector, IWalletStrategy } from '@/src/platforms'
 import { Platform } from '../../config'
-import { IWalletStrategy } from '../shared/interfaces/IWalletStrategy'
 
 export function useWallet(): IWalletStrategy {
   const { platform } = usePlatformDetector()
@@ -11,17 +10,18 @@ export function useWallet(): IWalletStrategy {
   // This ensures wagmi hooks are NEVER called in Base App or Farcaster
   switch (platform) {
     case Platform.WEB: {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
       const { useWebWalletStrategy } = require('@/src/platforms/web/strategies/useWebWalletStrategy')
-      // eslint-disable-next-line react-hooks/rules-of-hooks
       return useWebWalletStrategy()
     }
 
-    case Platform.BASE_APP:
+    case Platform.BASE_APP: {
+      const { useBaseAppWalletStrategy } = require('@/src/platforms/base-app/strategies/useBaseAppWalletStrategy')
+      return useBaseAppWalletStrategy()
+    }
+
     case Platform.FARCASTER:
     default: {
-      // Base App and Farcaster don't have wallet strategy yet
-      // Return stub implementation
+      // Farcaster doesn't have wallet strategy yet - return stub
       return {
         address: undefined,
         isConnected: false,
