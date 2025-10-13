@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
 import { useAuth } from "@/src/platforms/_core/hooks/useAuth"
 import { useNotifications } from "@/components/ui/notifications"
-import { LogOut, ChevronDown, Wallet } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,26 +17,6 @@ export function BaseAppAuthSection() {
   const auth = useAuth()
   const notifications = useNotifications()
 
-  const handleLogin = async () => {
-    try {
-      console.log('[BaseAppAuthSection] Initiating Base App login via MiniKit')
-      await auth.authenticate()
-      notifications.success('Authentication successful', 'You have been authenticated successfully')
-    } catch (error: any) {
-      console.error('[BaseAppAuthSection] Login error:', error)
-      notifications.error('Authentication failed', error.message || 'Please try again')
-    }
-  }
-
-  const handleLogout = async () => {
-    try {
-      await auth.logout()
-      notifications.success('Logged out', 'You have been successfully logged out')
-    } catch (error: any) {
-      notifications.error('Logout failed', error.message || 'Please try again')
-    }
-  }
-
   const handleBalanceChange = (newBalance: number, previousBalance: number) => {
     const difference = newBalance - previousBalance
     if (difference > 0) {
@@ -48,24 +28,8 @@ export function BaseAppAuthSection() {
     }
   }
 
-  // Not authenticated state
-  if (!auth.isAuthenticated) {
-    return (
-      <div className="flex items-center space-x-2">
-        <Button
-          onClick={handleLogin}
-          disabled={auth.isLoading}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-medium flex items-center space-x-2"
-        >
-          <Wallet className="w-4 h-4" />
-          <span>{auth.isLoading ? 'Connecting...' : 'Connect Base'}</span>
-        </Button>
-      </div>
-    )
-  }
-
-  // Authenticated state
-  if (auth.isAuthenticated && auth.user) {
+  // In Base App, user is always authenticated via context
+  if (auth.user) {
     return (
       <div className="flex items-center space-x-3">
         <DropdownMenu>
@@ -77,7 +41,9 @@ export function BaseAppAuthSection() {
                 </svg>
               </div>
               <span className="text-sm font-medium text-zinc-700">
-                {auth.user.walletAddress ? formatAddress(auth.user.walletAddress) : 'No address'}
+                {auth.user.walletAddress
+                  ? formatAddress(auth.user.walletAddress)
+                  : '@' + ((auth.user.metadata as any)?.username || `FID ${auth.user.id}`)}
               </span>
               <div className="h-4 w-px bg-zinc-300 mx-2"></div>
               <HeardPointsBalance
@@ -91,9 +57,8 @@ export function BaseAppAuthSection() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
+            <DropdownMenuItem disabled className="text-zinc-500">
+              FID: {auth.user.id}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -101,5 +66,10 @@ export function BaseAppAuthSection() {
     )
   }
 
-  return null
+  // Show loading state while context loads
+  return (
+    <div className="flex items-center space-x-2">
+      <div className="h-8 w-32 bg-zinc-100 rounded-lg animate-pulse"></div>
+    </div>
+  )
 }

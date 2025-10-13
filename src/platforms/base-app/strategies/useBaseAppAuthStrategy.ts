@@ -41,40 +41,41 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
     }
   }, [])
 
+  // Get wallet address via Wagmi (Base Account is auto-connected in Base App)
   useEffect(() => {
     if (sdkContext?.user) {
       const contextUser = sdkContext.user
 
-      // Try to get wallet address from multiple sources
-      const custody = (contextUser as any).custody
-      const verifications = (contextUser as any).verifications || []
-      const walletAddress = custody?.address ||
-                           verifications[0]?.address ||
-                           verifications.find((v: any) => v.protocol === 'ethereum')?.address
-
-      console.log('[useBaseAppAuthStrategy] User context:', {
-        hasCustody: !!custody,
-        custodyAddress: custody?.address,
-        verifications: verifications.length,
-        walletAddress
-      })
-
-      const newUser: User = {
-        id: contextUser.fid?.toString() || 'unknown',
-        walletAddress: walletAddress,
-        platform: Platform.BASE_APP,
-        metadata: {
-          fid: contextUser.fid,
-          username: contextUser.username,
-          displayName: contextUser.displayName,
-          pfpUrl: contextUser.pfpUrl,
-          custody: custody,
-          verifications: verifications,
-          isFromContext: true
+      // Try to get wallet address from Ethereum provider
+      const getWalletAddress = async () => {
+        try {
+          const provider = sdk.wallet.ethProvider
+          if (provider) {
+            const accounts = await provider.request({ method: 'eth_accounts' })
+            return accounts[0]
+          }
+        } catch (error) {
+          console.error('[useBaseAppAuthStrategy] Failed to get wallet address:', error)
         }
+        return undefined
       }
-      setUser(newUser)
-      useAuthStore.getState().setUser(newUser as any)
+
+      getWalletAddress().then(walletAddress => {
+        const newUser: User = {
+          id: contextUser.fid?.toString() || 'unknown',
+          walletAddress: walletAddress,
+          platform: Platform.BASE_APP,
+          metadata: {
+            fid: contextUser.fid,
+            username: contextUser.username,
+            displayName: contextUser.displayName,
+            pfpUrl: contextUser.pfpUrl,
+            isFromContext: true
+          }
+        }
+        setUser(newUser)
+        useAuthStore.getState().setUser(newUser as any)
+      })
     } else {
       setUser(null)
       useAuthStore.getState().setUser(null)
