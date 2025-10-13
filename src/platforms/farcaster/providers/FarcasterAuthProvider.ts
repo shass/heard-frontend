@@ -260,17 +260,18 @@ export class FarcasterAuthProvider implements IAuthProvider {
   
   async getFarcasterProfile(): Promise<any> {
     const user = await this.getCurrentUser()
-    if (!user?.metadata?.fid) {
+    const metadata = user?.metadata as any
+    if (!metadata?.fid) {
       return null
     }
-    
+
     return {
-      fid: user.metadata.fid,
-      username: user.metadata.username,
-      displayName: user.metadata.displayName,
-      pfpUrl: user.metadata.pfpUrl,
-      followerCount: user.metadata.followerCount,
-      followingCount: user.metadata.followingCount,
+      fid: metadata.fid,
+      username: metadata.username,
+      displayName: metadata.displayName,
+      pfpUrl: metadata.pfpUrl,
+      followerCount: metadata.followerCount,
+      followingCount: metadata.followingCount,
       isVerified: this.currentState === AuthState.AUTHENTICATED
     }
   }
@@ -285,13 +286,14 @@ export class FarcasterAuthProvider implements IAuthProvider {
     const user = this.currentUser
     if (!user) return null
 
+    const metadata = user.metadata as any
     return {
       platform: Platform.FARCASTER,
-      fid: user.metadata?.fid,
-      username: user.metadata?.username,
-      displayName: user.metadata?.displayName,
+      fid: metadata?.fid,
+      username: metadata?.username,
+      displayName: metadata?.displayName,
       isAuthenticated: this.currentState === AuthState.AUTHENTICATED,
-      isFromContext: user.metadata?.isFromContext || false
+      isFromContext: metadata?.isFromContext || false
     }
   }
   

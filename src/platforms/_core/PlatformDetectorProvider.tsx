@@ -18,10 +18,19 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Set loading state at the start of detection
     setIsLoading(true)
 
     const detectPlatform = async () => {
+      // Check for debug override in localStorage or URL
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search)
+        const debugPlatform = urlParams.get('debug_platform') || localStorage.getItem('debug_platform')
+
+        if (debugPlatform === 'base-app') return Platform.BASE_APP
+        if (debugPlatform === 'farcaster') return Platform.FARCASTER
+        if (debugPlatform === 'web') return Platform.WEB
+      }
+
       const context = await sdk.context
       const clientFid = (context?.client as any)?.clientFid
       const clientFidStr = clientFid?.toString()
