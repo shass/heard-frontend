@@ -135,7 +135,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
           signature: backendSignature,
           message: backendMessage,
           jwtToken,
-          platform: 'base-app',
+          platform: 'base',
           metadata: {
             fid: (result as any).fid,
             username: (result as any).username,

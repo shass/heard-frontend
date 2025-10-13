@@ -52,10 +52,11 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
         status: error?.status,
         fullError: error
       })
-      setInitStatus('idle')
+      // Set to 'completed' to prevent retry loop
+      setInitStatus('completed')
       // Only show error if it's not because survey is already completed
       if (!error?.message?.includes('already completed')) {
-        notifications?.error('Failed to start survey', error?.message || error?.error?.message || 'Unknown error')
+        notifications?.error('Failed to start survey', error?.message || error?.error?.message || 'Please make sure you are authenticated')
       }
     }
   })
