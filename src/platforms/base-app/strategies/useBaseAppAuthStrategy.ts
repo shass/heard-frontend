@@ -156,10 +156,14 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
 
         // Extract JWT token from cookie and store it for Authorization header
         if (typeof document !== 'undefined') {
+          console.log('[BaseAppAuthStrategy] Checking for auth_token cookie...')
+          console.log('[BaseAppAuthStrategy] All cookies:', document.cookie)
+
           const cookies = document.cookie.split(';')
           let authToken = null
           for (const cookie of cookies) {
             const [name, value] = cookie.trim().split('=')
+            console.log('[BaseAppAuthStrategy] Cookie found:', name, '=', value?.substring(0, 20) + '...')
             if (name === 'auth_token') {
               authToken = value
               break
@@ -167,19 +171,22 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
           }
 
           if (authToken) {
-            console.log('[BaseAppAuthStrategy] Extracted token from cookie, storing for Authorization header')
+            console.log('[BaseAppAuthStrategy] ✅ Extracted token from cookie')
             const { apiClient } = await import('@/lib/api/client')
             apiClient.setAuthToken(authToken)
+            console.log('[BaseAppAuthStrategy] Token stored in apiClient')
 
             // Verify token works
             try {
+              console.log('[BaseAppAuthStrategy] Verifying token with /auth/me...')
               const testAuth = await authApi.checkAuth()
-              console.log('[BaseAppAuthStrategy] Token verification SUCCESS:', testAuth)
+              console.log('[BaseAppAuthStrategy] ✅ Token verification SUCCESS:', testAuth)
             } catch (err) {
-              console.error('[BaseAppAuthStrategy] Token verification failed:', err)
+              console.error('[BaseAppAuthStrategy] ❌ Token verification failed:', err)
             }
           } else {
-            console.warn('[BaseAppAuthStrategy] Could not extract auth_token from cookies')
+            console.error('[BaseAppAuthStrategy] ❌ Could not find auth_token in cookies')
+            console.error('[BaseAppAuthStrategy] This means cookie was not set by backend or is blocked in iframe')
           }
         }
 
