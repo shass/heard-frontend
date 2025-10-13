@@ -236,9 +236,42 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
     }
   }, [])
 
+  // Check if we have stored token on mount
   useEffect(() => {
     if (!sdkContext) return
-    setAuthState(sdkContext.user ? AuthState.AUTHENTICATED : AuthState.UNAUTHENTICATED)
+
+    // Check if we have a stored auth token from previous session
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('auth_token')
+      if (storedToken) {
+        console.log('[BaseAppAuthStrategy] Found stored token, verifying...')
+        // Verify token is still valid
+        authApi.checkAuth().then((userData) => {
+          if (userData) {
+            console.log('[BaseAppAuthStrategy] Stored token valid, restoring session')
+            const restoredUser: User = {
+              id: userData.id,
+              walletAddress: userData.walletAddress,
+              platform: Platform.BASE_APP,
+              metadata: userData
+            }
+            setUser(restoredUser)
+            setAuthState(AuthState.AUTHENTICATED)
+            useAuthStore.getState().setUser(restoredUser as any)
+          } else {
+            console.log('[BaseAppAuthStrategy] Stored token invalid')
+            setAuthState(AuthState.UNAUTHENTICATED)
+          }
+        }).catch(() => {
+          console.log('[BaseAppAuthStrategy] Token verification failed')
+          setAuthState(AuthState.UNAUTHENTICATED)
+          localStorage.removeItem('auth_token')
+        })
+      } else {
+        // No stored token - user needs to authenticate
+        setAuthState(AuthState.UNAUTHENTICATED)
+      }
+    }
   }, [sdkContext])
 
   const checkAuthStatus = useCallback(async () => {

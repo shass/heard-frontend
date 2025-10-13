@@ -11,6 +11,10 @@ class ApiClient {
   constructor() {
     this.baseURL = env.API_URL
     this.timeout = env.API_TIMEOUT
+    // Load token from localStorage on initialization
+    if (typeof window !== 'undefined') {
+      this.authToken = localStorage.getItem('auth_token')
+    }
   }
 
   // Set auth token for Authorization header (used by Base App)
