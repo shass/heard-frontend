@@ -44,17 +44,32 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
   useEffect(() => {
     if (sdkContext?.user) {
       const contextUser = sdkContext.user
+
+      // Try to get wallet address from multiple sources
+      const custody = (contextUser as any).custody
+      const verifications = (contextUser as any).verifications || []
+      const walletAddress = custody?.address ||
+                           verifications[0]?.address ||
+                           verifications.find((v: any) => v.protocol === 'ethereum')?.address
+
+      console.log('[useBaseAppAuthStrategy] User context:', {
+        hasCustody: !!custody,
+        custodyAddress: custody?.address,
+        verifications: verifications.length,
+        walletAddress
+      })
+
       const newUser: User = {
         id: contextUser.fid?.toString() || 'unknown',
-        walletAddress: (contextUser as any).custody?.address,
+        walletAddress: walletAddress,
         platform: Platform.BASE_APP,
         metadata: {
           fid: contextUser.fid,
           username: contextUser.username,
           displayName: contextUser.displayName,
           pfpUrl: contextUser.pfpUrl,
-          custody: (contextUser as any).custody,
-          verifications: (contextUser as any).verifications,
+          custody: custody,
+          verifications: verifications,
           isFromContext: true
         }
       }
@@ -81,9 +96,16 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       const result = await sdk.actions.signIn({ nonce: crypto.randomUUID() })
 
       if (result) {
+        const custody = (result as any).custody || (sdkContext.user as any)?.custody
+        const verifications = (result as any).verifications || (sdkContext.user as any)?.verifications || []
+        const walletAddress = (result as any).address ||
+                             custody?.address ||
+                             verifications[0]?.address ||
+                             verifications.find((v: any) => v.protocol === 'ethereum')?.address
+
         const authenticatedUser: User = {
           id: (result as any).fid?.toString() || sdkContext.user?.fid?.toString() || 'unknown',
-          walletAddress: (result as any).address || (sdkContext.user as any)?.custody?.address,
+          walletAddress: walletAddress,
           platform: Platform.BASE_APP,
           metadata: {
             ...result,
