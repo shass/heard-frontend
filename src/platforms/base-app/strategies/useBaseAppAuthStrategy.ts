@@ -7,6 +7,7 @@ import { AuthState, User } from '@/src/platforms'
 import { IAuthStrategy, AuthResult } from '../../_core/shared/interfaces/IAuthStrategy'
 import { Platform } from '../../config'
 import { useAuthStore } from '@/lib/store'
+import { authApi } from '@/lib/api/auth'
 
 export function useBaseAppAuthStrategy(): IAuthStrategy {
   const [user, setUser] = useState<User | null>(null)
@@ -94,7 +95,9 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       setAuthState(AuthState.LOADING)
       useAuthStore.getState().setLoading(true)
 
-      const result = await sdk.actions.signIn({ nonce: crypto.randomUUID() })
+      // Step 1: Get signIn result from Farcaster SDK
+      const nonce = crypto.randomUUID()
+      const result = await sdk.actions.signIn({ nonce })
 
       if (result) {
         const custody = (result as any).custody || (sdkContext.user as any)?.custody
@@ -104,12 +107,51 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
                              verifications[0]?.address ||
                              verifications.find((v: any) => v.protocol === 'ethereum')?.address
 
+        if (!walletAddress) {
+          throw new Error('No wallet address found in sign in result')
+        }
+
+        console.log('[BaseAppAuthStrategy] SignIn successful, wallet:', walletAddress)
+
+        // Step 2: Get nonce from backend for JWT token generation
+        const { message: backendMessage, jwtToken } = await authApi.getNonce(walletAddress)
+
+        // Step 3: Sign the backend message using Base Account
+        const provider = sdk.wallet.ethProvider
+        if (!provider) {
+          throw new Error('Ethereum provider not available')
+        }
+
+        const backendSignature = await provider.request({
+          method: 'personal_sign',
+          params: [backendMessage as `0x${string}`, walletAddress as `0x${string}`]
+        }) as string
+
+        console.log('[BaseAppAuthStrategy] Signed backend message')
+
+        // Step 4: Connect wallet to backend and get JWT cookie
+        const { user: userData } = await authApi.connectWallet({
+          walletAddress,
+          signature: backendSignature,
+          message: backendMessage,
+          jwtToken,
+          platform: 'base-app',
+          metadata: {
+            fid: (result as any).fid,
+            username: (result as any).username,
+            displayName: (result as any).displayName,
+            pfpUrl: (result as any).pfpUrl,
+          }
+        })
+
+        console.log('[BaseAppAuthStrategy] Backend authentication successful:', userData)
+
         const authenticatedUser: User = {
-          id: (result as any).fid?.toString() || sdkContext.user?.fid?.toString() || 'unknown',
-          walletAddress: walletAddress,
+          id: userData.id,
+          walletAddress: userData.walletAddress,
           platform: Platform.BASE_APP,
           metadata: {
-            ...result,
+            ...userData,
             fid: (result as any).fid,
             username: (result as any).username,
             displayName: (result as any).displayName,
@@ -136,6 +178,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       }
     } catch (err: any) {
       const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
+      console.error('[BaseAppAuthStrategy] Authentication error:', err)
       setError(errorMessage)
       setAuthState(AuthState.ERROR)
       setIsLoading(false)
