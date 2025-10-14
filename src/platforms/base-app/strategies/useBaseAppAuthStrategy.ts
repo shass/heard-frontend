@@ -117,16 +117,21 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       console.log('[BaseAppAuthStrategy] Wallet address:', walletAddress)
 
       // Step 2: Get nonce and jwtToken from backend BEFORE signIn
-      console.log('[BaseAppAuthStrategy] Getting nonce from backend...')
-      const { nonce, jwtToken } = await authApi.getNonce(walletAddress)
-      console.log('[BaseAppAuthStrategy] Got nonce and jwtToken from backend')
+      const nonceResponse = await authApi.getNonce(walletAddress)
+      const { nonce, jwtToken } = nonceResponse
+      console.log('[BaseApp] 📝 Backend nonce:', nonce)
 
       // Step 3: Use backend nonce in signIn
       let result
       try {
-        console.log('[BaseAppAuthStrategy] Calling sdk.actions.signIn with backend nonce:', nonce)
         result = await sdk.actions.signIn({ nonce })
-        console.log('[BaseAppAuthStrategy] SignIn raw result:', result)
+        const signInMessage = (result as any).message as string
+
+        // Extract nonce from SIWE message to compare
+        const nonceInMessage = signInMessage.match(/Nonce: ([a-zA-Z0-9]+)/)?.[1]
+        console.log('[BaseApp] 🔐 SDK generated SIWE message nonce:', nonceInMessage)
+        console.log('[BaseApp] ✅ Nonces match:', nonce === nonceInMessage)
+
       } catch (signInError) {
         console.warn('[BaseAppAuthStrategy] SignIn failed:', signInError)
         throw new Error('SignIn failed: ' + (signInError instanceof Error ? signInError.message : 'Unknown error'))
@@ -134,12 +139,8 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
 
       // If signIn succeeded, we already have signature and message!
       if (result && (result as any).signature && (result as any).message) {
-        console.log('[BaseAppAuthStrategy] Using signature from signIn result')
-
         const signInMessage = (result as any).message as string
-
         const signInSignature = (result as any).signature as string
-        console.log('[BaseAppAuthStrategy] Using signIn signature')
 
         // Send signIn result to backend
         // Backend will verify SIWE signature format and return token
