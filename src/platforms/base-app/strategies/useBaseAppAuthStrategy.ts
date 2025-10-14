@@ -114,12 +114,21 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         throw new Error('No wallet address available')
       }
 
-      console.log('[BaseAppAuthStrategy] Wallet address:', walletAddress)
-
       // Step 2: Get nonce and jwtToken from backend BEFORE signIn
       const nonceResponse = await authApi.getNonce(walletAddress)
-      const { nonce, jwtToken } = nonceResponse
-      console.log('[BaseApp] 📝 Backend nonce:', nonce)
+      let { nonce, jwtToken } = nonceResponse
+
+      // If backend doesn't return nonce directly, extract from message (backward compatibility)
+      if (!nonce && nonceResponse.message) {
+        const nonceMatch = nonceResponse.message.match(/Nonce: ([a-zA-Z0-9]+)/)
+        nonce = nonceMatch?.[1] || ''
+      }
+
+      if (!nonce) {
+        throw new Error('Could not get nonce from backend')
+      }
+
+      console.log('[BaseApp] 🎯 Calling signIn with nonce:', nonce)
 
       // Step 3: Use backend nonce in signIn
       let result
@@ -127,10 +136,9 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         result = await sdk.actions.signIn({ nonce })
         const signInMessage = (result as any).message as string
 
-        // Extract nonce from SIWE message to compare
+        // Extract nonce from SIWE message to verify
         const nonceInMessage = signInMessage.match(/Nonce: ([a-zA-Z0-9]+)/)?.[1]
-        console.log('[BaseApp] 🔐 SDK generated SIWE message nonce:', nonceInMessage)
-        console.log('[BaseApp] ✅ Nonces match:', nonce === nonceInMessage)
+        console.log('[BaseApp] ✅ Nonces match:', nonce === nonceInMessage, `(sent: ${nonce}, got: ${nonceInMessage})`)
 
       } catch (signInError) {
         console.warn('[BaseAppAuthStrategy] SignIn failed:', signInError)
