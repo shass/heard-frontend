@@ -100,42 +100,43 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       const { apiClient } = await import('@/lib/api/client')
       apiClient.setAuthToken(null)
 
-      // Step 1: Try to use Farcaster signIn (may not be needed for Base App)
-      // Base App has auto-connected wallet, we might not need signIn at all
-      console.log('[BaseAppAuthStrategy] Checking if signIn is needed...')
+      // Step 1: Get wallet address from SDK provider
+      console.log('[BaseAppAuthStrategy] Getting wallet address from SDK provider...')
+      const provider = sdk.wallet.ethProvider
+      if (!provider) {
+        throw new Error('Ethereum provider not available in Base App')
+      }
 
+      const accounts = await provider.request({ method: 'eth_accounts' })
+      const walletAddress = accounts[0]?.toLowerCase()
+
+      if (!walletAddress) {
+        throw new Error('No wallet address available')
+      }
+
+      console.log('[BaseAppAuthStrategy] Wallet address:', walletAddress)
+
+      // Step 2: Get nonce and jwtToken from backend BEFORE signIn
+      console.log('[BaseAppAuthStrategy] Getting nonce from backend...')
+      const { nonce, jwtToken } = await authApi.getNonce(walletAddress)
+      console.log('[BaseAppAuthStrategy] Got nonce and jwtToken from backend')
+
+      // Step 3: Use backend nonce in signIn
       let result
       try {
-        // Try signIn with simple nonce
-        const nonce = Date.now().toString()
-        console.log('[BaseAppAuthStrategy] Calling sdk.actions.signIn with nonce:', nonce)
+        console.log('[BaseAppAuthStrategy] Calling sdk.actions.signIn with backend nonce:', nonce)
         result = await sdk.actions.signIn({ nonce })
         console.log('[BaseAppAuthStrategy] SignIn raw result:', result)
       } catch (signInError) {
-        console.warn('[BaseAppAuthStrategy] SignIn failed, continuing without it:', signInError)
-        // SignIn failed - this is OK for Base App, we can use wallet directly
-        result = null
+        console.warn('[BaseAppAuthStrategy] SignIn failed:', signInError)
+        throw new Error('SignIn failed: ' + (signInError instanceof Error ? signInError.message : 'Unknown error'))
       }
 
       // If signIn succeeded, we already have signature and message!
       if (result && (result as any).signature && (result as any).message) {
         console.log('[BaseAppAuthStrategy] Using signature from signIn result')
 
-        // Extract wallet address from signIn message
         const signInMessage = (result as any).message as string
-        const addressMatch = signInMessage.match(/0x[a-fA-F0-9]{40}/)
-        const walletAddress = addressMatch ? addressMatch[0].toLowerCase() : null
-
-        if (!walletAddress) {
-          throw new Error('Could not extract wallet address from signIn message')
-        }
-
-        console.log('[BaseAppAuthStrategy] Wallet address from signIn:', walletAddress)
-
-        // Get jwtToken from backend (required for verification flow)
-        console.log('[BaseAppAuthStrategy] Getting jwtToken from backend...')
-        const { jwtToken } = await authApi.getNonce(walletAddress)
-        console.log('[BaseAppAuthStrategy] Got jwtToken')
 
         const signInSignature = (result as any).signature as string
         console.log('[BaseAppAuthStrategy] Using signIn signature')
