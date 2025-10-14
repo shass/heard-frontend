@@ -95,6 +95,11 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       setAuthState(AuthState.LOADING)
       useAuthStore.getState().setLoading(true)
 
+      // Clear old token before authentication to prevent 401 on public endpoints
+      console.log('[BaseAppAuthStrategy] Clearing old token before authentication...')
+      const { apiClient } = await import('@/lib/api/client')
+      apiClient.setAuthToken(null)
+
       // Step 1: Try to use Farcaster signIn (may not be needed for Base App)
       // Base App has auto-connected wallet, we might not need signIn at all
       console.log('[BaseAppAuthStrategy] Checking if signIn is needed...')

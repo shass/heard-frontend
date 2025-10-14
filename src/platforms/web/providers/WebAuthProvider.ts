@@ -30,6 +30,11 @@ export class WebAuthProvider implements IAuthProvider {
 
       console.log('[WebAuth] Starting authentication on Web platform for address:', this.wagmiAccount.address)
 
+      // Clear old token before authentication to prevent 401 on public endpoints
+      console.log('[WebAuth] Clearing old token before authentication...')
+      const { apiClient } = await import('@/lib/api/client')
+      apiClient.setAuthToken(null)
+
       // Step 1: Get nonce from backend
       const { message, jwtToken } = await authApi.getNonce(this.wagmiAccount.address)
       console.log('[WebAuth] Got nonce and jwtToken')
