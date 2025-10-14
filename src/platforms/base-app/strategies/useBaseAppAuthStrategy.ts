@@ -136,8 +136,8 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         console.log('[BaseAppAuthStrategy] Using signIn signature')
 
         // Send signIn result to backend
-        // Backend will verify SIWE signature format
-        const { user: userData } = await authApi.connectWallet({
+        // Backend will verify SIWE signature format and return token
+        const { user: userData, token } = await authApi.connectWallet({
           walletAddress,
           signature: signInSignature,
           message: signInMessage,
@@ -154,39 +154,42 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
 
         console.log('[BaseAppAuthStrategy] Backend authentication successful with signIn:', userData)
 
-        // Extract JWT token from cookie and store it for Authorization header
-        if (typeof document !== 'undefined') {
-          console.log('[BaseAppAuthStrategy] Checking for auth_token cookie...')
-          console.log('[BaseAppAuthStrategy] All cookies:', document.cookie)
+        // Use token from response body (Variant 1 - always returned by backend)
+        if (token) {
+          console.log('[BaseAppAuthStrategy] ✅ Got token from response body')
+          const { apiClient } = await import('@/lib/api/client')
+          apiClient.setAuthToken(token)
+          console.log('[BaseAppAuthStrategy] Token stored in apiClient')
 
-          const cookies = document.cookie.split(';')
-          let authToken = null
-          for (const cookie of cookies) {
-            const [name, value] = cookie.trim().split('=')
-            console.log('[BaseAppAuthStrategy] Cookie found:', name, '=', value?.substring(0, 20) + '...')
-            if (name === 'auth_token') {
-              authToken = value
-              break
-            }
+          // Verify token works
+          try {
+            console.log('[BaseAppAuthStrategy] Verifying token with /auth/me...')
+            const testAuth = await authApi.checkAuth()
+            console.log('[BaseAppAuthStrategy] ✅ Token verification SUCCESS:', testAuth)
+          } catch (err) {
+            console.error('[BaseAppAuthStrategy] ❌ Token verification failed:', err)
           }
-
-          if (authToken) {
-            console.log('[BaseAppAuthStrategy] ✅ Extracted token from cookie')
-            const { apiClient } = await import('@/lib/api/client')
-            apiClient.setAuthToken(authToken)
-            console.log('[BaseAppAuthStrategy] Token stored in apiClient')
-
-            // Verify token works
-            try {
-              console.log('[BaseAppAuthStrategy] Verifying token with /auth/me...')
-              const testAuth = await authApi.checkAuth()
-              console.log('[BaseAppAuthStrategy] ✅ Token verification SUCCESS:', testAuth)
-            } catch (err) {
-              console.error('[BaseAppAuthStrategy] ❌ Token verification failed:', err)
+        } else {
+          console.warn('[BaseAppAuthStrategy] ⚠️ No token in response body, falling back to cookie')
+          // Fallback to cookie extraction for backwards compatibility
+          if (typeof document !== 'undefined') {
+            const cookies = document.cookie.split(';')
+            let authToken = null
+            for (const cookie of cookies) {
+              const [name, value] = cookie.trim().split('=')
+              if (name === 'auth_token') {
+                authToken = value
+                break
+              }
             }
-          } else {
-            console.error('[BaseAppAuthStrategy] ❌ Could not find auth_token in cookies')
-            console.error('[BaseAppAuthStrategy] This means cookie was not set by backend or is blocked in iframe')
+
+            if (authToken) {
+              console.log('[BaseAppAuthStrategy] ✅ Extracted token from cookie')
+              const { apiClient } = await import('@/lib/api/client')
+              apiClient.setAuthToken(authToken)
+            } else {
+              console.error('[BaseAppAuthStrategy] ❌ No token available (neither response nor cookie)')
+            }
           }
         }
 
