@@ -21,7 +21,7 @@ interface AuthStore {
 
 export const useAuthStore = create<AuthStore>()(
   devtools(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
       loading: true, // Start with loading true to prevent flickering

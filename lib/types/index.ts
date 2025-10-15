@@ -1,4 +1,5 @@
 // TypeScript types for the application
+import { Platform } from '@/src/platforms/config'
 
 // User types (compatible with backend)
 export interface User {
@@ -10,6 +11,7 @@ export interface User {
   lastLoginAt?: string
   createdAt: string
   updatedAt: string
+  platform?: Platform | string // Platform identifier from Platform enum
 }
 
 // Survey types (compatible with backend) 

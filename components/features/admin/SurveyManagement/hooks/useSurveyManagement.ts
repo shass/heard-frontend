@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from '@/src/platforms/_core/hooks/useAuth'
+import { useAuthStore } from '@/lib/store'
 import {
   getAdminSurveys,
   createSurvey,
@@ -18,8 +18,7 @@ import { useNotifications } from '@/components/ui/notifications'
 import type { AdminSurveyListItem, CreateSurveyRequest, UpdateSurveyRequest } from '@/lib/types'
 
 export function useSurveyManagement() {
-  const auth = useAuth()
-  const { isAuthenticated, user } = auth
+  const { isAuthenticated, user } = useAuthStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [selectedSurvey, setSelectedSurvey] = useState<AdminSurveyListItem | null>(null)
@@ -47,7 +46,7 @@ export function useSurveyManagement() {
       status: statusFilter === 'all' ? undefined : statusFilter,
       limit: 50
     }),
-    enabled: isAuthenticated && user?.metadata?.role === 'admin',
+    enabled: isAuthenticated && user?.role === 'admin',
     refetchInterval: 30000
   })
 

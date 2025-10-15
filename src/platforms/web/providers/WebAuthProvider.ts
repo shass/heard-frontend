@@ -52,12 +52,8 @@ export class WebAuthProvider implements IAuthProvider {
       })
       console.log('[WebAuth] Backend verified signature, user:', userData)
 
-      const user: User = {
-        id: userData.id,
-        walletAddress: userData.walletAddress,
-        platform: Platform.WEB,
-        metadata: userData
-      }
+      // Return full user data without wrapping in metadata
+      const user: User = userData as User
 
       this.setState(AuthState.AUTHENTICATED)
 
@@ -119,12 +115,8 @@ export class WebAuthProvider implements IAuthProvider {
     try {
       const userData = await authApi.checkAuth()
       if (userData) {
-        return {
-          id: userData.id,
-          walletAddress: userData.walletAddress,
-          platform: Platform.WEB,
-          metadata: userData
-        }
+        // Return full user data without wrapping in metadata
+        return userData as User
       }
     } catch (error) {
       console.warn('Failed to get current user:', error)

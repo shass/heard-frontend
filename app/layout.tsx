@@ -98,7 +98,7 @@ export default function RootLayout({
             <PlatformDetectorProvider>
               {/* Debug tools - общие для всех платформ */}
               <PlatformDebugBanner />
-              <MobileDevTools />
+              {/*<MobileDevTools />*/}
 
               {/* Platform-specific layout switch */}
               <PlatformLayoutSwitch>

@@ -5,12 +5,14 @@ import { useAccount, useSignMessage } from 'wagmi'
 import { WebAuthProvider, AuthState, User } from '@/src/platforms'
 import { IAuthStrategy, AuthResult } from '../../_core/shared/interfaces/IAuthStrategy'
 import { useAuthStore } from '@/lib/store'
+import { Platform } from '@/src/platforms/config'
 
 export function useWebAuthStrategy(): IAuthStrategy {
   const { address, isConnected } = useAccount()
   const { signMessageAsync } = useSignMessage()
 
-  const [user, setUser] = useState<User | null>(null)
+  // Read user from store instead of local state to avoid conflicts with useAdminAuth
+  const user = useAuthStore(state => state.user)
   const [authState, setAuthState] = useState<AuthState>(AuthState.UNAUTHENTICATED)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -41,19 +43,20 @@ export function useWebAuthStrategy(): IAuthStrategy {
   }, [authProvider])
 
   // Update user when authenticated
-  useEffect(() => {
-    if (authState === AuthState.AUTHENTICATED && authProvider) {
-      authProvider.getCurrentUser().then((user) => {
-        setUser(user)
-        // Sync with Zustand store
-        useAuthStore.getState().setUser(user as any)
-      }).catch(console.error)
-    } else {
-      setUser(null)
-      // Sync with Zustand store
-      useAuthStore.getState().setUser(null)
-    }
-  }, [authState, authProvider])
+  // DISABLED: This conflicts with useAdminAuth and causes request loops
+  // useEffect(() => {
+  //   if (authState === AuthState.AUTHENTICATED && authProvider) {
+  //     authProvider.getCurrentUser().then((user) => {
+  //       setUser(user)
+  //       // Sync with Zustand store
+  //       useAuthStore.getState().setUser(user as any)
+  //     }).catch(console.error)
+  //   } else {
+  //     setUser(null)
+  //     // Sync with Zustand store
+  //     useAuthStore.getState().setUser(null)
+  //   }
+  // }, [authState, authProvider])
 
   const authenticate = useCallback(async (): Promise<AuthResult> => {
     if (!authProvider) {
@@ -73,14 +76,10 @@ export function useWebAuthStrategy(): IAuthStrategy {
       const result = await authProvider.connect()
 
       if (result.success) {
-        console.log('[WebAuthStrategy] Authentication successful, user:', result.user)
-        setUser(result.user || null)
         // Sync with Zustand store
         useAuthStore.getState().setUser(result.user as any || null)
-        console.log('[WebAuthStrategy] User set in store:', useAuthStore.getState().user)
         return { success: true, user: result.user }
       } else {
-        console.error('[WebAuthStrategy] Authentication failed:', result.error)
         setError(result.error || 'Authentication failed')
         return { success: false, error: result.error }
       }
@@ -98,7 +97,6 @@ export function useWebAuthStrategy(): IAuthStrategy {
     try {
       setError(null)
       await authProvider.disconnect()
-      setUser(null)
       // Sync with Zustand store
       useAuthStore.getState().logout()
     } catch (err) {
@@ -111,7 +109,6 @@ export function useWebAuthStrategy(): IAuthStrategy {
 
     try {
       const currentUser = await authProvider.getCurrentUser()
-      setUser(currentUser)
       setAuthState(currentUser ? AuthState.AUTHENTICATED : AuthState.UNAUTHENTICATED)
       // Sync with Zustand store
       useAuthStore.getState().setUser(currentUser as any)
@@ -122,12 +119,13 @@ export function useWebAuthStrategy(): IAuthStrategy {
   }, [authProvider])
 
   // Check auth status on mount
-  useEffect(() => {
-    checkAuthStatus()
-  }, [checkAuthStatus])
+  // DISABLED: This conflicts with useAdminAuth and causes request loops
+  // useEffect(() => {
+  //   checkAuthStatus()
+  // }, [checkAuthStatus])
 
   return {
-    user,
+    user: user ? { ...user, platform: Platform.WEB } : null,
     authState,
     isAuthenticated: authState === AuthState.AUTHENTICATED,
     isLoading: authState === AuthState.LOADING || isLoading,

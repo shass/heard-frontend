@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,7 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
   const { openConnectModal } = useConnectModal()
   const {
     login,
+    logout,
     isAuthenticated,
     user,
     isLoading: authLoading,
@@ -137,8 +138,23 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
 
   // If authenticated, render children
   if (isAuthenticated && user) {
+    console.log('[AdminAuthWrapper] Security check:', {
+      userRole: user.role,
+      userWallet: user.walletAddress,
+      connectedWallet: address,
+      walletsMatch: user.walletAddress?.toLowerCase() === address?.toLowerCase()
+    })
+
+    // CRITICAL: Check wallet address matches
+    if (user.walletAddress?.toLowerCase() !== address?.toLowerCase()) {
+      console.error('[AdminAuthWrapper] ⚠️ SECURITY: Wallet mismatch! Logging out...')
+      logout()
+      return null
+    }
+
     // Double-check admin role
     if (user.role !== 'admin') {
+      console.error('[AdminAuthWrapper] ⚠️ SECURITY: Non-admin user attempting access')
       router.push('/')
       return null
     }
