@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { authApi } from '@/lib/api/auth'
 import { useAuthStore } from '@/lib/store'
@@ -11,9 +11,29 @@ export function useAdminAuth() {
   const { setUser, setLoading, logout: storeLogout, user, isAuthenticated, isLoading } = useAuthStore()
   const [error, setError] = useState<string | null>(null)
 
-  const login = async () => {
-    console.log('[useAdminAuth] login called, isConnected:', isConnected, 'address:', address)
+  // Check auth on mount
+  useEffect(() => {
+    const checkInitialAuth = async () => {
+      setLoading(true)
+      try {
+        const userData = await authApi.checkAuth()
+        if (userData) {
+          setUser(userData)
+        } else {
+          storeLogout()
+        }
+      } catch (error: any) {
+        storeLogout()
+      } finally {
+        setLoading(false)
+      }
+    }
 
+    checkInitialAuth()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const login = async () => {
     if (!isConnected || !address) {
       throw new Error('Wallet not connected')
     }
@@ -23,7 +43,6 @@ export function useAdminAuth() {
 
     try {
       // Get nonce from backend using direct fetch
-      console.log('[useAdminAuth] Requesting nonce for address:', address)
       const nonceResponse = await fetch('/api/auth/nonce', {
         method: 'POST',
         headers: {
@@ -38,21 +57,15 @@ export function useAdminAuth() {
       }
 
       const nonceData = await nonceResponse.json()
-      console.log('[useAdminAuth] Received nonce data:', nonceData)
 
       // Extract message and jwtToken from the response
       const message = nonceData.data.message
       const jwtToken = nonceData.data.jwtToken
-      console.log('[useAdminAuth] Message to sign:', message)
-      console.log('[useAdminAuth] JWT Token:', jwtToken)
 
       // Sign message with wallet
-      console.log('[useAdminAuth] Requesting signature...')
       const signature = await signMessageAsync({ message })
-      console.log('[useAdminAuth] Signature received:', signature)
 
       // Connect wallet and get user data using direct fetch
-      console.log('[useAdminAuth] Connecting wallet...')
       const connectResponse = await fetch('/api/auth/connect-wallet', {
         method: 'POST',
         headers: {
@@ -72,7 +85,6 @@ export function useAdminAuth() {
       }
 
       const connectData = await connectResponse.json()
-      console.log('[useAdminAuth] Connected successfully, data:', connectData)
 
       setUser(connectData.data.user)
       return connectData.data.user

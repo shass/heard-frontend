@@ -32,9 +32,7 @@ const useWebConnectModal = () => {
   const { platform } = usePlatformDetector()
 
   if (platform === Platform.WEB) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     const { useConnectModal } = require('@rainbow-me/rainbowkit')
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     return useConnectModal()
   }
 

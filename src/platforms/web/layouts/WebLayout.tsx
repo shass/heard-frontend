@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode } from 'react'
+import { ReactNode, memo } from 'react'
 import { Web3Provider } from '@/src/platforms/web/providers/Web3Provider'
 import { CreateSurveyModalProvider } from '@/components/providers/create-survey-modal-provider'
 import { NavigationProvider } from '@/components/providers/navigation-provider'
@@ -11,9 +11,7 @@ interface WebLayoutProps {
   children: ReactNode
 }
 
-export default function WebLayout({ children }: WebLayoutProps) {
-  console.log('[WebLayout] Rendering Web layout')
-
+function WebLayoutComponent({ children }: WebLayoutProps) {
   return (
     <Web3Provider>
       <CreateSurveyModalProvider>
@@ -26,3 +24,5 @@ export default function WebLayout({ children }: WebLayoutProps) {
     </Web3Provider>
   )
 }
+
+export default memo(WebLayoutComponent)

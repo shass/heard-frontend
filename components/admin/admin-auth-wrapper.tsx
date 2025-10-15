@@ -16,31 +16,23 @@ interface AdminAuthWrapperProps {
 export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
   const router = useRouter()
   const { openConnectModal } = useConnectModal()
-  const { 
-    login, 
-    isAuthenticated, 
-    user, 
-    isLoading: authLoading, 
-    isConnected, 
-    address 
+  const {
+    login,
+    isAuthenticated,
+    user,
+    isLoading: authLoading,
+    isConnected,
+    address
   } = useAdminAuth()
   const [isCreatingSession, setIsCreatingSession] = useState(false)
-
-  useEffect(() => {
-    // If authenticated and not admin, redirect to home
-    if (isAuthenticated && user && user.role !== 'admin') {
-      router.push('/')
-      return
-    }
-  }, [isAuthenticated, user, router])
 
   const handleCreateSession = async (event?: React.MouseEvent) => {
     // Prevent any default behavior
     event?.preventDefault()
     event?.stopPropagation()
-    
+
     if (!isConnected) return
-    
+
     // Prevent double calls
     if (isCreatingSession) {
       console.log('[AdminAuthWrapper] Already creating session, skipping...')
