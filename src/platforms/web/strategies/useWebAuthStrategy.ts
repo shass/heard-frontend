@@ -11,11 +11,23 @@ export function useWebAuthStrategy(): IAuthStrategy {
   const { address, isConnected } = useAccount()
   const { signMessageAsync } = useSignMessage()
 
-  // Read user from store instead of local state to avoid conflicts with useAdminAuth
+  // Read user from store instead of local state to avoid conflicts
   const user = useAuthStore(state => state.user)
   const [authState, setAuthState] = useState<AuthState>(AuthState.UNAUTHENTICATED)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Sync authState with user from store
+  // This ensures that when WebAuthInitializer restores user, authState reflects it
+  useEffect(() => {
+    if (user) {
+      console.log('[useWebAuthStrategy] User exists in store, setting authState to AUTHENTICATED')
+      setAuthState(AuthState.AUTHENTICATED)
+    } else {
+      console.log('[useWebAuthStrategy] No user in store, setting authState to UNAUTHENTICATED')
+      setAuthState(AuthState.UNAUTHENTICATED)
+    }
+  }, [user])
 
   // Create auth provider instance directly
   const authProvider = useMemo(() => {
@@ -32,6 +44,13 @@ export function useWebAuthStrategy(): IAuthStrategy {
     if (!authProvider) return
 
     const unsubscribe = authProvider.onAuthStateChange((state) => {
+      // Don't override authState if we already have a user from WebAuthInitializer
+      const currentUser = useAuthStore.getState().user
+      if (currentUser && state === AuthState.UNAUTHENTICATED) {
+        console.log('[useWebAuthStrategy] Ignoring UNAUTHENTICATED state - user exists in store')
+        return
+      }
+
       setAuthState(state)
       const loading = state === AuthState.LOADING
       setIsLoading(loading)
@@ -42,21 +61,11 @@ export function useWebAuthStrategy(): IAuthStrategy {
     return unsubscribe
   }, [authProvider])
 
-  // Update user when authenticated
-  // DISABLED: This conflicts with useAdminAuth and causes request loops
-  // useEffect(() => {
-  //   if (authState === AuthState.AUTHENTICATED && authProvider) {
-  //     authProvider.getCurrentUser().then((user) => {
-  //       setUser(user)
-  //       // Sync with Zustand store
-  //       useAuthStore.getState().setUser(user as any)
-  //     }).catch(console.error)
-  //   } else {
-  //     setUser(null)
-  //     // Sync with Zustand store
-  //     useAuthStore.getState().setUser(null)
-  //   }
-  // }, [authState, authProvider])
+  // NOTE: User syncing with store is handled by:
+  // 1. WebAuthInitializer on app mount (restores session)
+  // 2. authenticate() method when user manually logs in
+  // 3. authState syncs with user via useEffect above
+  // No need to call getCurrentUser() when authState changes
 
   const authenticate = useCallback(async (): Promise<AuthResult> => {
     if (!authProvider) {
@@ -118,11 +127,23 @@ export function useWebAuthStrategy(): IAuthStrategy {
     }
   }, [authProvider])
 
-  // Check auth status on mount
-  // DISABLED: This conflicts with useAdminAuth and causes request loops
-  // useEffect(() => {
-  //   checkAuthStatus()
-  // }, [checkAuthStatus])
+  // Check auth status on mount - ONLY if not already initialized globally
+  // WebAuthInitializer handles the initial auth check to prevent duplicate requests
+  useEffect(() => {
+    const { initialized } = useAuthStore.getState()
+
+    // Skip if already initialized by WebAuthInitializer
+    if (initialized) {
+      console.log('[useWebAuthStrategy] Skipping auth check - already initialized globally')
+      return
+    }
+
+    // Only check if we have an auth provider ready
+    if (!authProvider) return
+
+    console.log('[useWebAuthStrategy] Running auth check (not initialized globally)')
+    checkAuthStatus()
+  }, [checkAuthStatus, authProvider])
 
   return {
     user: user ? { ...user, platform: Platform.WEB } : null,

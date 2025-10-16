@@ -11,11 +11,13 @@ interface AuthStore {
   loading: boolean
   isLoading: boolean // Alias for compatibility
   error: string | null
+  initialized: boolean // Flag to prevent duplicate auth checks
 
   // Actions
   setUser: (user: User | null) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
+  setInitialized: (initialized: boolean) => void
   logout: () => void
 }
 
@@ -27,12 +29,15 @@ export const useAuthStore = create<AuthStore>()(
       loading: true, // Start with loading true to prevent flickering
       isLoading: true, // Alias for compatibility
       error: null,
+      initialized: false,
 
       setUser: (user) => set({ user, isAuthenticated: !!user, error: null }),
 
       setLoading: (loading) => set({ loading, isLoading: loading }),
 
       setError: (error) => set({ error, loading: false, isLoading: false }),
+
+      setInitialized: (initialized) => set({ initialized }),
 
       logout: () => {
         // Clear auth state
@@ -42,6 +47,7 @@ export const useAuthStore = create<AuthStore>()(
           loading: false, // Not loading after explicit logout
           isLoading: false,
           error: null,
+          initialized: false, // Reset initialized flag so auth check runs again
         })
 
         // Clear all survey state as well

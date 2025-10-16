@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAccount } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/loading-states'
 import { Wallet, Shield, ArrowLeft } from 'lucide-react'
-import { useAdminAuth } from '@/src/platforms/web/hooks/useAdminAuth'
+import { useAuth } from '@/src/platforms/_core/hooks/useAuth'
+import { useAuthStore } from '@/lib/store'
 import Link from 'next/link'
 
 interface AdminAuthWrapperProps {
@@ -16,15 +18,15 @@ interface AdminAuthWrapperProps {
 export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
   const router = useRouter()
   const { openConnectModal } = useConnectModal()
+  const { address, isConnected } = useAccount()
   const {
-    login,
+    authenticate,
     logout,
     isAuthenticated,
-    user,
-    isLoading: authLoading,
-    isConnected,
-    address
-  } = useAdminAuth()
+    isLoading: authLoading
+  } = useAuth()
+  // Read backend user with role from store
+  const user = useAuthStore(state => state.user)
   const [isCreatingSession, setIsCreatingSession] = useState(false)
 
   const handleCreateSession = async (event?: React.MouseEvent) => {
@@ -43,7 +45,7 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
     setIsCreatingSession(true)
     try {
       console.log('[AdminAuthWrapper] Creating session...')
-      await login()
+      await authenticate()
       console.log('[AdminAuthWrapper] Session created successfully')
     } catch (error) {
       console.error('[AdminAuthWrapper] Failed to create session:', error)
