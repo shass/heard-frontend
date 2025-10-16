@@ -179,13 +179,6 @@ function WalletComponent() {
 
 ## 🧪 Testing
 
-Visit `/platform-test` page to test the platform system:
-
-1. **Platform Detection**: Automatically detects current environment
-2. **Web Features**: Test wallet connection and authentication
-3. **Browser Capabilities**: View detailed browser feature detection
-4. **Provider Status**: Check initialization status of all providers
-
 ### Testing Different Platforms
 
 Open browser console and run these commands to simulate other platforms:

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuthActions } from '@/components/providers/auth-provider'
+import { useAuthStore } from '@/lib/store'
 import {
   getAdminSurveys,
   createSurvey,
@@ -18,7 +18,7 @@ import { useNotifications } from '@/components/ui/notifications'
 import type { AdminSurveyListItem, CreateSurveyRequest, UpdateSurveyRequest } from '@/lib/types'
 
 export function useSurveyManagement() {
-  const { isAuthenticated, user } = useAuthActions()
+  const { isAuthenticated, user } = useAuthStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [selectedSurvey, setSelectedSurvey] = useState<AdminSurveyListItem | null>(null)

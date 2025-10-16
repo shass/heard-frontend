@@ -4,41 +4,6 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { User, Survey, SurveyResponse } from '@/lib/types'
 
-// SSR-safe storage for UI preferences only
-const createSSRSafeStorage = () => {
-  if (typeof window === 'undefined') {
-    return {
-      getItem: () => null,
-      setItem: () => {},
-      removeItem: () => {},
-    }
-  }
-
-  return {
-    getItem: (name: string) => {
-      try {
-        return localStorage.getItem(name)
-      } catch {
-        return null
-      }
-    },
-    setItem: (name: string, value: string) => {
-      try {
-        localStorage.setItem(name, value)
-      } catch {
-        // Silently fail
-      }
-    },
-    removeItem: (name: string) => {
-      try {
-        localStorage.removeItem(name)
-      } catch {
-        // Silently fail
-      }
-    },
-  }
-}
-
 // Auth store
 interface AuthStore {
   user: User | null
@@ -46,32 +11,33 @@ interface AuthStore {
   loading: boolean
   isLoading: boolean // Alias for compatibility
   error: string | null
+  initialized: boolean // Flag to prevent duplicate auth checks
 
   // Actions
   setUser: (user: User | null) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
+  setInitialized: (initialized: boolean) => void
   logout: () => void
 }
 
 export const useAuthStore = create<AuthStore>()(
   devtools(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
       loading: true, // Start with loading true to prevent flickering
       isLoading: true, // Alias for compatibility
       error: null,
+      initialized: false,
 
-      setUser: (user) => set((state) => ({
-        user,
-        isAuthenticated: !!user,
-        error: null,
-      })),
+      setUser: (user) => set({ user, isAuthenticated: !!user, error: null }),
 
       setLoading: (loading) => set({ loading, isLoading: loading }),
 
       setError: (error) => set({ error, loading: false, isLoading: false }),
+
+      setInitialized: (initialized) => set({ initialized }),
 
       logout: () => {
         // Clear auth state
@@ -81,6 +47,7 @@ export const useAuthStore = create<AuthStore>()(
           loading: false, // Not loading after explicit logout
           isLoading: false,
           error: null,
+          initialized: false, // Reset initialized flag so auth check runs again
         })
 
         // Clear all survey state as well

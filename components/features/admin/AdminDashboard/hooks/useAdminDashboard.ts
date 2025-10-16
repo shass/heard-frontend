@@ -3,16 +3,16 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getAdminDashboardStats } from '@/lib/api/admin'
-import { useAuthActions } from '@/components/providers/auth-provider'
+import { useAuthStore } from '@/lib/store'
 
 export function useAdminDashboard() {
   const [activeTab, setActiveTab] = useState('surveys')
-  const { isAuthenticated, user } = useAuthActions()
+  const { isAuthenticated, user } = useAuthStore()
 
-  const { 
-    data: stats, 
-    isLoading: loading, 
-    error 
+  const {
+    data: stats,
+    isLoading: loading,
+    error
   } = useQuery({
     queryKey: ['admin-dashboard-stats'],
     queryFn: getAdminDashboardStats,

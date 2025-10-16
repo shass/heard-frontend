@@ -9,13 +9,13 @@ import { useUser, useIsAuthenticated, useAuthLoading } from "@/lib/store"
 import { useCreateSurveyModal } from "@/hooks/use-create-survey-modal"
 import { Settings } from "lucide-react"
 
-// Dynamically import Web3 components to avoid SSR issues
+// Dynamically import AuthSection to avoid SSR issues
 const AuthSection = dynamic(
-  () => import('./auth/auth-section').then((mod) => ({ 
+  () => import('@/src/platforms/_core/components/AuthSectionSwitch').then((mod) => ({
     default: function WrappedAuthSection(props: any) {
       return (
         <React.Suspense fallback={<div className="h-10 w-32 bg-zinc-100 rounded-lg animate-pulse"></div>}>
-          <mod.AuthSection {...props} />
+          <mod.AuthSectionSwitch {...props} />
         </React.Suspense>
       )
     }
@@ -37,7 +37,6 @@ export function HeaderClient({ onCreateSurvey }: HeaderClientProps) {
   const isAuthenticated = useIsAuthenticated()
   const isAuthLoading = useAuthLoading()
   const { openModal } = useCreateSurveyModal()
-
   const isAuthenticatedAdmin = !isAuthLoading && isAuthenticated && user?.role === 'admin'
 
   return (
@@ -46,7 +45,21 @@ export function HeaderClient({ onCreateSurvey }: HeaderClientProps) {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center h-10">
             <Link href="/">
-              <Image src="/logo.svg" alt="Heard Labs" width={160} height={160} className="h-10 w-40 min-w-40" />
+              {/* Full logo on desktop, icon on mobile */}
+              <Image
+                src="/logo.svg"
+                alt="Heard Labs"
+                width={160}
+                height={160}
+                className="hidden sm:block h-10 w-40 min-w-40"
+              />
+              <Image
+                src="/icon-200x200.png"
+                alt="Heard"
+                width={40}
+                height={40}
+                className="block sm:hidden h-10 w-10 min-w-10"
+              />
             </Link>
           </div>
 

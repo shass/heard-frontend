@@ -6,10 +6,36 @@ import type { ApiResponse, ApiError } from '@/lib/types'
 class ApiClient {
   private baseURL: string
   private timeout: number
+  private authToken: string | null = null
 
   constructor() {
     this.baseURL = env.API_URL
     this.timeout = env.API_TIMEOUT
+    // Load token from localStorage on initialization
+    if (typeof window !== 'undefined') {
+      this.authToken = localStorage.getItem('auth_token')
+    }
+  }
+
+  // Set auth token for Authorization header (used by Base App)
+  setAuthToken(token: string | null) {
+    this.authToken = token
+    if (token && typeof window !== 'undefined') {
+      localStorage.setItem('auth_token', token)
+    } else if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_token')
+    }
+  }
+
+  // Get auth token from memory or localStorage
+  getAuthToken(): string | null {
+    if (this.authToken) {
+      return this.authToken
+    }
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('auth_token')
+    }
+    return null
   }
 
   private async fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
@@ -22,12 +48,18 @@ class ApiClient {
         options.method !== 'DELETE' && 
         (options.body !== undefined || options.method === 'POST')
       
-      const headers: HeadersInit = {
-        ...options.headers,
+      const headers: Record<string, string> = {
+        ...(options.headers as Record<string, string>),
       }
-      
+
       if (shouldSetContentType && !(options.body instanceof FormData)) {
         headers['Content-Type'] = 'application/json'
+      }
+
+      // Add Authorization header if token exists (for Base App)
+      const token = this.getAuthToken()
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
       }
 
       const response = await fetch(url, {
@@ -53,6 +85,7 @@ class ApiClient {
 
   private async handleResponse<T>(response: Response): Promise<T> {
     if (response.status === 401) {
+      console.error('[ApiClient] 401 Unauthorized:', response.url)
       // Handle unauthorized - HttpOnly cookie will be cleared by server
       // No action needed on client side
     }
@@ -61,6 +94,11 @@ class ApiClient {
       let errorData: ApiError
       try {
         errorData = await response.json()
+        console.error('[ApiClient] Request failed:', {
+          url: response.url,
+          status: response.status,
+          error: errorData
+        })
       } catch {
         errorData = this.formatError(new Error(`HTTP ${response.status}: ${response.statusText}`))
       }

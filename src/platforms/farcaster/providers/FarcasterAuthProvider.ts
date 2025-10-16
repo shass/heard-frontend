@@ -1,18 +1,22 @@
-import { 
-  IAuthProvider, 
-  AuthResult, 
-  Session, 
-  User, 
-  AuthState 
-} from '../../shared/interfaces/IAuthProvider'
+import {
+  IAuthProvider,
+  AuthResult,
+  Session,
+  User,
+  AuthState
+} from '../../_core/shared/interfaces/IAuthProvider'
+import { Platform } from '../../config'
 
 export class FarcasterAuthProvider implements IAuthProvider {
   private authStateCallbacks: Set<(state: AuthState) => void> = new Set()
   private currentState: AuthState = AuthState.UNAUTHENTICATED
   private currentUser: User | null = null
   private currentSession: Session | null = null
-  
-  constructor(private miniAppSdk: any) {
+
+  constructor(
+    private miniKitContext: ReturnType<typeof import('@coinbase/onchainkit/minikit').useMiniKit>,
+    private miniAppSdk: any // Farcaster SDK for quickAuth API
+  ) {
     this.initializeFromContext()
   }
   
@@ -26,7 +30,7 @@ export class FarcasterAuthProvider implements IAuthProvider {
         const user: User = {
           id: contextData.user.fid?.toString() || 'unknown',
           walletAddress: undefined, // Context doesn't provide wallet address directly
-          platform: 'farcaster',
+          platform: Platform.FARCASTER,
           metadata: {
             fid: contextData.user.fid,
             username: contextData.user.username,
@@ -51,14 +55,15 @@ export class FarcasterAuthProvider implements IAuthProvider {
   
   private async getContextData(): Promise<any> {
     try {
-      if (this.miniAppSdk?.context) {
-        return this.miniAppSdk.context
+      // Get context from OnChainKit MiniKit hook
+      if (this.miniKitContext?.context) {
+        return this.miniKitContext.context
       }
-      
-      // Try to get context from SDK
-      return await this.miniAppSdk?.getContext?.()
+
+      console.warn('[FarcasterAuth] No MiniKit context available')
+      return null
     } catch (error) {
-      console.warn('[FarcasterAuth] No context data available:', error)
+      console.error('[FarcasterAuth] Failed to get context:', error)
       return null
     }
   }
@@ -102,7 +107,7 @@ export class FarcasterAuthProvider implements IAuthProvider {
       const user: User = {
         id: userData.fid?.toString() || 'unknown',
         walletAddress: undefined, // Quick Auth doesn't provide wallet address
-        platform: 'farcaster',
+        platform: Platform.FARCASTER,
         metadata: {
           fid: userData.fid,
           username: userData.username,
@@ -113,13 +118,13 @@ export class FarcasterAuthProvider implements IAuthProvider {
           quickAuthToken: token
         }
       }
-      
+
       // Create session
       this.currentSession = {
         id: `farcaster-session-${userData.fid}`,
         userId: userData.fid?.toString() || 'unknown',
         walletAddress: undefined,
-        platform: 'farcaster',
+        platform: Platform.FARCASTER,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
       }
       
@@ -195,7 +200,7 @@ export class FarcasterAuthProvider implements IAuthProvider {
       return {
         id: contextData.user.fid?.toString() || 'unknown',
         walletAddress: undefined,
-        platform: 'farcaster',
+        platform: Platform.FARCASTER,
         metadata: {
           fid: contextData.user.fid,
           username: contextData.user.username,
@@ -255,17 +260,18 @@ export class FarcasterAuthProvider implements IAuthProvider {
   
   async getFarcasterProfile(): Promise<any> {
     const user = await this.getCurrentUser()
-    if (!user?.metadata?.fid) {
+    const metadata = user?.metadata as any
+    if (!metadata?.fid) {
       return null
     }
-    
+
     return {
-      fid: user.metadata.fid,
-      username: user.metadata.username,
-      displayName: user.metadata.displayName,
-      pfpUrl: user.metadata.pfpUrl,
-      followerCount: user.metadata.followerCount,
-      followingCount: user.metadata.followingCount,
+      fid: metadata.fid,
+      username: metadata.username,
+      displayName: metadata.displayName,
+      pfpUrl: metadata.pfpUrl,
+      followerCount: metadata.followerCount,
+      followingCount: metadata.followingCount,
       isVerified: this.currentState === AuthState.AUTHENTICATED
     }
   }
@@ -279,14 +285,15 @@ export class FarcasterAuthProvider implements IAuthProvider {
   getSocialContext() {
     const user = this.currentUser
     if (!user) return null
-    
+
+    const metadata = user.metadata as any
     return {
-      platform: 'farcaster',
-      fid: user.metadata?.fid,
-      username: user.metadata?.username,
-      displayName: user.metadata?.displayName,
+      platform: Platform.FARCASTER,
+      fid: metadata?.fid,
+      username: metadata?.username,
+      displayName: metadata?.displayName,
       isAuthenticated: this.currentState === AuthState.AUTHENTICATED,
-      isFromContext: user.metadata?.isFromContext || false
+      isFromContext: metadata?.isFromContext || false
     }
   }
   
@@ -294,5 +301,57 @@ export class FarcasterAuthProvider implements IAuthProvider {
   async getWalletAddress(): Promise<string | null> {
     const user = await this.getCurrentUser()
     return user?.walletAddress || null
+  }
+
+  // IAuthProvider required alias methods
+  async authenticate(): Promise<AuthResult> {
+    return this.connect()
+  }
+
+  async logout(): Promise<void> {
+    return this.disconnect()
+  }
+
+  async checkAuthStatus(): Promise<void> {
+    try {
+      const user = await this.getCurrentUser()
+      if (user && this.currentState === AuthState.AUTHENTICATED) {
+        this.currentUser = user
+        this.setState(AuthState.AUTHENTICATED)
+      } else {
+        this.setState(AuthState.UNAUTHENTICATED)
+      }
+    } catch (error: any) {
+      this.setState(AuthState.ERROR)
+    }
+  }
+
+  // IAuthProvider required getters
+  get isAuthenticated(): boolean {
+    return this.currentState === AuthState.AUTHENTICATED
+  }
+
+  get isLoading(): boolean {
+    return this.currentState === AuthState.LOADING
+  }
+
+  get error(): string | null {
+    return this.currentState === AuthState.ERROR ? 'Authentication error' : null
+  }
+
+  get user(): User | null {
+    return this.currentUser
+  }
+
+  get platform(): string {
+    return Platform.FARCASTER
+  }
+
+  get authState(): AuthState {
+    return this.currentState
+  }
+
+  get canAuthenticate(): boolean {
+    return !!this.miniAppSdk && !!this.miniAppSdk.quickAuth
   }
 }

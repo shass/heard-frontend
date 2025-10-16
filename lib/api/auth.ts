@@ -13,9 +13,11 @@ export class AuthApi {
    * Get nonce for wallet signature
    */
   async getNonce(walletAddress: string): Promise<NonceResponse> {
-    return await apiClient.post<NonceResponse>('/auth/nonce', {
+    const response = await apiClient.post<NonceResponse>('/auth/nonce', {
       walletAddress,
     })
+    console.log('[AuthApi] getNonce response:', response)
+    return response
   }
 
   /**

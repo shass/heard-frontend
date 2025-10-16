@@ -121,12 +121,12 @@ export function HeardPointsHistoryModal({ isOpen, onClose }: HeardPointsHistoryM
           <LoadingState
             loading={isLoading}
             error={error ? 'Failed to load transaction history' : null}
-            empty={!history?.transactions?.length}
+            empty={!history?.items?.length}
             emptyMessage="No transactions found"
           >
-            {history?.transactions && (
+            {history?.items && (
               <div className="space-y-4">
-                {history.transactions.map((transaction) => (
+                {history.items.map((transaction) => (
                   <div
                     key={transaction.id}
                     className="flex items-center justify-between p-4 bg-zinc-50 rounded-lg border border-zinc-200"
@@ -160,7 +160,7 @@ export function HeardPointsHistoryModal({ isOpen, onClose }: HeardPointsHistoryM
         {/* Footer */}
         <div className="flex items-center justify-between p-6 border-t border-zinc-200 bg-zinc-50">
           <div className="text-sm text-zinc-600">
-            {history?.total ? `Showing ${history.transactions?.length} of ${history.total} transactions` : ''}
+            {history?.pagination?.total ? `Showing ${history.items?.length || 0} of ${history.pagination.total} transactions` : ''}
           </div>
           <Button
             onClick={onClose}

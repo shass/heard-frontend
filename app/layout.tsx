@@ -1,14 +1,10 @@
 import type { Metadata } from 'next'
-import { Web3Provider } from '@/components/providers/web3-provider'
-import { AuthProvider } from '@/components/providers/auth-provider'
-import { CreateSurveyModalProvider } from '@/components/providers/create-survey-modal-provider'
-import { MiniKitContextProvider } from '@/components/providers/minikit-provider'
-import { NavigationProvider } from '@/components/providers/navigation-provider'
-import { NotificationContainer } from '@/components/ui/notifications'
-import { NetworkStatus } from '@/components/lazy'
 import ErrorBoundary from '@/components/ui/error-boundary'
-import { StoreHydration } from '@/lib/store/hydration'
-import { MiniKitReady } from '@/components/providers/minikit-ready'
+import { MobileDevTools } from '@/components/debug/mobile-devtools'
+import { PlatformDebugBanner } from '@/components/debug/platform-debug-banner'
+import { PlatformDetectorProvider } from '@/src/platforms/_core/PlatformDetectorProvider'
+import { MiniKitContextProvider } from '@/src/platforms/base-app/providers/MiniKitProvider'
+import { PlatformLayoutSwitch } from '@/src/platforms/_core/components/PlatformLayoutSwitch'
 import { env } from '@/lib/env'
 import './globals.css'
 import React from 'react';
@@ -99,19 +95,16 @@ export default function RootLayout({
       <body>
         <ErrorBoundary>
           <MiniKitContextProvider>
-            <Web3Provider>
-              <AuthProvider>
-                <CreateSurveyModalProvider>
-                  <NavigationProvider>
-                    <StoreHydration />
-                    <NetworkStatus />
-                    <MiniKitReady />
-                    {children}
-                    <NotificationContainer />
-                  </NavigationProvider>
-                </CreateSurveyModalProvider>
-              </AuthProvider>
-            </Web3Provider>
+            <PlatformDetectorProvider>
+              {/* Debug tools - общие для всех платформ */}
+              <PlatformDebugBanner />
+              {/*<MobileDevTools />*/}
+
+              {/* Platform-specific layout switch */}
+              <PlatformLayoutSwitch>
+                {children}
+              </PlatformLayoutSwitch>
+            </PlatformDetectorProvider>
           </MiniKitContextProvider>
         </ErrorBoundary>
       </body>

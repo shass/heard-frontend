@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useOpenUrl } from '@coinbase/onchainkit/minikit'
+import { useOpenUrl } from '@/src/platforms/base-app/hooks/useOpenUrl'
 import { useUserReward } from '@/hooks/use-reward'
 import { useHeardPoints } from '@/hooks/use-users'
 import { useIsAuthenticated, useUser } from '@/lib/store'

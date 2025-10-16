@@ -1,4 +1,5 @@
 // TypeScript types for the application
+import { Platform } from '@/src/platforms/config'
 
 // User types (compatible with backend)
 export interface User {
@@ -10,6 +11,7 @@ export interface User {
   lastLoginAt?: string
   createdAt: string
   updatedAt: string
+  platform?: Platform | string // Platform identifier from Platform enum
 }
 
 // Survey types (compatible with backend) 
@@ -130,8 +132,9 @@ export interface AuthResponse {
 }
 
 export interface NonceResponse {
-  message: string
-  jwtToken: string // JWT token containing nonce data
+  nonce: string // Plain nonce for SIWE/Base App (at least 8 alphanumeric chars)
+  message: string // Custom message for Web platform
+  jwtToken: string // JWT token containing nonce data for verification
 }
 
 // Eligibility types
@@ -172,6 +175,8 @@ export interface ConnectWalletRequest {
   signature: string
   message: string
   jwtToken: string // JWT token from nonce response
+  platform?: string // Platform identifier: 'web' | 'base' | 'farcaster'
+  metadata?: any // Platform-specific metadata
 }
 
 export interface AnswerSubmissionRequest {

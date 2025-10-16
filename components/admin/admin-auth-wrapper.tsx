@@ -1,12 +1,14 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAccount } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/loading-states'
 import { Wallet, Shield, ArrowLeft } from 'lucide-react'
-import { useAdminAuth } from '@/hooks/use-admin-auth'
+import { useAuth } from '@/src/platforms/_core/hooks/useAuth'
+import { useAuthStore } from '@/lib/store'
 import Link from 'next/link'
 
 interface AdminAuthWrapperProps {
@@ -16,31 +18,24 @@ interface AdminAuthWrapperProps {
 export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
   const router = useRouter()
   const { openConnectModal } = useConnectModal()
-  const { 
-    login, 
-    isAuthenticated, 
-    user, 
-    isLoading: authLoading, 
-    isConnected, 
-    address 
-  } = useAdminAuth()
+  const { address, isConnected } = useAccount()
+  const {
+    authenticate,
+    logout,
+    isAuthenticated,
+    isLoading: authLoading
+  } = useAuth()
+  // Read backend user with role from store
+  const user = useAuthStore(state => state.user)
   const [isCreatingSession, setIsCreatingSession] = useState(false)
-
-  useEffect(() => {
-    // If authenticated and not admin, redirect to home
-    if (isAuthenticated && user && user.role !== 'admin') {
-      router.push('/')
-      return
-    }
-  }, [isAuthenticated, user, router])
 
   const handleCreateSession = async (event?: React.MouseEvent) => {
     // Prevent any default behavior
     event?.preventDefault()
     event?.stopPropagation()
-    
+
     if (!isConnected) return
-    
+
     // Prevent double calls
     if (isCreatingSession) {
       console.log('[AdminAuthWrapper] Already creating session, skipping...')
@@ -50,7 +45,7 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
     setIsCreatingSession(true)
     try {
       console.log('[AdminAuthWrapper] Creating session...')
-      await login()
+      await authenticate()
       console.log('[AdminAuthWrapper] Session created successfully')
     } catch (error) {
       console.error('[AdminAuthWrapper] Failed to create session:', error)
@@ -145,8 +140,23 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
 
   // If authenticated, render children
   if (isAuthenticated && user) {
+    console.log('[AdminAuthWrapper] Security check:', {
+      userRole: user.role,
+      userWallet: user.walletAddress,
+      connectedWallet: address,
+      walletsMatch: user.walletAddress?.toLowerCase() === address?.toLowerCase()
+    })
+
+    // CRITICAL: Check wallet address matches
+    if (user.walletAddress?.toLowerCase() !== address?.toLowerCase()) {
+      console.error('[AdminAuthWrapper] ⚠️ SECURITY: Wallet mismatch! Logging out...')
+      logout()
+      return null
+    }
+
     // Double-check admin role
     if (user.role !== 'admin') {
+      console.error('[AdminAuthWrapper] ⚠️ SECURITY: Non-admin user attempting access')
       router.push('/')
       return null
     }

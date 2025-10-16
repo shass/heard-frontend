@@ -4,19 +4,14 @@ import type {
   AdminSurveyListItem,
   CreateSurveyRequest,
   UpdateSurveyRequest,
-  WhitelistEntry,
-  WhitelistManagementData,
   WhitelistPagedData,
-  BulkWhitelistRequest,
   RewardLink,
   UsedRewardLink,
   RewardLinksData,
   ImportRewardLinksRequest,
   Survey,
-  SurveyResponse,
   AdminSurveyResponse,
   User,
-  ApiResponse,
   PaginationMeta
 } from '../types'
 
@@ -112,10 +107,10 @@ export const duplicateSurvey = async (surveyId: string, newName: string): Promis
 }
 
 export const refreshSurveyStats = async (surveyId?: string): Promise<{ success: boolean; message: string }> => {
-  const endpoint = surveyId 
+  const endpoint = surveyId
     ? `/admin/surveys/${surveyId}/refresh-stats`
     : '/admin/surveys/refresh-stats'
-  
+
   const data = await apiClient.post<{ success: boolean; message: string }>(endpoint, {})
   return data
 }
@@ -169,38 +164,6 @@ export const getSurveyResponses = async (surveyId: string, params?: {
   }
 }
 
-export const exportSurveyResponses = async (surveyId: string, format: 'csv' | 'json' = 'csv'): Promise<Blob> => {
-  const data = await apiClient.get<Blob>(`/admin/surveys/${surveyId}/export`, {
-    params: { format },
-    responseType: 'blob'
-  })
-  return data
-}
-
-// Whitelist Management
-export const getWhitelistEntries = async (surveyId: string, params?: {
-  limit?: number
-  offset?: number
-  search?: string
-}): Promise<WhitelistManagementData> => {
-  const data = await apiClient.get<{
-    whitelist: string[]
-  }>(`/admin/surveys/${surveyId}/whitelist`, {
-    params: {
-      limit: params?.limit || 100,
-      offset: params?.offset || 0,
-      search: params?.search,
-      format: 'simple'
-    }
-  })
-
-  return {
-    surveyId,
-    entries: data.whitelist || [],
-    totalEntries: data.whitelist?.length || 0
-  }
-}
-
 // New paginated whitelist function with search and completion status
 export const getWhitelistEntriesPaged = async (surveyId: string, params?: {
   limit?: number
@@ -219,33 +182,12 @@ export const getWhitelistEntriesPaged = async (surveyId: string, params?: {
   return data
 }
 
-export const addWhitelistEntry = async (surveyId: string, walletAddress: string): Promise<{ message: string, addedAddress: string }> => {
-  const data = await apiClient.post<{ message: string, addedAddress: string }>(`/admin/surveys/${surveyId}/whitelist/add`, {
-    walletAddress
-  })
-
-  return data
-}
-
 export const removeWhitelistEntry = async (surveyId: string, entryId: string): Promise<void> => {
   await apiClient.delete(`/admin/surveys/${surveyId}/whitelist/${entryId}`)
 }
 
-export const toggleWhitelistEntry = async (surveyId: string, entryId: string, isActive: boolean): Promise<{ message: string, address: string, inWhitelist: boolean }> => {
-  const data = await apiClient.patch<{ message: string, address: string, inWhitelist: boolean }>(`/admin/surveys/${surveyId}/whitelist/${entryId}/toggle`, {
-    isActive
-  })
-
-  return data
-}
-
 export const clearWhitelist = async (surveyId: string): Promise<void> => {
   await apiClient.delete(`/admin/surveys/${surveyId}/whitelist`)
-}
-
-// Note: CSV import is not yet implemented on backend
-export const importWhitelistFromCSV = async (surveyId: string, file: File): Promise<any> => {
-  throw new Error('CSV upload functionality is not yet implemented. Please use TXT file import instead.')
 }
 
 // New batch upload endpoints

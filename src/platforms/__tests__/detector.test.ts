@@ -1,4 +1,4 @@
-import { PlatformDetector } from '../detection/detector'
+import { PlatformDetector } from '../_core/detection/detector'
 import { Platform } from '../config'
 
 describe('PlatformDetector', () => {
