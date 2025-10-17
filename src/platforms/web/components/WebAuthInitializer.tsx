@@ -28,6 +28,11 @@ export function WebAuthInitializer() {
       console.log('[WebAuthInitializer] Starting auth initialization...')
       const { setUser, setLoading, logout: storeLogout, setInitialized } = useAuthStore.getState()
 
+      // CRITICAL: Set initialized=true IMMEDIATELY to prevent race condition
+      // This prevents other components from calling checkAuth while we're initializing
+      setInitialized(true)
+      hasInitialized.current = true
+
       setLoading(true)
 
       try {
@@ -49,8 +54,6 @@ export function WebAuthInitializer() {
         storeLogout()
       } finally {
         setLoading(false)
-        setInitialized(true)
-        hasInitialized.current = true
         console.log('[WebAuthInitializer] Initialization complete')
       }
     }
