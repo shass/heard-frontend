@@ -1,7 +1,7 @@
 'use client'
 
-import { XIcon, MailIcon } from '@/components/ui/icons'
-import { Button } from '@/components/ui/button'
+import { XIcon, MailIcon } from './ui/icons'
+import { Button } from './ui/button'
 import { useCreateSurveyModal } from '@/hooks/use-create-survey-modal'
 
 interface FooterProps {

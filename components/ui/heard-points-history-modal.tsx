@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Button } from "@/components/ui/button"
-import { LoadingState } from "@/components/ui/loading-states"
+import { useState } from 'react'
+import { Button } from "./button"
+import { LoadingState } from "./loading-states"
 import { X, TrendingUp, TrendingDown, Gift, Settings } from "lucide-react"
-import { useHeardPointsHistory } from "@/hooks/use-users"
+import { useHeardPointsHistory } from "@/hooks"
 import { useUser } from "@/lib/store"
 import type { HeardPointsTransaction } from "@/lib/types"
 import { formatDistance } from 'date-fns'
@@ -17,22 +17,15 @@ interface HeardPointsHistoryModalProps {
 export function HeardPointsHistoryModal({ isOpen, onClose }: HeardPointsHistoryModalProps) {
   const [filterType, setFilterType] = useState<'all' | 'earned' | 'spent' | 'bonus' | 'admin_adjustment'>('all')
   const user = useUser()
-  
-  const { 
-    data: history, 
-    isLoading, 
-    error,
-    refetch
-  } = useHeardPointsHistory({ 
-    limit: 50, 
-    type: filterType === 'all' ? undefined : filterType 
-  })
 
-  useEffect(() => {
-    if (isOpen) {
-      refetch()
-    }
-  }, [isOpen, refetch])
+  const {
+    data: history,
+    isLoading,
+    error
+  } = useHeardPointsHistory({
+    limit: 50,
+    type: filterType === 'all' ? undefined : filterType
+  })
 
   const getTransactionIcon = (type: HeardPointsTransaction['type']) => {
     switch (type) {

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Button } from '@/components/ui/button'
+import { Button } from './button'
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react'
 
 interface ErrorBoundaryState {

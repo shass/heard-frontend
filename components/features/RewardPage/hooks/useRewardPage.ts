@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useOpenUrl } from '@/src/platforms/base-app/hooks/useOpenUrl'
-import { useUserReward } from '@/hooks/use-reward'
-import { useHeardPoints } from '@/hooks/use-users'
-import { useIsAuthenticated, useUser } from '@/lib/store'
 import { useNotifications } from '@/components/ui/notifications'
+import { useHeardPoints, useUserReward } from '@/hooks'
+import { useOpenUrl } from '@/src/platforms/_core'
+import { useIsAuthenticated, useUser } from '@/lib/store'
 import type { Survey } from '@/lib/types'
 
 type ClaimStatus = 'pending' | 'claimed' | 'error'
@@ -35,7 +34,7 @@ export function useRewardPage(survey: Survey, responseId?: string) {
   const hasTokenRewards = !!claimLink
   const hasHeardPointsRewards = !!userReward?.heardPointsAwarded && userReward.heardPointsAwarded > 0
   const hasAnyRewards = hasTokenRewards || hasHeardPointsRewards
-  
+
   const hasCompletedSurvey = !!responseId || !!userReward
   const shouldShowErrorState = !hasCompletedSurvey && !rewardLoading
 
@@ -86,11 +85,11 @@ export function useRewardPage(survey: Survey, responseId?: string) {
     claimStatus,
     linkCopied,
     setLinkCopied,
-    
+
     // User data
     user,
     isAuthenticated,
-    
+
     // Reward data
     userReward,
     rewardLoading,
@@ -100,14 +99,14 @@ export function useRewardPage(survey: Survey, responseId?: string) {
     rewardIssued,
     isLinkdropReward,
     isCompletedNoReward,
-    
+
     // Computed values
     hasTokenRewards,
     hasHeardPointsRewards,
     hasAnyRewards,
     hasCompletedSurvey,
     shouldShowErrorState,
-    
+
     // Actions
     handleClaimReward,
     handleCopyClaimLink

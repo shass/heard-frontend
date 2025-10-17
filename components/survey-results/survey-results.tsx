@@ -2,30 +2,39 @@
 
 import React from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { ShareButton } from '@/components/share-button'
+import { SurveyReward } from '@/components/survey'
 import { Users, TrendingUp, Clock, Eye, EyeOff } from 'lucide-react'
-import { useSurveyResultsWithQuestions, useCanViewResults } from '@/hooks/use-survey-clients'
+import { useSurveyResultsWithQuestions, useCanViewResults, useUserReward } from '@/hooks'
+import { useAuth, useWallet } from '@/src/platforms/_core'
 import { resultsUtils } from '@/lib/api/survey-clients'
 import { QuestionChart } from './question-chart'
 import { VisibilityManager } from './visibility-manager'
-import { ShareButton } from '@/components/share-button'
 
 interface SurveyResultsProps {
   surveyId: string
   surveyName?: string
   surveyCompany?: string
+  onClaimReward?: (claimLink: string) => void
 }
 
 export function SurveyResults({
   surveyId,
   surveyName = 'Survey Results',
-  surveyCompany
+  surveyCompany,
+  onClaimReward
 }: SurveyResultsProps) {
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
+
+  const auth = useAuth()
+  const { isAuthenticated } = auth
+  const wallet = useWallet()
+  const isConnected = wallet.isConnected
 
   const { canView, visibilityMode, isLoading: accessLoading } = useCanViewResults(surveyId, token || undefined)
   const {
@@ -35,6 +44,26 @@ export function SurveyResults({
     error,
     isError
   } = useSurveyResultsWithQuestions(surveyId, token || undefined)
+
+  // Get user's reward if authenticated and connected
+  const { data: userReward } = useUserReward(surveyId, isAuthenticated && isConnected)
+
+  const handleClaimReward = () => {
+    if (userReward?.claimLink) {
+      // Use provided handler or fallback to window.open for web
+      if (onClaimReward) {
+        onClaimReward(userReward.claimLink)
+      } else if (typeof window !== 'undefined') {
+        window.open(userReward.claimLink, '_blank', 'noopener,noreferrer')
+      }
+    }
+  }
+
+  const handleCopyClaimLink = () => {
+    if (userReward?.claimLink) {
+      navigator.clipboard.writeText(userReward.claimLink)
+    }
+  }
 
   // Access denied
   if (!accessLoading && !canView) {
@@ -110,6 +139,15 @@ export function SurveyResults({
 
       {/* Visibility Management (admin only) */}
       <VisibilityManager surveyId={surveyId} />
+
+      {/* Reward Section */}
+      {userReward?.claimLink && (
+        <SurveyReward
+          userReward={userReward}
+          onClaimReward={handleClaimReward}
+          onCopyClaimLink={handleCopyClaimLink}
+        />
+      )}
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

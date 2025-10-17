@@ -1,10 +1,7 @@
-import { AuthState, User } from './IAuthProvider'
+import { AuthState, User, AuthResult } from './IAuthProvider'
 
-export interface AuthResult {
-  success: boolean
-  user?: User
-  error?: string
-}
+// Re-export types needed by strategy consumers
+export type { AuthResult, AuthState, User }
 
 export interface IAuthStrategy {
   // State

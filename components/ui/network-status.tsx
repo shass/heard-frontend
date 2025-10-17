@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Wifi, WifiOff, AlertCircle, CheckCircle2 } from 'lucide-react'
-import { useNotifications } from '@/components/ui/notifications'
+import { useNotifications } from './notifications'
 
 interface NetworkStatusProps {
   className?: string

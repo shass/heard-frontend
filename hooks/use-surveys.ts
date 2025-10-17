@@ -97,25 +97,15 @@ export function useSurveyQuestions(id: string) {
  * Only makes request if both id and walletAddress are provided
  */
 export function useSurveyEligibility(id: string, walletAddress?: string) {
+  // Normalize wallet address to lowercase to prevent duplicate requests
+  const normalizedAddress = walletAddress?.toLowerCase()
+
   return useQuery({
-    queryKey: surveyKeys.eligibility(id, walletAddress),
-    queryFn: () => surveyApi.checkEligibility(id, { walletAddress }),
-    enabled: !!id && !!walletAddress,
+    queryKey: surveyKeys.eligibility(id, normalizedAddress),
+    queryFn: () => surveyApi.checkEligibility(id, { walletAddress: normalizedAddress }),
+    enabled: !!id && !!normalizedAddress,
     staleTime: 0, // Always fetch fresh data
     gcTime: 30 * 1000, // 30 seconds
-  })
-}
-
-/**
- * Hook to search surveys
- */
-export function useSearchSurveys(query: string, params: GetSurveysRequest = {}) {
-  return useQuery({
-    queryKey: [...surveyKeys.lists(), 'search', query, params],
-    queryFn: () => surveyApi.searchSurveys(query, params),
-    enabled: query.length > 2, // Only search if query is meaningful
-    staleTime: 1 * 60 * 1000, // 1 minute
-    gcTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 
