@@ -5,25 +5,23 @@ import type { Survey } from '@/lib/types'
 interface RewardDetailsProps {
   survey: Survey
   claimLink?: string
-  linkDropCode?: string
   heardPointsAwarded: number
 }
 
-export function RewardDetails({ 
-  survey, 
-  claimLink, 
-  linkDropCode, 
-  heardPointsAwarded 
+export function RewardDetails({
+  survey,
+  claimLink,
+  heardPointsAwarded
 }: RewardDetailsProps) {
   const formatReward = () => {
-    if (claimLink || linkDropCode) {
+    if (claimLink) {
       return `${formatNumber(survey.rewardAmount)} ${survey.rewardToken}`
     }
-    
+
     if (heardPointsAwarded > 0) {
       return `${heardPointsAwarded} HeardPoints`
     }
-    
+
     return `${formatNumber(survey.rewardAmount)} ${survey.rewardToken}`
   }
 
@@ -34,7 +32,7 @@ export function RewardDetails({
         {formatReward()}
       </div>
 
-      {heardPointsAwarded > 0 && (claimLink || linkDropCode) && (
+      {heardPointsAwarded > 0 && claimLink && (
         <div className="flex items-center justify-center space-x-2 text-sm text-zinc-600">
           <CheckCircle2 className="w-4 h-4 text-green-600" />
           <span>{heardPointsAwarded} HeardPoints have been added to your account</span>

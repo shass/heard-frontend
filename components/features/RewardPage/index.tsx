@@ -26,7 +26,6 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
     isAuthenticated,
     rewardLoading,
     claimLink,
-    linkDropCode,
     heardPointsAwarded,
     rewardIssued,
     hasTokenRewards,
@@ -122,16 +121,14 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
           <RewardDetails
             survey={survey}
             claimLink={claimLink}
-            linkDropCode={linkDropCode}
             heardPointsAwarded={heardPointsAwarded}
           />
 
-          {qrCodeUrl && (claimLink || linkDropCode) && (
+          {qrCodeUrl && claimLink && (
             <ClaimSection
               survey={survey}
               qrCodeUrl={qrCodeUrl}
               claimLink={claimLink}
-              linkDropCode={linkDropCode}
               linkCopied={linkCopied}
               setLinkCopied={setLinkCopied}
             />

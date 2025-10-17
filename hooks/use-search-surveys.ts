@@ -20,6 +20,9 @@ export function useSearchSurveys(options: UseSearchSurveysOptions = {}) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
 
+  // Check if there's an active search/filter
+  const hasActiveSearch = Boolean(searchParams.search || searchParams.company)
+
   // React Query for actual API calls
   const queryResult = useQuery({
     queryKey: ['surveys', 'search', searchParams],
@@ -28,17 +31,18 @@ export function useSearchSurveys(options: UseSearchSurveysOptions = {}) {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort()
       }
-      
+
       // Create new AbortController for this request
       abortControllerRef.current = new AbortController()
-      
+
       return surveyApi.getSurveys({
         ...searchParams,
         limit: searchParams.limit || 50,
         offset: searchParams.offset || 0
       }, { signal: signal || abortControllerRef.current.signal })
     },
-    enabled: enabled,
+    // Only enable when there's an actual search/filter
+    enabled: enabled && hasActiveSearch,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes (was cacheTime)
     retry: (failureCount, error: any) => {
@@ -104,7 +108,7 @@ export function useSearchSurveys(options: UseSearchSurveysOptions = {}) {
     searchNow,
     clearSearch,
     // Convenience getters
-    hasActiveSearch: Boolean(searchParams.search || searchParams.company),
+    hasActiveSearch,
     searchTerm: searchParams.search || '',
     selectedCompany: searchParams.company || ''
   }

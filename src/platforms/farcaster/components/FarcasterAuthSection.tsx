@@ -78,7 +78,7 @@ export function FarcasterAuthSection() {
                 </svg>
               </div>
               <span className="text-sm font-medium text-zinc-700">
-                {formatAddress(user.walletAddress)}
+                {formatAddress(user.walletAddress || '')}
               </span>
               <div className="h-4 w-px bg-zinc-300 mx-2"></div>
               <HeardPointsBalance

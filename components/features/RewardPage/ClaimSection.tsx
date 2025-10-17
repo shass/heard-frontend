@@ -7,7 +7,6 @@ interface ClaimSectionProps {
   survey: Survey
   qrCodeUrl: string | null
   claimLink?: string
-  linkDropCode?: string
   linkCopied: boolean
   setLinkCopied: (copied: boolean) => void
 }
@@ -16,13 +15,12 @@ export function ClaimSection({
   survey,
   qrCodeUrl,
   claimLink,
-  linkDropCode,
   linkCopied,
   setLinkCopied
 }: ClaimSectionProps) {
   const notifications = useNotifications()
 
-  const claimUrl = claimLink || (linkDropCode ? `${window.location.origin}/claim/${linkDropCode}` : '')
+  const claimUrl = claimLink || ''
 
   if (!qrCodeUrl || !claimUrl) return null
 
