@@ -1,5 +1,6 @@
 // Platform Detector
 export * from './PlatformDetectorProvider'
+export { platformState } from '@/lib/platform/platformState'
 
 // Hooks
 export * from './hooks/useAuth'

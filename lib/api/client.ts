@@ -2,6 +2,7 @@
 
 import { env } from '@/lib/env'
 import type { ApiResponse, ApiError } from '@/lib/types'
+import { platformState } from '@/lib/platform/platformState'
 
 class ApiClient {
   private baseURL: string
@@ -11,14 +12,19 @@ class ApiClient {
   constructor() {
     this.baseURL = env.API_URL
     this.timeout = env.API_TIMEOUT
-    // Load token from localStorage on initialization
-    if (typeof window !== 'undefined') {
-      this.authToken = localStorage.getItem('auth_token')
-    }
+    // NOTE: Don't load token in constructor due to race condition with platformState
+    // Token will be loaded lazily in getAuthToken()
   }
 
-  // Set auth token for Authorization header (used by Base App)
+  // Set auth token for Authorization header (used by Base App only)
+  // Web platform doesn't use this - it relies on HttpOnly cookies
   setAuthToken(token: string | null) {
+    // Only use localStorage for Base App
+    if (!platformState.isBaseApp()) {
+      console.log('[ApiClient] Ignoring setAuthToken - Web platform uses HttpOnly cookies')
+      return
+    }
+
     this.authToken = token
     if (token && typeof window !== 'undefined') {
       localStorage.setItem('auth_token', token)
@@ -27,15 +33,20 @@ class ApiClient {
     }
   }
 
-  // Get auth token from memory or localStorage
+  // Get auth token from memory or localStorage (Base App only)
+  // Web platform doesn't use this - it relies on HttpOnly cookies
   getAuthToken(): string | null {
-    if (this.authToken) {
-      return this.authToken
+    // Only use localStorage for Base App
+    if (!platformState.isBaseApp()) {
+      return null
     }
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('auth_token')
+
+    // Lazy-load token from localStorage if not in memory
+    if (!this.authToken && typeof window !== 'undefined') {
+      this.authToken = localStorage.getItem('auth_token')
     }
-    return null
+
+    return this.authToken
   }
 
   private async fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {

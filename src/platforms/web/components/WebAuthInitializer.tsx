@@ -39,22 +39,14 @@ export function WebAuthInitializer() {
         const userData = await authApi.checkAuth()
 
         if (userData) {
-          console.log('[WebAuthInitializer] Session restored:', {
-            id: userData.id,
-            role: userData.role,
-            wallet: userData.walletAddress
-          })
           setUser(userData)
         } else {
-          console.log('[WebAuthInitializer] No active session')
           storeLogout()
         }
       } catch (error: any) {
-        console.log('[WebAuthInitializer] Session check failed:', error.message)
         storeLogout()
       } finally {
         setLoading(false)
-        console.log('[WebAuthInitializer] Initialization complete')
       }
     }
 

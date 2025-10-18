@@ -5,6 +5,7 @@ import { useMiniKit } from '@coinbase/onchainkit/minikit'
 import { FarcasterAuthProvider } from '../providers/FarcasterAuthProvider'
 import { AuthState, User } from '../../_core/shared/interfaces/IAuthProvider'
 import { IAuthStrategy, AuthResult } from '../../_core/shared/interfaces/IAuthStrategy'
+import { useAuthStore } from '@/lib/store'
 
 export function useFarcasterAuthStrategy(): IAuthStrategy {
   const miniKit = useMiniKit()
@@ -118,13 +119,27 @@ export function useFarcasterAuthStrategy(): IAuthStrategy {
     }
   }, [authProvider])
 
-  // Check auth status on mount and when authProvider changes
+  // Check auth status on mount only (not when authProvider changes)
+  // This prevents duplicate /auth/me requests when provider is recreated
   useEffect(() => {
     if (!authProvider) return
 
+    const { isAuthStrategyReady, setAuthStrategyReady } = useAuthStore.getState()
+
+    // Skip if any other strategy instance already checked
+    if (isAuthStrategyReady) {
+      console.log('[useFarcasterAuthStrategy] Skipping auth check - strategy already ready')
+      return
+    }
+
+    console.log('[useFarcasterAuthStrategy] Running auth check')
+
+    // Mark as ready IMMEDIATELY to prevent race conditions
+    setAuthStrategyReady(true)
+
     checkAuthStatus()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authProvider])
+  }, [])
 
   return {
     user,

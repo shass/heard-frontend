@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react'
 import { Platform } from '../config'
 import { sdk } from '@farcaster/miniapp-sdk'
+import { platformState } from '@/lib/platform/platformState'
 
 interface PlatformDetectorContext {
   platform: Platform
@@ -48,6 +49,7 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
 
     detectPlatform().then((detected) => {
       setPlatform(detected)
+      platformState.setPlatform(detected) // Set global state for non-React code
       setIsInitialized(true)
       setIsLoading(false)
     })

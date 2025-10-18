@@ -30,11 +30,6 @@ export class WebAuthProvider implements IAuthProvider {
 
       console.log('[WebAuth] Starting authentication on Web platform for address:', this.wagmiAccount.address)
 
-      // Clear old token before authentication to prevent 401 on public endpoints
-      console.log('[WebAuth] Clearing old token before authentication...')
-      const { apiClient } = await import('@/lib/api/client')
-      apiClient.setAuthToken(null)
-
       // Step 1: Get nonce from backend
       const { message, jwtToken } = await authApi.getNonce(this.wagmiAccount.address)
       console.log('[WebAuth] Got nonce and jwtToken')
@@ -44,6 +39,7 @@ export class WebAuthProvider implements IAuthProvider {
       console.log('[WebAuth] Message signed')
 
       // Step 3: Verify signature with backend using JWT token
+      // Backend sets HttpOnly cookie in response
       const { user: userData } = await authApi.connectWallet({
         walletAddress: this.wagmiAccount.address,
         signature,
@@ -51,20 +47,22 @@ export class WebAuthProvider implements IAuthProvider {
         jwtToken,
       })
       console.log('[WebAuth] Backend verified signature, user:', userData)
+      console.log('[WebAuth] HttpOnly cookie should be set by backend')
 
       // Return full user data without wrapping in metadata
       const user: User = userData as User
 
       this.setState(AuthState.AUTHENTICATED)
 
-      console.log('[WebAuth] Success on Web platform, checking if user is saved...')
+      console.log('[WebAuth] Success on Web platform, verifying HttpOnly cookie...')
 
-      // Verify that JWT cookie was set by trying to get current user
+      // Verify that HttpOnly cookie was set correctly
       try {
         const verifyUser = await authApi.checkAuth()
-        console.log('[WebAuth] JWT cookie verification - user from /auth/me:', verifyUser)
+        console.log('[WebAuth] ✅ HttpOnly cookie verification SUCCESS - user from /auth/me:', verifyUser)
       } catch (err) {
-        console.error('[WebAuth] JWT cookie verification failed:', err)
+        console.error('[WebAuth] ❌ HttpOnly cookie verification FAILED:', err)
+        throw new Error('Authentication failed: HttpOnly cookie was not set by backend')
       }
 
       return {
@@ -83,11 +81,13 @@ export class WebAuthProvider implements IAuthProvider {
   
   async disconnect(): Promise<void> {
     try {
+      // Backend clears HttpOnly cookie
       await authApi.disconnect()
+      console.log('[WebAuth] HttpOnly cookie cleared by backend')
     } catch (error) {
-      console.warn('Logout API call failed:', error)
+      console.warn('[WebAuth] Logout API call failed:', error)
     }
-    
+
     this.setState(AuthState.UNAUTHENTICATED)
   }
   
