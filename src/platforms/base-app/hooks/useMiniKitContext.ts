@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { sdk } from '@farcaster/miniapp-sdk'
 import type { Context } from '@farcaster/miniapp-sdk'
+import { FARCASTER_CLIENT_FID } from '../../config'
 
 export interface MiniKitContext {
   isBaseApp: boolean
@@ -35,13 +36,13 @@ export function useMiniKitContext(): MiniKitContext {
   }
 
   const clientFid = (context.client as any)?.clientFid
-  const clientFidStr = clientFid?.toString()
+  const clientFidStr = String(clientFid ?? '')
 
   // Check for Base App by clientFid
-  const isBaseApp = clientFidStr === '309857'
+  const isBaseApp = clientFidStr === FARCASTER_CLIENT_FID.BASE_APP
 
   // Check for Farcaster by clientFid
-  const isFarcasterApp = clientFidStr === '1'
+  const isFarcasterApp = clientFidStr === FARCASTER_CLIENT_FID.FARCASTER
 
   const isWebsite = !isBaseApp && !isFarcasterApp
 

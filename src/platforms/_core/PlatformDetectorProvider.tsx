@@ -1,9 +1,11 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react'
-import { Platform } from '../config'
+import { Platform, FARCASTER_CLIENT_FID } from '../config'
 import { sdk } from '@farcaster/miniapp-sdk'
 import { platformState } from '@/lib/platform/platformState'
+import { apiClient } from '@/lib/api/client'
+import { LocalStorageTokenStorage, NoOpTokenStorage } from '@/lib/api/token-storage'
 
 interface PlatformDetectorContext {
   platform: Platform
@@ -27,17 +29,17 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
         const urlParams = new URLSearchParams(window.location.search)
         const debugPlatform = urlParams.get('debug_platform') || localStorage.getItem('debug_platform')
 
-        if (debugPlatform === 'base-app') return Platform.BASE_APP
-        if (debugPlatform === 'farcaster') return Platform.FARCASTER
-        if (debugPlatform === 'web') return Platform.WEB
+        if (debugPlatform === Platform.BASE_APP) return Platform.BASE_APP
+        if (debugPlatform === Platform.FARCASTER) return Platform.FARCASTER
+        if (debugPlatform === Platform.WEB) return Platform.WEB
       }
 
       const context = await sdk.context
       const clientFid = (context?.client as any)?.clientFid
       const clientFidStr = clientFid?.toString()
 
-      if (clientFidStr === '309857') return Platform.BASE_APP
-      if (clientFidStr === '1') return Platform.FARCASTER
+      if (clientFidStr === FARCASTER_CLIENT_FID.BASE_APP) return Platform.BASE_APP
+      if (clientFidStr === FARCASTER_CLIENT_FID.FARCASTER) return Platform.FARCASTER
 
       if (typeof window !== 'undefined') {
         const hasMiniKit = !!((window as any)?.webkit?.messageHandlers?.minikit || (window as any)?.MiniKit)
@@ -48,8 +50,19 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
     }
 
     detectPlatform().then((detected) => {
+      console.log('[PlatformDetector] Detected platform:', detected)
+
       setPlatform(detected)
-      platformState.setPlatform(detected) // Set global state for non-React code
+      platformState.setPlatform(detected)
+
+      // Configure ApiClient with platform-specific token storage
+      const tokenStorage = detected === Platform.BASE_APP
+        ? new LocalStorageTokenStorage()
+        : new NoOpTokenStorage()
+
+      apiClient.setTokenStorage(tokenStorage)
+      console.log('[PlatformDetector] ApiClient configured for platform:', detected)
+
       setIsInitialized(true)
       setIsLoading(false)
     })

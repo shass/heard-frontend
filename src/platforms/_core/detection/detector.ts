@@ -1,4 +1,4 @@
-import { Platform } from '../../config'
+import { Platform, FARCASTER_CLIENT_FID } from '../../config'
 
 export interface MiniKitContext {
   context?: {
@@ -97,14 +97,15 @@ export class PlatformDetector {
 
     // Then check clientFid to distinguish Base App from Farcaster
     const clientFid = miniKitContext?.context?.client?.clientFid
+    const clientFidStr = String(clientFid ?? '')
 
     console.log('[PlatformDetector] Base App check:', {
       hasMiniKit,
       clientFid,
-      isBaseApp: clientFid === '309857'
+      isBaseApp: clientFidStr === FARCASTER_CLIENT_FID.BASE_APP
     })
 
-    return clientFid === '309857'
+    return clientFidStr === FARCASTER_CLIENT_FID.BASE_APP
   }
 
   /**
@@ -118,14 +119,15 @@ export class PlatformDetector {
 
     // Then check clientFid
     const clientFid = miniKitContext?.context?.client?.clientFid
+    const clientFidStr = String(clientFid ?? '')
 
     console.log('[PlatformDetector] Farcaster check:', {
       hasMiniKit,
       clientFid,
-      isFarcaster: clientFid === '1'
+      isFarcaster: clientFidStr === FARCASTER_CLIENT_FID.FARCASTER
     })
 
-    return clientFid === '1'
+    return clientFidStr === FARCASTER_CLIENT_FID.FARCASTER
   }
 
   /**

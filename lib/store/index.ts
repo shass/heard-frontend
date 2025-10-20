@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { User, Survey, SurveyResponse } from '@/lib/types'
+import { apiClient } from '@/lib/api/client'
 
 // Auth store
 interface AuthStore {
@@ -55,6 +56,9 @@ export const useAuthStore = create<AuthStore>()(
           initialized: false, // Reset initialized flag so auth check runs again
           isAuthStrategyReady: false, // Reset strategy check flag
         })
+
+        // Clear token from storage (localStorage for Base App, no-op for Web)
+        apiClient.clearAuthToken()
 
         // Clear all survey state as well
         const { clearAll } = useSurveyStore.getState()

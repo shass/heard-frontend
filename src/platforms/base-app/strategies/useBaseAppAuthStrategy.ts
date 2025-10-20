@@ -99,7 +99,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       // Clear old token before authentication to prevent 401 on public endpoints
       console.log('[BaseAppAuthStrategy] Clearing old token before authentication...')
       const { apiClient } = await import('@/lib/api/client')
-      apiClient.setAuthToken(null)
+      apiClient.clearAuthToken()
 
       // Step 1: Get wallet address from SDK provider
       console.log('[BaseAppAuthStrategy] Getting wallet address from SDK provider...')
@@ -256,7 +256,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       // Clear stored token
       if (typeof window !== 'undefined') {
         const { apiClient } = await import('@/lib/api/client')
-        apiClient.setAuthToken(null)
+        apiClient.clearAuthToken()
       }
 
       useAuthStore.getState().logout()

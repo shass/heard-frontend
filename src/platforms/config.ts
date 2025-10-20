@@ -7,6 +7,14 @@ export enum Platform {
 }
 
 /**
+ * Farcaster Client FID identifiers for platform detection
+ */
+export const FARCASTER_CLIENT_FID = {
+  BASE_APP: '309857',
+    FARCASTER: '1',
+} as const
+
+/**
  * Maps Platform enum values to API platform identifiers
  * Used when sending platform info to backend
  */

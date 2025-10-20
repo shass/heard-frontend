@@ -6,6 +6,7 @@ import { FarcasterAuthProvider } from '../providers/FarcasterAuthProvider'
 import { AuthState, User } from '../../_core/shared/interfaces/IAuthProvider'
 import { IAuthStrategy, AuthResult } from '../../_core/shared/interfaces/IAuthStrategy'
 import { useAuthStore } from '@/lib/store'
+import { FARCASTER_CLIENT_FID } from '../../config'
 
 export function useFarcasterAuthStrategy(): IAuthStrategy {
   const miniKit = useMiniKit()
@@ -20,7 +21,8 @@ export function useFarcasterAuthStrategy(): IAuthStrategy {
   const isFarcaster = useMemo(() => {
     const clientFid = (miniKit.context as any)?.client?.fid ||
                       (miniKit.context as any)?.client?.clientFid
-    return clientFid === '1' // Farcaster clientFid
+    const clientFidStr = String(clientFid ?? '')
+    return clientFidStr === FARCASTER_CLIENT_FID.FARCASTER
   }, [miniKit.context])
 
   // Load Farcaster SDK for quickAuth (Farcaster-specific feature)

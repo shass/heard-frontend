@@ -2,51 +2,49 @@
 
 import { env } from '@/lib/env'
 import type { ApiResponse, ApiError } from '@/lib/types'
-import { platformState } from '@/lib/platform/platformState'
+import { ITokenStorage, NoOpTokenStorage } from './token-storage'
 
 class ApiClient {
   private baseURL: string
   private timeout: number
-  private authToken: string | null = null
+  private tokenStorage: ITokenStorage
 
   constructor() {
     this.baseURL = env.API_URL
     this.timeout = env.API_TIMEOUT
-    // NOTE: Don't load token in constructor due to race condition with platformState
-    // Token will be loaded lazily in getAuthToken()
+    // Default to NoOpTokenStorage (for Web platform with HttpOnly cookies)
+    // Platform-specific storage will be set by PlatformDetectorProvider
+    this.tokenStorage = new NoOpTokenStorage()
   }
 
-  // Set auth token for Authorization header (used by Base App only)
-  // Web platform doesn't use this - it relies on HttpOnly cookies
-  setAuthToken(token: string | null) {
-    // Only use localStorage for Base App
-    if (!platformState.isBaseApp()) {
-      console.log('[ApiClient] Ignoring setAuthToken - Web platform uses HttpOnly cookies')
-      return
-    }
-
-    this.authToken = token
-    if (token && typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', token)
-    } else if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token')
-    }
+  /**
+   * Set token storage strategy
+   * Called by PlatformDetectorProvider after platform detection
+   */
+  setTokenStorage(storage: ITokenStorage): void {
+    this.tokenStorage = storage
+    console.log('[ApiClient] Token storage strategy configured:', storage.constructor.name)
   }
 
-  // Get auth token from memory or localStorage (Base App only)
-  // Web platform doesn't use this - it relies on HttpOnly cookies
+  /**
+   * Set auth token via configured storage strategy
+   */
+  setAuthToken(token: string | null): void {
+    this.tokenStorage.setToken(token)
+  }
+
+  /**
+   * Get auth token via configured storage strategy
+   */
   getAuthToken(): string | null {
-    // Only use localStorage for Base App
-    if (!platformState.isBaseApp()) {
-      return null
-    }
+    return this.tokenStorage.getToken()
+  }
 
-    // Lazy-load token from localStorage if not in memory
-    if (!this.authToken && typeof window !== 'undefined') {
-      this.authToken = localStorage.getItem('auth_token')
-    }
-
-    return this.authToken
+  /**
+   * Clear auth token via configured storage strategy
+   */
+  clearAuthToken(): void {
+    this.tokenStorage.clearToken()
   }
 
   private async fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
@@ -97,8 +95,9 @@ class ApiClient {
   private async handleResponse<T>(response: Response): Promise<T> {
     if (response.status === 401) {
       console.error('[ApiClient] 401 Unauthorized:', response.url)
-      // Handle unauthorized - HttpOnly cookie will be cleared by server
-      // No action needed on client side
+      // Clear token on client side (localStorage for Base App, no-op for Web)
+      // HttpOnly cookie will be cleared by server
+      this.clearAuthToken()
     }
 
     if (!response.ok) {
