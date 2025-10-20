@@ -3,7 +3,7 @@ import { env } from '../../../lib/env';
 
 export async function GET() {
   const isProduction = env.ENVIRONMENT === 'production'
-  
+
   // Ensure required Farcaster variables exist in production
   if (isProduction && (!env.FARCASTER_HEADER || !env.FARCASTER_PAYLOAD || !env.FARCASTER_SIGNATURE)) {
     return NextResponse.json(
@@ -21,7 +21,7 @@ export async function GET() {
         signature: env.FARCASTER_SIGNATURE,
       }
     }),
-    
+
     // Core frame config
     frame: {
       version: "1",
@@ -33,7 +33,7 @@ export async function GET() {
       imageUrl: `${env.PUBLIC_URL}/hero-1200x628.png`,
       heroImageUrl: `${env.PUBLIC_URL}/hero-1200x628.png`,
       buttonTitle: "Start Survey",
-      splashImageUrl: `${env.PUBLIC_URL}/hero-banner.png`,
+      splashImageUrl: `${env.PUBLIC_URL}/splash-200x200.png`,
       splashBackgroundColor: "#ffffff",
 
       // Extended metadata fields
