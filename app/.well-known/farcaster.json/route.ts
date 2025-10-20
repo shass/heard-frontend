@@ -39,6 +39,7 @@ export async function GET() {
       // Extended metadata fields
       description: "Earn crypto rewards by completing surveys on the Web3 platform",
       primaryCategory: "social",
+      tags: ["survey", "poll", "social", "heard"],
 
       // Open Graph metadata (required for Base App)
       ogTitle: "HEARD - Everyone Will Be HEARD",
