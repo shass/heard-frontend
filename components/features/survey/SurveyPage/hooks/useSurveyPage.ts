@@ -63,9 +63,8 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
   })
 
   // Response state management (only after we have a responseId)
-  // Disable progress and response queries since we manage state locally
+  // Disable response queries since we manage state locally
   const responseState = useSurveyResponseState(responseId || null, {
-    enableProgress: false,
     enableResponse: false
   })
 
