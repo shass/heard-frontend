@@ -24,14 +24,6 @@ export interface SubmitAnswerResponse {
   canSubmit: boolean
 }
 
-export interface GetProgressResponse {
-  currentQuestion: number
-  totalQuestions: number
-  percentComplete: number
-  answeredQuestions: string[]
-  canSubmit: boolean
-}
-
 export interface SubmitSurveyRequest {
   responseId: string
 }
@@ -55,13 +47,6 @@ export class ResponseApi {
   }
 
   /**
-   * Get current progress of survey response
-   */
-  async getProgress(responseId: string): Promise<GetProgressResponse> {
-    return await apiClient.get<GetProgressResponse>(`/surveys/responses/${responseId}/progress`)
-  }
-
-  /**
    * Submit completed survey for rewards
    */
   async submitSurvey(request: SubmitSurveyRequest): Promise<SubmitSurveyResponse> {
@@ -81,41 +66,6 @@ export class ResponseApi {
   async getResponse(responseId: string): Promise<SurveyResponse> {
     throw new Error('Response details endpoint not implemented on backend')
     // return await apiClient.get<SurveyResponse>(`/surveys/responses/${responseId}`)
-  }
-
-  /**
-   * Check if user can continue survey response
-   */
-  async canContinue(responseId: string): Promise<{ canContinue: boolean; reason?: string }> {
-    try {
-      const progress = await this.getProgress(responseId)
-      return { 
-        canContinue: progress.percentComplete < 100 
-      }
-    } catch (error: any) {
-      return { 
-        canContinue: false, 
-        reason: error.message || 'Survey response not found or expired'
-      }
-    }
-  }
-
-  /**
-   * Get next unanswered question for response
-   */
-  async getNextQuestion(responseId: string): Promise<Question | null> {
-    try {
-      const progress = await this.getProgress(responseId)
-      if (progress.canSubmit) {
-        return null // Survey is complete
-      }
-
-      // This would typically be handled by the backend
-      // For now, we'll rely on the submitAnswer response to provide next question
-      throw new Error('Use submitAnswer to get next question')
-    } catch (error) {
-      throw new Error('Unable to get next question')
-    }
   }
 
   /**

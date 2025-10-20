@@ -239,7 +239,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
             <SurveyInfo survey={survey} eligibility={eligibility} />
 
             {/* Reward Section */}
-            {hasCompleted && userReward?.claimLink && (
+            {hasCompleted && userReward && (
               <SurveyReward
                 userReward={userReward}
                 onClaimReward={handleClaimReward}

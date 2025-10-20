@@ -31,36 +31,6 @@ export function useSurveyResponse(responseId: string) {
   })
 }
 
-/**
- * Hook to get survey response progress
- */
-export function useSurveyProgress(responseId: string) {
-  const isAuthenticated = useIsAuthenticated()
-  
-  return useQuery({
-    queryKey: responseKeys.progress(responseId),
-    queryFn: () => responseApi.getProgress(responseId),
-    enabled: !!responseId && isAuthenticated,
-    staleTime: 5 * 60 * 1000, // 5 minutes (manual refresh only)
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    // Removed refetchInterval - progress is managed locally in survey page
-  })
-}
-
-/**
- * Hook to check if user can continue survey response
- */
-export function useCanContinueSurvey(responseId: string) {
-  const isAuthenticated = useIsAuthenticated()
-  
-  return useQuery({
-    queryKey: [...responseKeys.detail(responseId), 'canContinue'],
-    queryFn: () => responseApi.canContinue(responseId),
-    enabled: !!responseId && isAuthenticated,
-    staleTime: 1 * 60 * 1000, // 1 minute
-    gcTime: 5 * 60 * 1000, // 5 minutes
-  })
-}
 
 /**
  * Mutation hook to submit an answer
@@ -131,16 +101,12 @@ export function useSubmitSurvey() {
  * Mutation hook for auto-saving answers
  */
 export function useAutoSaveAnswer() {
-  const queryClient = useQueryClient()
-  
   return useMutation({
     mutationFn: (request: SubmitAnswerRequest) => responseApi.autoSaveAnswer(request),
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       if (data.saved) {
-        // Silently update cache without notifications
-        queryClient.invalidateQueries({ 
-          queryKey: responseKeys.progress(variables.responseId) 
-        })
+        // Silently saved without notifications
+        console.log('[AutoSave] Answer saved successfully')
       }
     },
     // Don't show error notifications for auto-save failures
@@ -177,11 +143,11 @@ export function useAnswerValidation() {
 /**
  * Hook to manage survey response state
  */
-export function useSurveyResponseState(responseId: string | null, options: { enableProgress?: boolean, enableResponse?: boolean } = {}) {
-  const { enableProgress = false, enableResponse = true } = options
+export function useSurveyResponseState(responseId: string | null, options: { enableResponse?: boolean } = {}) {
+  const { enableResponse = true } = options
   const isAuthenticated = useIsAuthenticated()
   const queryClient = useQueryClient()
-  
+
   // Clear response caches when not authenticated or responseId changes
   React.useEffect(() => {
     if (!isAuthenticated || !responseId) {
@@ -189,7 +155,7 @@ export function useSurveyResponseState(responseId: string | null, options: { ena
       queryClient.removeQueries({ queryKey: responseKeys.all })
     }
   }, [isAuthenticated, responseId, queryClient])
-  
+
   const { data: response, isLoading: responseLoading } = useQuery({
     queryKey: responseKeys.detail(responseId || ''),
     queryFn: () => responseApi.getResponse(responseId || ''),
@@ -197,43 +163,27 @@ export function useSurveyResponseState(responseId: string | null, options: { ena
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
   })
-  const { data: progress, isLoading: progressLoading } = useQuery({
-    queryKey: responseKeys.progress(responseId || ''),
-    queryFn: () => responseApi.getProgress(responseId || ''),
-    enabled: !!responseId && isAuthenticated && enableProgress,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  })
-  const { data: canContinue } = useCanContinueSurvey(responseId || '')
-  
+
   const submitAnswer = useSubmitAnswer()
   const submitSurvey = useSubmitSurvey()
   const autoSave = useAutoSaveAnswer()
-  
+
   return {
     // Data
     response,
-    progress,
-    canContinue: canContinue?.canContinue ?? false,
-    
+
     // Loading states
-    isLoading: responseLoading || progressLoading,
-    
+    isLoading: responseLoading,
+
     // Actions
     submitAnswer: submitAnswer.mutateAsync,
     submitSurvey: submitSurvey.mutateAsync,
     autoSave: autoSave.mutateAsync,
-    
+
     // Status
     isSubmittingAnswer: submitAnswer.isPending,
     isSubmittingSurvey: submitSurvey.isPending,
     isAutoSaving: autoSave.isPending,
-    
-    // Computed properties
-    isCompleted: progress?.percentComplete === 100,
-    canSubmitSurvey: progress?.canSubmit ?? false,
-    currentQuestionNumber: progress?.currentQuestion ?? 1,
-    totalQuestions: progress?.totalQuestions ?? 0,
   }
 }
 
@@ -242,21 +192,13 @@ export function useSurveyResponseState(responseId: string | null, options: { ena
  */
 export function usePrefetchResponse() {
   const queryClient = useQueryClient()
-  
+
   return {
     prefetchResponse: (responseId: string) => {
       queryClient.prefetchQuery({
         queryKey: responseKeys.detail(responseId),
         queryFn: () => responseApi.getResponse(responseId),
         staleTime: 30 * 1000,
-      })
-    },
-    
-    prefetchProgress: (responseId: string) => {
-      queryClient.prefetchQuery({
-        queryKey: responseKeys.progress(responseId),
-        queryFn: () => responseApi.getProgress(responseId),
-        staleTime: 10 * 1000,
       })
     }
   }
