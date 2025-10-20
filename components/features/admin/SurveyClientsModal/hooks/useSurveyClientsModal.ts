@@ -3,18 +3,18 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useOpenUrl } from '@/src/platforms/base-app/hooks/useOpenUrl'
-import { toast } from 'sonner'
-import { 
-  useSurveyClients, 
-  useAddSurveyClient, 
-  useUpdateSurveyClient, 
+import { useOpenUrl } from '@/src/platforms/_core'
+import {
+  useSurveyClients,
+  useAddSurveyClient,
+  useUpdateSurveyClient,
   useRemoveSurveyClient,
   useSurveyVisibility,
   useUpdateSurveyVisibility,
   useGenerateShareLink
 } from '@/hooks/use-survey-clients'
+import { toast } from 'sonner'
+import { z } from 'zod'
 
 // Schemas
 const walletAddressSchema = z
@@ -36,11 +36,11 @@ interface UseSurveyClientsModalProps {
 export function useSurveyClientsModal({ surveyId }: UseSurveyClientsModalProps) {
   const openUrl = useOpenUrl()
   const [activeTab, setActiveTab] = useState<ActiveTab>('clients')
-  
+
   // API hooks
   const { data: clients, isLoading: clientsLoading } = useSurveyClients(surveyId || '')
   const { data: visibility, isLoading: visibilityLoading } = useSurveyVisibility(surveyId || '')
-  
+
   const addClient = useAddSurveyClient()
   const updateClient = useUpdateSurveyClient()
   const removeClient = useRemoveSurveyClient()
@@ -59,7 +59,7 @@ export function useSurveyClientsModal({ surveyId }: UseSurveyClientsModalProps) 
   // Handlers
   const handleAddClient = async (data: AddClientForm) => {
     if (!surveyId) return
-    
+
     try {
       await addClient.mutateAsync({
         surveyId,
@@ -73,7 +73,7 @@ export function useSurveyClientsModal({ surveyId }: UseSurveyClientsModalProps) 
 
   const handleUpdateClientPermission = async (walletAddress: string, canMakePublic: boolean) => {
     if (!surveyId) return
-    
+
     try {
       await updateClient.mutateAsync({
         surveyId,
@@ -87,11 +87,11 @@ export function useSurveyClientsModal({ surveyId }: UseSurveyClientsModalProps) 
 
   const handleRemoveClient = async (walletAddress: string) => {
     if (!surveyId) return
-    
+
     if (!confirm('Remove this client from the survey? They will lose access to results.')) {
       return
     }
-    
+
     try {
       await removeClient.mutateAsync({
         surveyId,
@@ -104,7 +104,7 @@ export function useSurveyClientsModal({ surveyId }: UseSurveyClientsModalProps) 
 
   const handleVisibilityChange = async (mode: 'private' | 'public' | 'link') => {
     if (!surveyId) return
-    
+
     try {
       await updateVisibility.mutateAsync({
         surveyId,
@@ -117,7 +117,7 @@ export function useSurveyClientsModal({ surveyId }: UseSurveyClientsModalProps) 
 
   const handleGenerateLink = async () => {
     if (!surveyId) return
-    
+
     try {
       await generateLink.mutateAsync(surveyId)
     } catch (error) {
@@ -150,23 +150,23 @@ export function useSurveyClientsModal({ surveyId }: UseSurveyClientsModalProps) 
     // State
     activeTab,
     setActiveTab,
-    
+
     // Data
     clients,
     visibility,
     clientsLoading,
     visibilityLoading,
-    
+
     // Form
     form,
-    
+
     // Mutations
     addClient,
     updateClient,
     removeClient,
     updateVisibility,
     generateLink,
-    
+
     // Handlers
     handleAddClient,
     handleUpdateClientPermission,

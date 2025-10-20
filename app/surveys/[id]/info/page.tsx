@@ -2,17 +2,14 @@
 
 import { use } from "react"
 import { useRouter } from "next/navigation"
-import { useOpenUrl } from '@/src/platforms/base-app/hooks/useOpenUrl'
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { useSurvey, useSurveyEligibility } from "@/hooks/use-surveys"
-import { useUserReward } from "@/hooks/use-reward"
-import { useAuth } from "@/src/platforms/_core/hooks/useAuth"
-import { usePlatformDetector } from "@/src/platforms"
-import { useWallet } from "@/src/platforms/_core/hooks/useWallet"
-import { Platform } from "@/src/platforms/config"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useSurvey, useSurveyEligibility, useUserReward } from "@/hooks"
+import { usePlatformDetector } from "@/src/platforms"
+import { useAuth, useWallet, useOpenUrl } from "@/src/platforms/_core"
+import { Platform } from "@/src/platforms/config"
 import {
   SurveyHeader,
   SurveyStats,
@@ -57,7 +54,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
   const { data: survey, isLoading, error } = useSurvey(id)
   const { data: eligibility } = useSurveyEligibility(id, address ?? undefined)
-  const { data: userReward } = useUserReward(id)
+  const { data: userReward } = useUserReward(id, isAuthenticated && isConnected)
 
   const handleStartSurvey = () => {
     router.push(`/surveys/${id}`)

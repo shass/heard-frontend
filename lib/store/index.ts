@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { User, Survey, SurveyResponse } from '@/lib/types'
+import { apiClient } from '@/lib/api/client'
 
 // Auth store
 interface AuthStore {
@@ -11,13 +12,15 @@ interface AuthStore {
   loading: boolean
   isLoading: boolean // Alias for compatibility
   error: string | null
-  initialized: boolean // Flag to prevent duplicate auth checks
+  initialized: boolean // Flag to prevent duplicate auth checks from WebAuthInitializer
+  isAuthStrategyReady: boolean // Flag to prevent duplicate strategy-level auth checks
 
   // Actions
   setUser: (user: User | null) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   setInitialized: (initialized: boolean) => void
+  setAuthStrategyReady: (ready: boolean) => void
   logout: () => void
 }
 
@@ -30,6 +33,7 @@ export const useAuthStore = create<AuthStore>()(
       isLoading: true, // Alias for compatibility
       error: null,
       initialized: false,
+      isAuthStrategyReady: false,
 
       setUser: (user) => set({ user, isAuthenticated: !!user, error: null }),
 
@@ -38,6 +42,8 @@ export const useAuthStore = create<AuthStore>()(
       setError: (error) => set({ error, loading: false, isLoading: false }),
 
       setInitialized: (initialized) => set({ initialized }),
+
+      setAuthStrategyReady: (ready) => set({ isAuthStrategyReady: ready }),
 
       logout: () => {
         // Clear auth state
@@ -48,7 +54,11 @@ export const useAuthStore = create<AuthStore>()(
           isLoading: false,
           error: null,
           initialized: false, // Reset initialized flag so auth check runs again
+          isAuthStrategyReady: false, // Reset strategy check flag
         })
+
+        // Clear token from storage (localStorage for Base App, no-op for Web)
+        apiClient.clearAuthToken()
 
         // Clear all survey state as well
         const { clearAll } = useSurveyStore.getState()

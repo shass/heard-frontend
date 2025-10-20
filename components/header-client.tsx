@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import React from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
+import { Button } from "./ui/button"
 import { useUser, useIsAuthenticated, useAuthLoading } from "@/lib/store"
 import { useCreateSurveyModal } from "@/hooks/use-create-survey-modal"
 import { Settings } from "lucide-react"

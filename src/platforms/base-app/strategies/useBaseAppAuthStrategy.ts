@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { sdk } from '@farcaster/miniapp-sdk'
 import type { Context } from '@farcaster/miniapp-sdk'
 import { AuthState, User } from '@/src/platforms'
@@ -15,6 +15,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [sdkContext, setSdkContext] = useState<Context.MiniAppContext | null>(null)
+  const hasCheckedToken = useRef(false)
 
   // Get SDK context (only once on mount)
   useEffect(() => {
@@ -98,7 +99,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       // Clear old token before authentication to prevent 401 on public endpoints
       console.log('[BaseAppAuthStrategy] Clearing old token before authentication...')
       const { apiClient } = await import('@/lib/api/client')
-      apiClient.setAuthToken(null)
+      apiClient.clearAuthToken()
 
       // Step 1: Get wallet address from SDK provider
       console.log('[BaseAppAuthStrategy] Getting wallet address from SDK provider...')
@@ -255,7 +256,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       // Clear stored token
       if (typeof window !== 'undefined') {
         const { apiClient } = await import('@/lib/api/client')
-        apiClient.setAuthToken(null)
+        apiClient.clearAuthToken()
       }
 
       useAuthStore.getState().logout()
@@ -264,9 +265,24 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
     }
   }, [])
 
-  // Check if we have stored token on mount
+  // Check if we have stored token on mount (ONCE)
+  // Prevent duplicate /auth/me requests by using global flag
   useEffect(() => {
-    if (!sdkContext) return
+    if (!sdkContext || hasCheckedToken.current) return
+
+    const { isAuthStrategyReady, setAuthStrategyReady } = useAuthStore.getState()
+
+    // Skip if any other strategy instance already checked
+    if (isAuthStrategyReady) {
+      console.log('[BaseAppAuthStrategy] Skipping auth check - strategy already ready')
+      hasCheckedToken.current = true
+      return
+    }
+
+    hasCheckedToken.current = true
+
+    // Mark as ready IMMEDIATELY to prevent race conditions
+    setAuthStrategyReady(true)
 
     // Check if we have a stored auth token from previous session
     if (typeof window !== 'undefined') {

@@ -28,30 +28,25 @@ export function WebAuthInitializer() {
       console.log('[WebAuthInitializer] Starting auth initialization...')
       const { setUser, setLoading, logout: storeLogout, setInitialized } = useAuthStore.getState()
 
+      // CRITICAL: Set initialized=true IMMEDIATELY to prevent race condition
+      // This prevents other components from calling checkAuth while we're initializing
+      setInitialized(true)
+      hasInitialized.current = true
+
       setLoading(true)
 
       try {
         const userData = await authApi.checkAuth()
 
         if (userData) {
-          console.log('[WebAuthInitializer] Session restored:', {
-            id: userData.id,
-            role: userData.role,
-            wallet: userData.walletAddress
-          })
           setUser(userData)
         } else {
-          console.log('[WebAuthInitializer] No active session')
           storeLogout()
         }
       } catch (error: any) {
-        console.log('[WebAuthInitializer] Session check failed:', error.message)
         storeLogout()
       } finally {
         setLoading(false)
-        setInitialized(true)
-        hasInitialized.current = true
-        console.log('[WebAuthInitializer] Initialization complete')
       }
     }
 

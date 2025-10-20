@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { WebAuthProvider, AuthState, User } from '@/src/platforms'
 import { IAuthStrategy, AuthResult } from '../../_core/shared/interfaces/IAuthStrategy'
@@ -16,6 +16,9 @@ export function useWebAuthStrategy(): IAuthStrategy {
   const [authState, setAuthState] = useState<AuthState>(AuthState.UNAUTHENTICATED)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const previousAddressRef = useRef<string | undefined>(undefined)
+  const hasInitializedRef = useRef(false)
+  const wasConnectedRef = useRef(false)
 
   // Sync authState with user from store
   // This ensures that when WebAuthInitializer restores user, authState reflects it
@@ -130,7 +133,7 @@ export function useWebAuthStrategy(): IAuthStrategy {
   // Check auth status on mount - ONLY if not already initialized globally
   // WebAuthInitializer handles the initial auth check to prevent duplicate requests
   useEffect(() => {
-    const { initialized } = useAuthStore.getState()
+    const { initialized, isAuthStrategyReady, setAuthStrategyReady } = useAuthStore.getState()
 
     // Skip if already initialized by WebAuthInitializer
     if (initialized) {
@@ -138,12 +141,95 @@ export function useWebAuthStrategy(): IAuthStrategy {
       return
     }
 
+    // Skip if any other strategy instance already checked
+    if (isAuthStrategyReady) {
+      console.log('[useWebAuthStrategy] Skipping auth check - strategy already ready')
+      return
+    }
+
     // Only check if we have an auth provider ready
     if (!authProvider) return
 
     console.log('[useWebAuthStrategy] Running auth check (not initialized globally)')
+
+    // Mark as ready IMMEDIATELY to prevent race conditions
+    setAuthStrategyReady(true)
+
     checkAuthStatus()
-  }, [checkAuthStatus, authProvider])
+
+    // IMPORTANT: Only run once on mount, not when authProvider changes
+  }, [])
+
+  // Handle wallet address changes - logout if address changes
+  useEffect(() => {
+    // Update authProvider with new account info
+    if (authProvider) {
+      authProvider.updateWagmiAccount({ address, isConnected })
+    }
+
+    // Skip until we have a valid address at least once
+    // This prevents false positive on initial load when address is undefined
+    if (!hasInitializedRef.current) {
+      if (address && isConnected) {
+        // First time we have a valid address AND are connected - initialize
+        previousAddressRef.current = address
+        hasInitializedRef.current = true
+        wasConnectedRef.current = true
+        console.log('[useWebAuthStrategy] Initialized with address:', address)
+      }
+      return
+    }
+
+    // Track connection state
+    if (isConnected && !wasConnectedRef.current) {
+      wasConnectedRef.current = true
+      console.log('[useWebAuthStrategy] Wallet connected')
+    }
+
+    const currentUser = useAuthStore.getState().user
+    const previousAddress = previousAddressRef.current
+
+    // If we have a user and the address changed, logout
+    if (currentUser && currentUser.walletAddress && address && previousAddress !== address) {
+      const currentAddress = currentUser.walletAddress.toLowerCase()
+      const newAddress = address.toLowerCase()
+
+      if (currentAddress !== newAddress) {
+        console.log('[useWebAuthStrategy] Wallet address changed, logging out')
+        console.log('[useWebAuthStrategy] Previous:', previousAddress, 'New:', address)
+        console.log('[useWebAuthStrategy] User wallet:', currentAddress, 'Connected wallet:', newAddress)
+
+        // Logout directly through store to avoid stale closure issues
+        useAuthStore.getState().logout()
+
+        // Also disconnect from authProvider if it exists
+        if (authProvider) {
+          authProvider.disconnect().catch(console.error)
+        }
+      }
+    }
+
+    // If wallet disconnected, logout
+    // IMPORTANT: Only logout if we were previously connected
+    // This prevents false logout during initial wagmi load when isConnected=false
+    if (currentUser && !isConnected && wasConnectedRef.current) {
+      console.log('[useWebAuthStrategy] Wallet disconnected, logging out')
+
+      // Logout directly through store
+      useAuthStore.getState().logout()
+
+      // Also disconnect from authProvider if it exists
+      if (authProvider) {
+        authProvider.disconnect().catch(console.error)
+      }
+
+      // Reset connection flag
+      wasConnectedRef.current = false
+    }
+
+    // Update previous address for next comparison
+    previousAddressRef.current = address
+  }, [address, isConnected, authProvider])
 
   return {
     user: user ? { ...user, platform: Platform.WEB } : null,

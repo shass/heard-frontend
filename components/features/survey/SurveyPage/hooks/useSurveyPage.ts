@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useSurveyQuestions, useStartSurvey } from "@/hooks/use-surveys"
 import { useSurveyResponseState, useAnswerValidation } from "@/hooks/use-survey-response"
 import { useIsAuthenticated } from "@/lib/store"
@@ -22,6 +22,7 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
   const [isSubmittingFinalSurvey, setIsSubmittingFinalSurvey] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
   const [initStatus, setInitStatus] = useState<'idle' | 'checking' | 'starting' | 'ready' | 'completed'>('idle')
+  const hasInitialized = useRef(false)
 
   const isAuthenticated = useIsAuthenticated()
   const notifications = useNotifications()
@@ -90,6 +91,7 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
       setIsRedirecting(false)
       setCurrentQuestionIndex(0)
       setInitStatus('idle')
+      hasInitialized.current = false // Reset initialization flag
     }
   }, [isAuthenticated])
 
@@ -97,7 +99,15 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
   useEffect(() => {
     if (!isAuthenticated || initStatus !== 'idle') return
 
+    // Prevent duplicate initialization (React 18 Strict Mode mounts twice in dev)
+    if (hasInitialized.current) {
+      console.log('[useSurveyPage] Already initialized, skipping')
+      return
+    }
+
     const initializeSurvey = async () => {
+      // Mark as initialized immediately to prevent race condition
+      hasInitialized.current = true
       setInitStatus('checking')
 
       try {

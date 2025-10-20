@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from './ui/button';
 import { LogIn } from 'lucide-react';
-import { useNotifications } from '@/components/ui/notifications';
+import { useNotifications } from './ui/notifications';
 import {
   useAuth,
   PlatformSwitch
