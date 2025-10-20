@@ -30,8 +30,8 @@ export async function GET() {
       tagline: "Everyone Will Be HEARD",
       iconUrl: `${env.PUBLIC_URL}/icon-200x200.png`,
       homeUrl: env.PUBLIC_URL,
-      imageUrl: `${env.PUBLIC_URL}/hero-1200x628.png`,
-      heroImageUrl: `${env.PUBLIC_URL}/hero-1200x628.png`,
+      imageUrl: `${env.PUBLIC_URL}/hero-1200x630.png`,
+      heroImageUrl: `${env.PUBLIC_URL}/hero-1200x630.png`,
       buttonTitle: "Start Survey",
       splashImageUrl: `${env.PUBLIC_URL}/splash-200x200.png`,
       splashBackgroundColor: "#ffffff",
@@ -44,7 +44,7 @@ export async function GET() {
       // Open Graph metadata (required for Base App)
       ogTitle: "HEARD - Everyone Will Be HEARD",
       ogDescription: "Surveys gated by verified Web2 & Web3 behavior. Earn crypto rewards for your opinions.",
-      ogImageUrl: `${env.PUBLIC_URL}/hero-1200x628.png`,
+      ogImageUrl: `${env.PUBLIC_URL}/hero-1200x630.png`,
 
       // screenshots: [] // TODO: Add screenshots when available
 
