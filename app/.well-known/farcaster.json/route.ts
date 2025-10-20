@@ -22,6 +22,10 @@ export async function GET() {
       }
     }),
 
+    baseBuilder: {
+      ownerAddress: "0x17dfdB593be92cd172840530Ef975d16561e47dC"
+    },
+
     // Core frame config
     frame: {
       version: "1",
