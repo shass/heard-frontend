@@ -23,7 +23,7 @@ export async function GET() {
     }),
 
     baseBuilder: {
-      ownerAddress: "0x17dfdB593be92cd172840530Ef975d16561e47dC"
+      allowedAddresses: ["0x17dfdB593be92cd172840530Ef975d16561e47dC, 0xb135CC0182C9F009ABe8af67adbf0dc8ed0a0525"]
     },
 
     // Core frame config
