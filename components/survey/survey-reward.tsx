@@ -22,7 +22,7 @@ interface SurveyRewardProps {
 }
 
 export function SurveyReward({ userReward, onClaimReward, onCopyClaimLink }: SurveyRewardProps) {
-  if (!userReward?.claimLink) return null
+  const hasClaimLink = !!userReward?.claimLink
 
   return (
     <Card>
@@ -49,42 +49,44 @@ export function SurveyReward({ userReward, onClaimReward, onCopyClaimLink }: Sur
             </div>
           </div>
 
-          {/* Claim Actions */}
-          <div className="space-y-3">
-            <div className="text-sm text-zinc-600">
-              Use the link below to claim your {formatNumber(userReward.survey?.rewardAmount || 0)} {userReward.survey?.rewardToken} tokens:
-            </div>
-
-            <div className="flex space-x-3">
-              <Button
-                onClick={onClaimReward}
-                className="bg-green-600 hover:bg-green-700 text-white flex-1"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Claim Reward
-              </Button>
-
-              <Button
-                onClick={onCopyClaimLink}
-                variant="outline"
-                className="border-green-300 text-green-700 hover:bg-green-50"
-              >
-                <Copy className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* QR Code */}
-            <div className="text-center">
-              <div className="inline-block p-2 bg-white rounded-lg border">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(userReward.claimLink)}`}
-                  alt="QR Code for reward claim"
-                  className="w-30 h-30"
-                />
+          {/* Claim Actions - only show if claim link is available */}
+          {hasClaimLink && (
+            <div className="space-y-3">
+              <div className="text-sm text-zinc-600">
+                Use the link below to claim your {formatNumber(userReward.survey?.rewardAmount || 0)} {userReward.survey?.rewardToken} tokens:
               </div>
-              <p className="text-xs text-zinc-500 mt-1">Scan with your wallet app</p>
+
+              <div className="flex space-x-3">
+                <Button
+                  onClick={onClaimReward}
+                  className="bg-green-600 hover:bg-green-700 text-white flex-1"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Claim Reward
+                </Button>
+
+                <Button
+                  onClick={onCopyClaimLink}
+                  variant="outline"
+                  className="border-green-300 text-green-700 hover:bg-green-50"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* QR Code */}
+              <div className="text-center">
+                <div className="inline-block p-2 bg-white rounded-lg border">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(userReward.claimLink!)}`}
+                    alt="QR Code for reward claim"
+                    className="w-30 h-30"
+                  />
+                </div>
+                <p className="text-xs text-zinc-500 mt-1">Scan with your wallet app</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </CardContent>
     </Card>
