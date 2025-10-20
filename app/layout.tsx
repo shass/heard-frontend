@@ -25,9 +25,9 @@ export const metadata: Metadata = {
     siteName: 'HEARD',
     images: [
       {
-        url: '/hero-1200x628.png',
+        url: '/hero-1200x630.png',
         width: 1200,
-        height: 628,
+        height: 630,
       },
     ],
     locale: 'en_US',
@@ -37,12 +37,12 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'HEARD - Everyone Will Be HEARD',
     description: 'Surveys gated by verified Web2 & Web3 behavior. Earn crypto rewards for your opinions.',
-    images: ['/hero-1200x628.png'],
+    images: ['/hero-1200x630.png'],
   },
   other: {
     // Farcaster Frame embed metadata for sharing
     'fc:frame': 'vNext',
-    'fc:frame:image': `${env.PUBLIC_URL}/hero-1200x628.png`,
+    'fc:frame:image': `${env.PUBLIC_URL}/hero-1200x630.png`,
     'fc:frame:button:1': 'Start Survey',
     'fc:frame:button:1:action': 'link',
     'fc:frame:button:1:target': env.PUBLIC_URL || '',
