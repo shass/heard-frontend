@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useActiveSurveys } from "@/hooks/use-surveys"
 import { useSearchSurveys } from "@/hooks/use-search-surveys"
 import { useNotifications } from "@/components/ui/notifications"
+import { useShare } from "@/src/platforms/_core"
 import type { Survey } from "@/lib/types"
 
 interface UseSurveyTableProps {
@@ -46,6 +47,7 @@ export function useSurveyTable({ onTakeSurvey }: UseSurveyTableProps) {
   const refetch = hasActiveSearch ? refetchSearch : refetchAll
 
   const notifications = useNotifications()
+  const { share } = useShare()
 
   // Update search when inputs change
   useEffect(() => {
@@ -79,16 +81,22 @@ export function useSurveyTable({ onTakeSurvey }: UseSurveyTableProps) {
   const handleCopyLink = async (surveyId: string) => {
     try {
       const url = `${window.location.origin}/surveys/${surveyId}/info`
-      await navigator.clipboard.writeText(url)
+
+      // Use platform-specific share (composeCast for Base App, clipboard for Web)
+      await share({
+        url,
+        text: 'Check out this survey on HEARD! Everyone will be HEARD.'
+      })
+
       setCopiedSurveyId(surveyId)
-      notifications.success("Link copied", "")
+      notifications.success("Link shared", "")
 
       // Reset the copied state after 2 seconds
       setTimeout(() => {
         setCopiedSurveyId(null)
       }, 1500)
     } catch (error) {
-      notifications.error("Failed to copy link", "Please try again")
+      notifications.error("Failed to share link", "Please try again")
     }
   }
 
