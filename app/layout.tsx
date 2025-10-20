@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import ErrorBoundary from '@/components/ui/error-boundary'
-import { MobileDevTools } from '@/components/debug/mobile-devtools'
 import { PlatformDebugBanner } from '@/components/debug/platform-debug-banner'
 import { PlatformDetectorProvider } from '@/src/platforms/_core/PlatformDetectorProvider'
 import { MiniKitContextProvider } from '@/src/platforms/base-app/providers/MiniKitProvider'
@@ -16,15 +15,14 @@ export const viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.PUBLIC_URL || ''),
-  title: 'Heard - Web3 Survey Platform',
-  description: 'Earn crypto rewards by completing surveys on the Web3 platform',
+  title: 'HEARD - Everyone Will Be HEARD',
+  description: 'Surveys gated by verified Web2 & Web3 behavior. Earn crypto rewards for your opinions.',
   category: 'Social',
-  generator: 'Heard',
   openGraph: {
-    title: 'Heard',
-    description: 'Earn crypto rewards by completing surveys on the Web3 platform',
-    url: 'https://heardlabs.xyz',
-    siteName: 'Heard',
+    title: 'HEARD - Everyone Will Be HEARD',
+    description: 'Surveys gated by verified Web2 & Web3 behavior. Earn crypto rewards for your opinions.',
+    url: env.PUBLIC_URL,
+    siteName: 'HEARD',
     images: [
       {
         url: '/hero-1200x628.png',
@@ -37,44 +35,17 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Heard',
-    description: 'Earn crypto rewards by completing surveys on the Web3 platform',
+    title: 'HEARD - Everyone Will Be HEARD',
+    description: 'Surveys gated by verified Web2 & Web3 behavior. Earn crypto rewards for your opinions.',
     images: ['/hero-1200x628.png'],
   },
   other: {
-    // Farcaster Mini App metadata
-    // 'fc:miniapp': JSON.stringify({
-    //   version: '1',
-    //   imageUrl: 'https://heardlabs.xyz/hero-1200x628.png',
-    //   button: {
-    //     title: 'Open Heard',
-    //     action: {
-    //       type: 'launch_miniapp'
-    //     }
-    //   },
-    //   splashImageUrl: 'https://heardlabs.xyz/hero-banner.png',
-    //   splashBackgroundColor: '#ffffff'
-    // }),
-    // Farcaster Frame metadata
-    // 'fc:frame': 'vNext',
-    'fc:frame': JSON.stringify({
-      version: '1',
-      imageUrl: 'https://heardlabs.xyz/hero-1200x628.png',
-      button: {
-        title: 'Open Heard',
-        action: {
-          type: 'launch_miniapp'
-        }
-      },
-      splashImageUrl: 'https://heardlabs.xyz/hero-banner.png',
-      splashBackgroundColor: '#ffffff'
-    }),
-    'fc:frame:image': 'https://heardlabs.xyz/hero-1200x628.png',
-    'fc:frame:button:1': 'Open App',
+    // Farcaster Frame embed metadata for sharing
+    'fc:frame': 'vNext',
+    'fc:frame:image': `${env.PUBLIC_URL}/hero-1200x628.png`,
+    'fc:frame:button:1': 'Start Survey',
     'fc:frame:button:1:action': 'link',
-    'fc:frame:button:1:target': 'https://heardlabs.xyz',
-    // OpenGraph fallback
-    'og:image': 'https://heardlabs.xyz/hero-1200x628.png',
+    'fc:frame:button:1:target': env.PUBLIC_URL || '',
   },
   icons: {
     icon: [
