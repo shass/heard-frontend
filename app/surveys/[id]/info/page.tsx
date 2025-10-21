@@ -54,7 +54,8 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
   const { data: survey, isLoading, error } = useSurvey(id)
   const { data: eligibility } = useSurveyEligibility(id, address ?? undefined)
-  const { data: userReward } = useUserReward(id, isAuthenticated && isConnected)
+  // Reward is fetched only if user is authenticated (connected state is not required)
+  const { data: userReward } = useUserReward(id, isAuthenticated)
 
   const handleStartSurvey = () => {
     router.push(`/surveys/${id}`)

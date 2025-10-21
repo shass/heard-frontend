@@ -164,6 +164,17 @@ export const getSurveyResponses = async (surveyId: string, params?: {
   }
 }
 
+export const deleteSurveyResponse = async (surveyId: string, walletAddress: string): Promise<{
+  message: string
+  deletedCount: number
+}> => {
+  const data = await apiClient.delete<{
+    message: string
+    deletedCount: number
+  }>(`/admin/surveys/${surveyId}/responses/${walletAddress}`)
+  return data
+}
+
 // New paginated whitelist function with search and completion status
 export const getWhitelistEntriesPaged = async (surveyId: string, params?: {
   limit?: number

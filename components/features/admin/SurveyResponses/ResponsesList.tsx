@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Spinner } from '@/components/ui/loading-states'
-import { Eye, Calendar, Clock } from 'lucide-react'
+import { Eye, Calendar, Clock, Trash2 } from 'lucide-react'
 import type { AdminSurveyResponse } from '@/lib/types'
 
 interface ResponsesListProps {
@@ -11,13 +11,15 @@ interface ResponsesListProps {
   isLoading: boolean
   error: Error | null
   onViewDetails: (response: AdminSurveyResponse) => void
+  onDelete: (response: AdminSurveyResponse) => void
 }
 
 export function ResponsesList({
   responses,
   isLoading,
   error,
-  onViewDetails
+  onViewDetails,
+  onDelete
 }: ResponsesListProps) {
   return (
     <ScrollArea className="h-[400px] border rounded-lg">
@@ -67,15 +69,27 @@ export function ResponsesList({
                       </div>
                     </div>
                   </div>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onViewDetails(response)}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    View Details
-                  </Button>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewDetails(response)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Details
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onDelete(response)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      title="Delete response (allows user to retake survey)"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
