@@ -174,7 +174,7 @@ export interface ConnectWalletRequest {
   walletAddress: string
   signature: string
   message: string
-  jwtToken: string // JWT token from nonce response
+  jwtToken?: string // JWT token from nonce response (optional for SIWF)
   platform?: string // Platform identifier: 'web' | 'base' | 'farcaster'
   metadata?: any // Platform-specific metadata
 }

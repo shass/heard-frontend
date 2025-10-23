@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { sdk } from '@farcaster/miniapp-sdk'
 import type { Context } from '@farcaster/miniapp-sdk'
+import { useAuthenticate } from '@coinbase/onchainkit/minikit'
 import { AuthState, User } from '@/src/platforms'
 import { IAuthStrategy, AuthResult } from '../../_core/shared/interfaces/IAuthStrategy'
 import { Platform } from '../../config'
@@ -16,6 +17,9 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
   const [error, setError] = useState<string | null>(null)
   const [sdkContext, setSdkContext] = useState<Context.MiniAppContext | null>(null)
   const hasCheckedToken = useRef(false)
+
+  // Use OnchainKit's useAuthenticate hook for SIWF
+  const { signIn } = useAuthenticate()
 
   // Get SDK context (only once on mount)
   useEffect(() => {
@@ -43,7 +47,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
     }
   }, [])
 
-  // Get wallet address via Wagmi (Base Account is auto-connected in Base App)
+  // Get wallet address and set context user info
   useEffect(() => {
     if (sdkContext?.user) {
       const contextUser = sdkContext.user
@@ -96,146 +100,104 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       setAuthState(AuthState.LOADING)
       useAuthStore.getState().setLoading(true)
 
-      // Clear old token before authentication to prevent 401 on public endpoints
+      // Clear old token before authentication
       console.log('[BaseAppAuthStrategy] Clearing old token before authentication...')
       const { apiClient } = await import('@/lib/api/client')
       apiClient.clearAuthToken()
 
-      // Step 1: Get wallet address from SDK provider
-      console.log('[BaseAppAuthStrategy] Getting wallet address from SDK provider...')
-      const provider = sdk.wallet.ethProvider
-      if (!provider) {
-        throw new Error('Ethereum provider not available in Base App')
+      // Step 1: Get FID from SDK context
+      const fid = sdkContext.user?.fid
+      if (!fid) {
+        throw new Error('No Farcaster ID found in context')
       }
 
-      const accounts = await provider.request({ method: 'eth_accounts' })
-      const walletAddress = accounts[0]?.toLowerCase()
+      // Step 2: Use OnchainKit's useAuthenticate to get SIWF signature
+      console.log('[BaseAppAuthStrategy] Authenticating with Sign In With Farcaster for FID:', fid)
+      const signInResult = await signIn()
 
-      if (!walletAddress) {
-        throw new Error('No wallet address available')
+      if (!signInResult) {
+        throw new Error('Failed to authenticate with Farcaster')
       }
 
-      // Step 2: Get nonce and jwtToken from backend BEFORE signIn
-      const nonceResponse = await authApi.getNonce(walletAddress)
-      let { nonce, jwtToken } = nonceResponse
+      console.log('[BaseAppAuthStrategy] SIWF authentication successful:', {
+        fid,
+        hasSignature: !!signInResult.signature,
+        hasMessage: !!signInResult.message,
+        authMethod: signInResult.authMethod
+      })
 
-      // If backend doesn't return nonce directly, extract from message (backward compatibility)
-      if (!nonce && nonceResponse.message) {
-        const nonceMatch = nonceResponse.message.match(/Nonce: ([a-zA-Z0-9]+)/)
-        nonce = nonceMatch?.[1] || ''
-      }
-
-      if (!nonce) {
-        throw new Error('Could not get nonce from backend')
-      }
-
-      console.log('[BaseApp] 🎯 Calling signIn with nonce:', nonce)
-
-      // Step 3: Use backend nonce in signIn
-      let result
+      // Step 3: Get wallet address from SDK (optional but useful)
+      let walletAddress: string | undefined
       try {
-        result = await sdk.actions.signIn({ nonce })
-        const signInMessage = (result as any).message as string
-
-        // Extract nonce from SIWE message to verify
-        const nonceInMessage = signInMessage.match(/Nonce: ([a-zA-Z0-9]+)/)?.[1]
-        console.log('[BaseApp] ✅ Nonces match:', nonce === nonceInMessage, `(sent: ${nonce}, got: ${nonceInMessage})`)
-
-      } catch (signInError) {
-        console.warn('[BaseAppAuthStrategy] SignIn failed:', signInError)
-        throw new Error('SignIn failed: ' + (signInError instanceof Error ? signInError.message : 'Unknown error'))
+        const provider = sdk.wallet.ethProvider
+        if (provider) {
+          const accounts = await provider.request({ method: 'eth_accounts' })
+          walletAddress = accounts[0]?.toLowerCase()
+          console.log('[BaseAppAuthStrategy] Got wallet address from SDK:', walletAddress)
+        }
+      } catch (err) {
+        console.warn('[BaseAppAuthStrategy] Could not get wallet address:', err)
       }
 
-      // If signIn succeeded, we already have signature and message!
-      if (result && (result as any).signature && (result as any).message) {
-        const signInMessage = (result as any).message as string
-        const signInSignature = (result as any).signature as string
-
-        // Send signIn result to backend
-        // Backend will verify SIWE signature format and return token
-        const { user: userData, token } = await authApi.connectWallet({
-          walletAddress,
-          signature: signInSignature,
-          message: signInMessage,
-          jwtToken, // Required by backend
-          platform: 'base',
-          metadata: {
-            fid: (result as any).fid || sdkContext.user?.fid,
-            username: (result as any).username || sdkContext.user?.username,
-            displayName: (result as any).displayName || sdkContext.user?.displayName,
-            pfpUrl: (result as any).pfpUrl || sdkContext.user?.pfpUrl,
-            authMethod: (result as any).authMethod,
-          }
-        })
-
-        console.log('[BaseAppAuthStrategy] Backend authentication successful with signIn:', userData)
-
-        // Use token from response body (Variant 1 - always returned by backend)
-        if (token) {
-          console.log('[BaseAppAuthStrategy] ✅ Got token from response body')
-          const { apiClient } = await import('@/lib/api/client')
-          apiClient.setAuthToken(token)
-          console.log('[BaseAppAuthStrategy] Token stored in apiClient')
-
-          // Verify token works
-          try {
-            console.log('[BaseAppAuthStrategy] Verifying token with /auth/me...')
-            const testAuth = await authApi.checkAuth()
-            console.log('[BaseAppAuthStrategy] ✅ Token verification SUCCESS:', testAuth)
-          } catch (err) {
-            console.error('[BaseAppAuthStrategy] ❌ Token verification failed:', err)
-          }
-        } else {
-          console.warn('[BaseAppAuthStrategy] ⚠️ No token in response body, falling back to cookie')
-          // Fallback to cookie extraction for backwards compatibility
-          if (typeof document !== 'undefined') {
-            const cookies = document.cookie.split(';')
-            let authToken = null
-            for (const cookie of cookies) {
-              const [name, value] = cookie.trim().split('=')
-              if (name === 'auth_token') {
-                authToken = value
-                break
-              }
-            }
-
-            if (authToken) {
-              console.log('[BaseAppAuthStrategy] ✅ Extracted token from cookie')
-              const { apiClient } = await import('@/lib/api/client')
-              apiClient.setAuthToken(authToken)
-            } else {
-              console.error('[BaseAppAuthStrategy] ❌ No token available (neither response nor cookie)')
-            }
-          }
+      // Step 3: Send SIWF signature to backend for verification
+      // Backend will verify SIWF signature just like it verifies SIWE for Web
+      const { user: userData, token } = await authApi.connectWallet({
+        walletAddress: walletAddress || `fid:${fid}`, // Use FID as fallback
+        signature: signInResult.signature,
+        message: signInResult.message,
+        platform: 'base',
+        metadata: {
+          fid,
+          username: sdkContext.user?.username,
+          displayName: sdkContext.user?.displayName,
+          pfpUrl: sdkContext.user?.pfpUrl,
+          authMethod: 'siwf', // Sign In With Farcaster
         }
+      })
 
-        const authenticatedUser: User = {
-          id: userData.id,
-          walletAddress: userData.walletAddress,
-          platform: Platform.BASE_APP,
-          metadata: {
-            ...userData,
-            fid: (result as any).fid || sdkContext.user?.fid,
-            username: (result as any).username || sdkContext.user?.username,
-            displayName: (result as any).displayName || sdkContext.user?.displayName,
-            pfpUrl: (result as any).pfpUrl || sdkContext.user?.pfpUrl,
-            isAuthenticated: true
-          }
+      console.log('[BaseAppAuthStrategy] Backend authentication successful:', userData)
+
+      // Step 4: Store token
+      if (token) {
+        console.log('[BaseAppAuthStrategy] ✅ Got token from backend')
+        apiClient.setAuthToken(token)
+        console.log('[BaseAppAuthStrategy] Token stored in apiClient')
+
+        // Verify token works
+        try {
+          console.log('[BaseAppAuthStrategy] Verifying token with /auth/me...')
+          const testAuth = await authApi.checkAuth()
+          console.log('[BaseAppAuthStrategy] ✅ Token verification SUCCESS:', testAuth)
+        } catch (err) {
+          console.error('[BaseAppAuthStrategy] ❌ Token verification failed:', err)
         }
-
-        console.log('[BaseAppAuthStrategy] Authentication successful, user:', authenticatedUser)
-        setUser(authenticatedUser)
-        setAuthState(AuthState.AUTHENTICATED)
-        setIsLoading(false)
-        useAuthStore.getState().setUser(authenticatedUser as any)
-        useAuthStore.getState().setLoading(false)
-        console.log('[BaseAppAuthStrategy] User set in store:', useAuthStore.getState().user)
-
-        return { success: true, user: authenticatedUser }
-      } else {
-        // signIn failed - cannot proceed without signature
-        throw new Error('Failed to get signature from Base App signIn')
       }
+
+      // Step 4: Create authenticated user
+      const finalUser: User = {
+        id: userData.id,
+        walletAddress: walletAddress || userData.walletAddress,
+        platform: Platform.BASE_APP,
+        metadata: {
+          ...userData,
+          fid,
+          username: sdkContext.user?.username,
+          displayName: sdkContext.user?.displayName,
+          pfpUrl: sdkContext.user?.pfpUrl,
+          isAuthenticated: true,
+          authMethod: 'siwf'
+        }
+      }
+
+      console.log('[BaseAppAuthStrategy] Authentication successful, user:', finalUser)
+      setUser(finalUser)
+      setAuthState(AuthState.AUTHENTICATED)
+      setIsLoading(false)
+      useAuthStore.getState().setUser(finalUser as any)
+      useAuthStore.getState().setLoading(false)
+      console.log('[BaseAppAuthStrategy] User set in store:', useAuthStore.getState().user)
+
+      return { success: true, user: finalUser }
     } catch (err: any) {
       const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
       console.error('[BaseAppAuthStrategy] Authentication error:', err)
@@ -245,7 +207,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       useAuthStore.getState().setLoading(false)
       return { success: false, error: errorMessage }
     }
-  }, [sdkContext])
+  }, [sdkContext, signIn])
 
   const logout = useCallback(async () => {
     try {
