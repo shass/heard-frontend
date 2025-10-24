@@ -117,9 +117,29 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
 
       console.log('[BaseAppAuthStrategy] ✅ Quick Auth token obtained')
 
-      // Step 3: Send Quick Auth token to backend for verification
+      // Step 3: Get wallet address from SDK (required for survey access)
+      let walletAddress: string | undefined
+      try {
+        const provider = sdk.wallet.ethProvider
+        if (provider) {
+          const accounts = await provider.request({ method: 'eth_accounts' })
+          walletAddress = accounts[0]?.toLowerCase()
+          console.log('[BaseAppAuthStrategy] Got wallet address from SDK:', walletAddress)
+        } else {
+          console.warn('[BaseAppAuthStrategy] No Ethereum provider available')
+        }
+      } catch (err) {
+        console.warn('[BaseAppAuthStrategy] Could not get wallet address:', err)
+      }
+
+      if (!walletAddress) {
+        throw new Error('Wallet address is required for Base App authentication. Please ensure your wallet is connected.')
+      }
+
+      // Step 4: Send Quick Auth token and wallet address to backend
       const { user: userData, token } = await authApi.connectWallet({
         platform: 'base',
+        walletAddress,
         quickAuthToken,
         metadata: {
           fid,
