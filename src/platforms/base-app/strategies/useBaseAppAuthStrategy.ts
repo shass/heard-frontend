@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { sdk } from '@farcaster/miniapp-sdk'
 import type { Context } from '@farcaster/miniapp-sdk'
-import { useAuthenticate } from '@coinbase/onchainkit/minikit'
 import { AuthState, User } from '@/src/platforms'
 import { IAuthStrategy, AuthResult } from '../../_core/shared/interfaces/IAuthStrategy'
 import { Platform } from '../../config'
@@ -17,9 +16,6 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
   const [error, setError] = useState<string | null>(null)
   const [sdkContext, setSdkContext] = useState<Context.MiniAppContext | null>(null)
   const hasCheckedToken = useRef(false)
-
-  // Use OnchainKit's useAuthenticate hook for SIWF
-  const { signIn } = useAuthenticate()
 
   // Get SDK context (only once on mount)
   useEffect(() => {
@@ -111,47 +107,26 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         throw new Error('No Farcaster ID found in context')
       }
 
-      // Step 2: Use OnchainKit's useAuthenticate to get SIWF signature
-      console.log('[BaseAppAuthStrategy] Authenticating with Sign In With Farcaster for FID:', fid)
-      const signInResult = await signIn()
+      // Step 2: Use Quick Auth to get JWT token
+      console.log('[BaseAppAuthStrategy] Authenticating with Quick Auth for FID:', fid)
+      const { token: quickAuthToken } = await sdk.quickAuth.getToken()
 
-      if (!signInResult) {
-        throw new Error('Failed to authenticate with Farcaster')
+      if (!quickAuthToken) {
+        throw new Error('Failed to get Quick Auth token')
       }
 
-      console.log('[BaseAppAuthStrategy] SIWF authentication successful:', {
-        fid,
-        hasSignature: !!signInResult.signature,
-        hasMessage: !!signInResult.message,
-        authMethod: signInResult.authMethod
-      })
+      console.log('[BaseAppAuthStrategy] ✅ Quick Auth token obtained')
 
-      // Step 3: Get wallet address from SDK (optional but useful)
-      let walletAddress: string | undefined
-      try {
-        const provider = sdk.wallet.ethProvider
-        if (provider) {
-          const accounts = await provider.request({ method: 'eth_accounts' })
-          walletAddress = accounts[0]?.toLowerCase()
-          console.log('[BaseAppAuthStrategy] Got wallet address from SDK:', walletAddress)
-        }
-      } catch (err) {
-        console.warn('[BaseAppAuthStrategy] Could not get wallet address:', err)
-      }
-
-      // Step 3: Send SIWF signature to backend for verification
-      // Backend will verify SIWF signature just like it verifies SIWE for Web
+      // Step 3: Send Quick Auth token to backend for verification
       const { user: userData, token } = await authApi.connectWallet({
-        walletAddress: walletAddress || `fid:${fid}`, // Use FID as fallback
-        signature: signInResult.signature,
-        message: signInResult.message,
         platform: 'base',
+        quickAuthToken,
         metadata: {
           fid,
           username: sdkContext.user?.username,
           displayName: sdkContext.user?.displayName,
           pfpUrl: sdkContext.user?.pfpUrl,
-          authMethod: 'siwf', // Sign In With Farcaster
+          authMethod: 'quick_auth',
         }
       })
 
@@ -176,7 +151,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       // Step 4: Create authenticated user
       const finalUser: User = {
         id: userData.id,
-        walletAddress: walletAddress || userData.walletAddress,
+        walletAddress: userData.walletAddress,
         platform: Platform.BASE_APP,
         metadata: {
           ...userData,
@@ -185,7 +160,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
           displayName: sdkContext.user?.displayName,
           pfpUrl: sdkContext.user?.pfpUrl,
           isAuthenticated: true,
-          authMethod: 'siwf'
+          authMethod: 'quick_auth'
         }
       }
 
@@ -207,7 +182,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       useAuthStore.getState().setLoading(false)
       return { success: false, error: errorMessage }
     }
-  }, [sdkContext, signIn])
+  }, [sdkContext])
 
   const logout = useCallback(async () => {
     try {

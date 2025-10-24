@@ -171,10 +171,11 @@ export interface SurveyState {
 
 // Form types
 export interface ConnectWalletRequest {
-  walletAddress: string
-  signature: string
-  message: string
-  jwtToken?: string // JWT token from nonce response (optional for SIWF)
+  walletAddress?: string // Optional for Quick Auth
+  signature?: string // Optional for Quick Auth
+  message?: string // Optional for Quick Auth
+  jwtToken?: string // JWT token from nonce response (for SIWE)
+  quickAuthToken?: string // Farcaster Quick Auth JWT (for Base App)
   platform?: string // Platform identifier: 'web' | 'base' | 'farcaster'
   metadata?: any // Platform-specific metadata
 }
