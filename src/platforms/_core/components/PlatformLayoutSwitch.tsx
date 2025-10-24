@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, lazy, Suspense, useRef } from 'react'
+import { ReactNode, lazy, Suspense } from 'react'
 import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvider'
 import { Platform } from '@/src/platforms/config'
 import BaseAppLayout from '@/src/platforms/base-app/layouts/BaseAppLayout'
@@ -35,7 +35,6 @@ export function PlatformLayoutSwitch({ children }: PlatformLayoutSwitchProps) {
 
   if (isLoading) return <LayoutLoadingFallback />
 
-  // Render appropriate layout based on platform
   if (platform === Platform.BASE_APP) {
     return <BaseAppLayout>{children}</BaseAppLayout>
   }

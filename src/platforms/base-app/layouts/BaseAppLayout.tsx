@@ -1,6 +1,8 @@
 'use client'
 
 import { ReactNode } from 'react'
+import { OnchainKitProvider } from '@coinbase/onchainkit'
+import { base } from 'wagmi/chains'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/src/platforms/web/providers/Web3Provider'
 import { CreateSurveyModalProvider } from '@/components/providers/create-survey-modal-provider'
@@ -14,14 +16,20 @@ interface BaseAppLayoutProps {
 
 export default function BaseAppLayout({ children }: BaseAppLayoutProps) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <CreateSurveyModalProvider>
-        <NavigationProvider>
-          <MiniKitReady />
-          {children}
-          <NotificationContainer />
-        </NavigationProvider>
-      </CreateSurveyModalProvider>
-    </QueryClientProvider>
+    <OnchainKitProvider
+      apiKey={process.env.NEXT_PUBLIC_CDP_CLIENT_API_KEY}
+      chain={base}
+      miniKit={{ enabled: true }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <CreateSurveyModalProvider>
+          <NavigationProvider>
+            <MiniKitReady />
+            {children}
+            <NotificationContainer />
+          </NavigationProvider>
+        </CreateSurveyModalProvider>
+      </QueryClientProvider>
+    </OnchainKitProvider>
   )
 }

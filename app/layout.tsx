@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import ErrorBoundary from '@/components/ui/error-boundary'
 import { PlatformDebugBanner } from '@/components/debug/platform-debug-banner'
 import { PlatformDetectorProvider } from '@/src/platforms/_core/PlatformDetectorProvider'
-import { MiniKitContextProvider } from '@/src/platforms/base-app/providers/MiniKitProvider'
 import { PlatformLayoutSwitch } from '@/src/platforms/_core/components/PlatformLayoutSwitch'
 import { env } from '@/lib/env'
 import './globals.css'
 import React from 'react';
+import { MobileDevTools } from '@/components/debug/mobile-devtools';
 
 export const viewport = {
   width: 'device-width',
@@ -65,18 +65,15 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ErrorBoundary>
-          <MiniKitContextProvider>
-            <PlatformDetectorProvider>
-              {/* Debug tools - общие для всех платформ */}
-              <PlatformDebugBanner />
-              {/*<MobileDevTools />*/}
+          <PlatformDetectorProvider>
+            <PlatformDebugBanner />
+            <MobileDevTools />
 
-              {/* Platform-specific layout switch */}
-              <PlatformLayoutSwitch>
-                {children}
-              </PlatformLayoutSwitch>
-            </PlatformDetectorProvider>
-          </MiniKitContextProvider>
+            {/* Platform-specific layout switch */}
+            <PlatformLayoutSwitch>
+              {children}
+            </PlatformLayoutSwitch>
+          </PlatformDetectorProvider>
         </ErrorBoundary>
       </body>
     </html>

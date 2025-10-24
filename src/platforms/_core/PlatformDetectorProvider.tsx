@@ -24,28 +24,37 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
     setIsLoading(true)
 
     const detectPlatform = async () => {
-      // Check for debug override in localStorage or URL
-      if (typeof window !== 'undefined') {
-        const urlParams = new URLSearchParams(window.location.search)
-        const debugPlatform = urlParams.get('debug_platform') || localStorage.getItem('debug_platform')
+      // Get MiniKit context from SDK
+      // According to MiniKit documentation, platform is determined ONLY by clientFid:
+      // - Base App: clientFid === '309857'
+      // - Farcaster: clientFid === '1'
+      try {
+        const context = await sdk.context
+        const clientFid = (context?.client as any)?.clientFid
+        const clientFidStr = clientFid?.toString()
 
-        if (debugPlatform === Platform.BASE_APP) return Platform.BASE_APP
-        if (debugPlatform === Platform.FARCASTER) return Platform.FARCASTER
-        if (debugPlatform === Platform.WEB) return Platform.WEB
+        console.log('[PlatformDetector] MiniKit context:', {
+          hasContext: !!context,
+          clientFid: clientFidStr,
+          userFid: context?.user?.fid
+        })
+
+        // Exact match for Base App (per MiniKit docs)
+        if (clientFidStr === FARCASTER_CLIENT_FID.BASE_APP) {
+          return Platform.BASE_APP
+        }
+
+        // Exact match for Farcaster (per MiniKit docs)
+        if (clientFidStr === FARCASTER_CLIENT_FID.FARCASTER) {
+          return Platform.FARCASTER
+        }
+      } catch (error) {
+        console.log('[PlatformDetector] SDK context not available:', error)
       }
 
-      const context = await sdk.context
-      const clientFid = (context?.client as any)?.clientFid
-      const clientFidStr = clientFid?.toString()
-
-      if (clientFidStr === FARCASTER_CLIENT_FID.BASE_APP) return Platform.BASE_APP
-      if (clientFidStr === FARCASTER_CLIENT_FID.FARCASTER) return Platform.FARCASTER
-
-      if (typeof window !== 'undefined') {
-        const hasMiniKit = !!((window as any)?.webkit?.messageHandlers?.minikit || (window as any)?.MiniKit)
-        if (hasMiniKit) return Platform.BASE_APP
-      }
-
+      // Default to Web platform
+      // NOTE: Do NOT use presence of MiniKit APIs to determine platform
+      // Only clientFid can reliably identify Base App vs Farcaster
       return Platform.WEB
     }
 
