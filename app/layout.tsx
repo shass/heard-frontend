@@ -65,7 +65,6 @@ export default function RootLayout({
       <body>
         <ErrorBoundary>
           <PlatformDetectorProvider>
-            {/* Debug tools - общие для всех платформ */}
             <PlatformDebugBanner />
             {/*<MobileDevTools />*/}
 

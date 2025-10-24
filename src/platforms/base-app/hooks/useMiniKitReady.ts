@@ -1,29 +1,24 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { sdk } from '@farcaster/miniapp-sdk'
 
+/**
+ * Initializes MiniKit SDK by calling sdk.actions.ready()
+ * This is required to hide the loading splash screen in Base App / Farcaster MiniKit
+ *
+ * NOTE: This hook should only be used in BaseAppLayout or FarcasterLayout.
+ * Platform detection is already handled by PlatformLayoutSwitch.
+ *
+ * Side-effect only hook - does not return any value
+ */
 export function useMiniKitReady() {
-  const [isReady, setIsReady] = useState(false)
   const hasCalledReady = useRef(false)
 
   useEffect(() => {
     // Prevent double initialization
     if (hasCalledReady.current) return
 
-    // Check if we're in a Mini App context
-    const isMiniApp = typeof window !== 'undefined' && (
-      window.location.hostname.includes('base.org') ||
-      window.location.hostname.includes('farcaster.xyz') ||
-      'miniKit' in window
-    )
-
-    if (!isMiniApp) {
-      console.log('[MiniKitReady] Not in Mini App context, skipping sdk.actions.ready()')
-      return
-    }
-
-    // Mark as called to prevent double calls
     hasCalledReady.current = true
 
     // Call sdk.actions.ready() as per Base documentation
@@ -33,16 +28,11 @@ export function useMiniKitReady() {
         console.log('[MiniKitReady] Calling sdk.actions.ready()')
         await sdk.actions.ready()
         console.log('[MiniKitReady] ✅ SDK ready called successfully')
-        setIsReady(true)
       } catch (error) {
         console.error('[MiniKitReady] ❌ Error calling sdk.actions.ready():', error)
-        // Even if there's an error, mark as ready to not block the UI
-        setIsReady(true)
       }
     }
 
     initializeSDK()
   }, [])
-
-  return { isReady }
 }
