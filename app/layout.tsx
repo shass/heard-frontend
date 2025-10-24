@@ -6,6 +6,7 @@ import { PlatformLayoutSwitch } from '@/src/platforms/_core/components/PlatformL
 import { env } from '@/lib/env'
 import './globals.css'
 import React from 'react';
+import { MobileDevTools } from '@/components/debug/mobile-devtools';
 
 export const viewport = {
   width: 'device-width',
@@ -66,7 +67,7 @@ export default function RootLayout({
         <ErrorBoundary>
           <PlatformDetectorProvider>
             <PlatformDebugBanner />
-            {/*<MobileDevTools />*/}
+            <MobileDevTools />
 
             {/* Platform-specific layout switch */}
             <PlatformLayoutSwitch>
