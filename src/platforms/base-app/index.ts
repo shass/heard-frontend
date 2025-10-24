@@ -1,5 +1,4 @@
 // Hooks
-export * from './hooks/useAuthenticate'
 export * from './hooks/useComposeCast'
 export * from './hooks/useMiniKitContext'
 export * from './hooks/useMiniKitReady'

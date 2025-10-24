@@ -2,8 +2,6 @@
 export { Platform, platformToApiValue } from './config'
 export type { PlatformConfig } from './config'
 
-export { PlatformDetector } from './_core/detection/detector'
-export type { MiniKitContext } from './_core/detection/detector'
 export { PlatformDetectorProvider, usePlatformDetector } from './_core/PlatformDetectorProvider'
 
 // Web platform specific exports
