@@ -83,31 +83,20 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
       console.log('[Survey] ✅ login() completed, result:', result)
 
-      // Wait a bit for all state updates to propagate
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      console.log('[Survey] 📊 Auth state after login:', {
-        isAuthenticated: auth.isAuthenticated,
-        user: !!auth.user,
-        authError
-      })
-
-      if (auth.isAuthenticated) {
+      // Check result directly instead of waiting for state updates
+      if (result?.success) {
         console.log('[Survey] ✅ User authenticated successfully')
 
-        // Wait for eligibility check to update
-        await new Promise(resolve => setTimeout(resolve, 1000))
-
+        // Check eligibility before redirecting
         if (eligibility?.isEligible !== false) {
-          console.log('[Survey] ✅ User eligible or eligibility unknown, navigating to survey')
+          console.log('[Survey] ✅ User eligible or eligibility unknown, redirecting to survey...')
           router.push(`/surveys/${id}`)
         } else {
           console.log('[Survey] ⚠️ User authenticated but not eligible for this survey')
           // UI will update to show "Not Eligible" button
         }
       } else {
-        console.log('[Survey] ❌ Authentication completed but user not authenticated')
-        console.log('[Survey] This might happen if user cancelled the signature')
+        console.log('[Survey] ❌ Authentication failed or cancelled')
       }
 
     } catch (error: any) {
