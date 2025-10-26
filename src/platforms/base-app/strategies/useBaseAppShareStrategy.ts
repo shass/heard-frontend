@@ -16,9 +16,12 @@ export function useBaseAppShareStrategy(): IShareStrategy {
 
     try {
       // Use composeCast for native Base App sharing
+      // Use deeplink format to ensure it opens in Base App
+      const deeplink = `cbwallet://miniapp?url=${encodeURIComponent(url)}`
+
       composeCast({
         text: text || 'Check out this survey on HEARD!',
-        embeds: [url]
+        embeds: [deeplink]
       })
     } catch (error) {
       console.error('[BaseAppShareStrategy] Failed to compose cast:', error)

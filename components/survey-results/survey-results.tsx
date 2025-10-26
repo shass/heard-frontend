@@ -10,7 +10,7 @@ import { ShareButton } from '@/components/share-button'
 import { SurveyReward } from '@/components/survey'
 import { Users, TrendingUp, Clock, Eye, EyeOff } from 'lucide-react'
 import { useSurveyResultsWithQuestions, useCanViewResults, useUserReward } from '@/hooks'
-import { useAuth, useWallet } from '@/src/platforms/_core'
+import { useAuth, useWallet, useOpenUrl } from '@/src/platforms/_core'
 import { resultsUtils } from '@/lib/api/survey-clients'
 import { QuestionChart } from './question-chart'
 import { VisibilityManager } from './visibility-manager'
@@ -35,6 +35,7 @@ export function SurveyResults({
   const { isAuthenticated } = auth
   const wallet = useWallet()
   const isConnected = wallet.isConnected
+  const openUrl = useOpenUrl()
 
   const { canView, visibilityMode, isLoading: accessLoading } = useCanViewResults(surveyId, token || undefined)
   const {
@@ -50,11 +51,11 @@ export function SurveyResults({
 
   const handleClaimReward = () => {
     if (userReward?.claimLink) {
-      // Use provided handler or fallback to window.open for web
+      // Use provided handler or platform-specific URL strategy
       if (onClaimReward) {
         onClaimReward(userReward.claimLink)
-      } else if (typeof window !== 'undefined') {
-        window.open(userReward.claimLink, '_blank', 'noopener,noreferrer')
+      } else {
+        openUrl(userReward.claimLink)
       }
     }
   }

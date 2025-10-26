@@ -2,12 +2,13 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { 
+import {
   Eye,
   EyeOff,
   Copy,
   ExternalLink
 } from 'lucide-react'
+import { useOpenUrl } from '@/src/platforms/_core'
 
 interface Visibility {
   visibilityMode: 'private' | 'public' | 'link'
@@ -36,6 +37,8 @@ export function VisibilityTab({
   openResults,
   getResultsUrl,
 }: VisibilityTabProps) {
+  const openUrl = useOpenUrl()
+
   return (
     <div className="space-y-6 p-1">
       {/* Current Visibility Status */}
@@ -225,7 +228,7 @@ export function VisibilityTab({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => visibility.shareUrl && window.open(visibility.shareUrl)}
+                  onClick={() => visibility.shareUrl && openUrl(visibility.shareUrl)}
                 >
                   <ExternalLink className="h-4 w-4" />
                 </Button>
