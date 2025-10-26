@@ -7,13 +7,27 @@ interface SharePageProps {
   params: { id: string }
 }
 
+// Helper to get absolute API URL for server-side fetching
+function getAbsoluteApiUrl(path: string): string {
+  const apiUrl = env.API_URL
+
+  // If API_URL is already absolute (starts with http:// or https://), use it directly
+  if (apiUrl.startsWith('http://') || apiUrl.startsWith('https://')) {
+    return `${apiUrl}${path}`
+  }
+
+  // Otherwise API_URL is relative (like /api), so prepend PUBLIC_URL
+  const baseUrl = env.PUBLIC_URL || 'http://localhost:3000'
+  return `${baseUrl}${apiUrl}${path}`
+}
+
 // Generate metadata for social sharing (OpenGraph)
 export async function generateMetadata({ params }: SharePageProps): Promise<Metadata> {
   const surveyId = params.id
 
   try {
     // Fetch survey data for metadata
-    const response = await fetch(`${env.API_URL}/surveys/${surveyId}`, {
+    const response = await fetch(getAbsoluteApiUrl(`/surveys/${surveyId}`), {
       next: { revalidate: 300 }, // Cache for 5 minutes
     })
 
@@ -74,7 +88,7 @@ export default async function SharePage({ params }: SharePageProps) {
 
   try {
     // Fetch survey data server-side
-    const response = await fetch(`${env.API_URL}/surveys/${surveyId}`, {
+    const response = await fetch(getAbsoluteApiUrl(`/surveys/${surveyId}`), {
       next: { revalidate: 300 },
     })
 
