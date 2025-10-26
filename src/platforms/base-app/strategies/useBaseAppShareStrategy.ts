@@ -5,26 +5,25 @@ import type { IShareStrategy, ShareOptions } from '../../_core/shared/interfaces
 
 /**
  * Base App platform share strategy
- * Creates Coinbase Wallet deeplink for sharing surveys
+ * Shares HTTPS URLs that work in messengers and auto-redirect to Base App
  */
 export function useBaseAppShareStrategy(): IShareStrategy {
   const share = useCallback(async (options: ShareOptions) => {
     const { url, text, title } = options
 
     try {
-      // Create Coinbase Wallet deeplink
-      const deeplink = `cbwallet://miniapp?url=${encodeURIComponent(url)}`
-
+      // Use regular HTTPS URL - it's clickable in messengers
+      // The /share/[id] page will handle auto-redirect to Base App
       // Try to use native share API if available (mobile devices)
       if (typeof navigator?.share === 'function') {
         await navigator.share({
           title: title || 'HEARD Survey',
           text: text || 'Check out this survey on HEARD!',
-          url: deeplink
+          url
         })
       } else if (typeof navigator?.clipboard?.writeText === 'function') {
         // Fallback to clipboard copy
-        await navigator.clipboard.writeText(deeplink)
+        await navigator.clipboard.writeText(url)
       } else {
         throw new Error('Neither share API nor clipboard API is available')
       }
@@ -33,8 +32,7 @@ export function useBaseAppShareStrategy(): IShareStrategy {
 
       // Final fallback: try clipboard again
       if (typeof navigator?.clipboard?.writeText === 'function') {
-        const deeplink = `cbwallet://miniapp?url=${encodeURIComponent(url)}`
-        await navigator.clipboard.writeText(deeplink)
+        await navigator.clipboard.writeText(url)
       } else {
         throw error
       }

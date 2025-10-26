@@ -6,9 +6,12 @@ import type { IShareStrategy } from '../shared/interfaces/IShareStrategy'
 
 /**
  * Platform-agnostic share hook using Strategy Pattern
- * - Base App: Coinbase Wallet deeplink via native share API or clipboard
- * - Farcaster: composeCast from @farcaster/miniapp-sdk for native sharing
- * - Web: clipboard copy
+ * - Base App: HTTPS URL via native share API or clipboard
+ * - Farcaster: HTTPS URL via composeCast from @farcaster/miniapp-sdk
+ * - Web: HTTPS URL via clipboard copy
+ *
+ * All platforms share /share/[id] URLs that work in messengers
+ * and auto-redirect to the appropriate platform when opened
  */
 export function useShare() {
   const { platform } = usePlatformDetector()

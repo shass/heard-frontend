@@ -80,9 +80,10 @@ export function useSurveyTable({ onTakeSurvey }: UseSurveyTableProps) {
 
   const handleCopyLink = async (surveyId: string) => {
     try {
-      const url = `${window.location.origin}/surveys/${surveyId}/info`
+      // Use /share/[id] URL - works in messengers and auto-redirects to app
+      const url = `${window.location.origin}/share/${surveyId}`
 
-      // Use platform-specific share (composeCast for Base App, clipboard for Web)
+      // Use platform-specific share (native share for Base App, composeCast for Farcaster, clipboard for Web)
       await share({
         url,
         text: 'Check out this survey on HEARD! Everyone will be HEARD.'
