@@ -7,7 +7,7 @@ export interface ShareOptions {
 export interface IShareStrategy {
   /**
    * Share content using platform-specific method
-   * - Base App: composeCast (@coinbase/onchainkit/minikit)
+   * - Base App: Coinbase Wallet deeplink via native share API or clipboard
    * - Farcaster: composeCast (@farcaster/miniapp-sdk)
    * - Web: clipboard API
    */

@@ -1,40 +1,47 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useComposeCast } from '@coinbase/onchainkit/minikit'
 import type { IShareStrategy, ShareOptions } from '../../_core/shared/interfaces/IShareStrategy'
 
 /**
  * Base App platform share strategy
- * Uses composeCast from MiniKit for native sharing experience
+ * Creates Coinbase Wallet deeplink for sharing surveys
  */
 export function useBaseAppShareStrategy(): IShareStrategy {
-  const { composeCast } = useComposeCast()
-
   const share = useCallback(async (options: ShareOptions) => {
-    const { url, text } = options
+    const { url, text, title } = options
 
     try {
-      // Use composeCast for native Base App sharing
-      // Use deeplink format to ensure it opens in Base App
+      // Create Coinbase Wallet deeplink
       const deeplink = `cbwallet://miniapp?url=${encodeURIComponent(url)}`
 
-      composeCast({
-        text: text || 'Check out this survey on HEARD!',
-        embeds: [deeplink]
-      })
+      // Try to use native share API if available (mobile devices)
+      if (typeof navigator?.share === 'function') {
+        await navigator.share({
+          title: title || 'HEARD Survey',
+          text: text || 'Check out this survey on HEARD!',
+          url: deeplink
+        })
+      } else if (typeof navigator?.clipboard?.writeText === 'function') {
+        // Fallback to clipboard copy
+        await navigator.clipboard.writeText(deeplink)
+      } else {
+        throw new Error('Neither share API nor clipboard API is available')
+      }
     } catch (error) {
-      console.error('[BaseAppShareStrategy] Failed to compose cast:', error)
-      // Fallback to clipboard if composeCast fails
+      console.error('[BaseAppShareStrategy] Failed to share:', error)
+
+      // Final fallback: try clipboard again
       if (typeof navigator?.clipboard?.writeText === 'function') {
-        await navigator.clipboard.writeText(url)
+        const deeplink = `cbwallet://miniapp?url=${encodeURIComponent(url)}`
+        await navigator.clipboard.writeText(deeplink)
       } else {
         throw error
       }
     }
-  }, [composeCast])
+  }, [])
 
-  const canShare = !!composeCast || typeof navigator?.clipboard?.writeText === 'function'
+  const canShare = typeof navigator?.share === 'function' || typeof navigator?.clipboard?.writeText === 'function'
 
   return {
     share,
