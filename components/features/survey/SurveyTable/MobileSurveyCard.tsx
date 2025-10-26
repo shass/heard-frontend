@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button"
-import { Copy, Check } from "lucide-react"
+import { Copy, Check, Share2 } from "lucide-react"
 import { formatNumber } from "@/lib/utils"
 import type { Survey } from "@/lib/types"
+import { usePlatformDetector } from "@/src/platforms/_core"
+import { Platform } from "@/src/platforms/config"
 
 interface MobileSurveyCardProps {
   survey: Survey
@@ -11,6 +13,10 @@ interface MobileSurveyCardProps {
 }
 
 export function MobileSurveyCard({ survey, onTakeSurvey, onCopyLink, copiedSurveyId }: MobileSurveyCardProps) {
+  const { platform } = usePlatformDetector()
+
+  // Show Share icon in Base App and Farcaster, Copy icon in Web
+  const ShareIcon = platform === Platform.BASE_APP || platform === Platform.FARCASTER ? Share2 : Copy
   const getButtonStyle = () => {
     return "bg-zinc-900 hover:bg-zinc-800"
   }
@@ -57,7 +63,7 @@ export function MobileSurveyCard({ survey, onTakeSurvey, onCopyLink, copiedSurve
             {copiedSurveyId === survey.id ? (
               <Check className="w-4 h-4 text-zinc-900" />
             ) : (
-              <Copy className="w-4 h-4" />
+              <ShareIcon className="w-4 h-4" />
             )}
           </Button>
         </div>
