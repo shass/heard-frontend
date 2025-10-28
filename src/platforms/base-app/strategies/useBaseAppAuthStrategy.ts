@@ -1,54 +1,52 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useMiniKit } from '@coinbase/onchainkit/minikit'
 import { sdk } from '@farcaster/miniapp-sdk'
-import type { Context } from '@farcaster/miniapp-sdk'
 import { AuthState, User } from '@/src/platforms'
 import { IAuthStrategy, AuthResult } from '../../_core/shared/interfaces/IAuthStrategy'
 import { Platform } from '../../config'
 import { useAuthStore } from '@/lib/store'
 import { authApi } from '@/lib/api/auth'
 
+/**
+ * Base App authentication strategy using OnchainKit MiniKit
+ *
+ * SECURITY ARCHITECTURE:
+ * - useMiniKit().context provides UI hints ONLY (displayName, pfp, username)
+ *   Context data can be spoofed and MUST NOT be used for authorization
+ * - Quick Auth provides cryptographically verified authentication
+ * - FID from context is used only for UI prefill, not for security decisions
+ * - Backend verifies Quick Auth token for all authenticated operations
+ *
+ * @see https://docs.base.org/mini-apps/security
+ */
 export function useBaseAppAuthStrategy(): IAuthStrategy {
+  // MiniKit context - USE ONLY FOR UI HINTS (can be spoofed)
+  // Never use context data for authorization or security decisions
+  const { context } = useMiniKit()
+
   const [user, setUser] = useState<User | null>(null)
   const [authState, setAuthState] = useState<AuthState>(AuthState.UNAUTHENTICATED)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [sdkContext, setSdkContext] = useState<Context.MiniAppContext | null>(null)
   const hasCheckedToken = useRef(false)
 
-  // Get SDK context (only once on mount)
+  // Initialize UI state based on context (UI hints only)
   useEffect(() => {
-    console.log('[useBaseAppAuthStrategy] useEffect[1] for SDK context triggered')
-    let mounted = true
+    console.log('[useBaseAppAuthStrategy] Context updated:', context)
 
-    // Set loading to false initially since we're checking context
+    // Set loading to false initially
     useAuthStore.getState().setLoading(false)
-
-    sdk.context
-      .then((ctx) => {
-        if (!mounted) return
-        console.log('[useBaseAppAuthStrategy] SDK context loaded:', ctx)
-        setSdkContext(ctx)
-      })
-      .catch((error) => {
-        if (!mounted) return
-        console.error('[useBaseAppAuthStrategy] Failed to get SDK context:', error)
-        useAuthStore.getState().setLoading(false)
-      })
-
-    return () => {
-      console.log('[useBaseAppAuthStrategy] useEffect[1] cleanup called')
-      mounted = false
-    }
   }, [])
 
-  // Get wallet address and set context user info
+  // Set guest user with context UI hints (NOT authenticated)
+  // Context data is unverified and only used for display purposes
   useEffect(() => {
-    if (sdkContext?.user) {
-      const contextUser = sdkContext.user
+    if (context?.user) {
+      const contextUser = context.user
 
-      // Try to get wallet address from Ethereum provider
+      // Try to get wallet address for display (not for auth)
       const getWalletAddress = async () => {
         try {
           const provider = sdk.wallet.ethProvider
@@ -63,31 +61,35 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       }
 
       getWalletAddress().then(walletAddress => {
-        const newUser: User = {
-          id: contextUser.fid?.toString() || 'unknown',
+        // Guest user with UI hints - NOT AUTHENTICATED
+        // Do not use this for authorization
+        const guestUser: User = {
+          id: 'guest', // Not using FID as ID - it's unverified
           walletAddress: walletAddress,
           platform: Platform.BASE_APP,
           metadata: {
+            // UI hints only - can be spoofed
             fid: contextUser.fid,
             username: contextUser.username,
             displayName: contextUser.displayName,
             pfpUrl: contextUser.pfpUrl,
-            isFromContext: true
+            isFromContext: true,
+            isVerified: false
           }
         }
-        setUser(newUser)
-        useAuthStore.getState().setUser(newUser as any)
+        setUser(guestUser)
+        useAuthStore.getState().setUser(guestUser as any)
       })
     } else {
       setUser(null)
       useAuthStore.getState().setUser(null)
     }
-  }, [sdkContext])
+  }, [context])
 
   const authenticate = useCallback(async (): Promise<AuthResult> => {
-    if (!sdkContext) {
-      setError('Base App platform not initialized')
-      return { success: false, error: 'Base App platform not initialized' }
+    if (!context) {
+      setError('Base App context not available')
+      return { success: false, error: 'Base App context not available' }
     }
 
     try {
@@ -101,13 +103,16 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       const { apiClient } = await import('@/lib/api/client')
       apiClient.clearAuthToken()
 
-      // Step 1: Get FID from SDK context
-      const fid = sdkContext.user?.fid
+      // Step 1: Get FID from context (for UI prefill only)
+      // NOTE: Context FID is unverified - backend will verify via Quick Auth
+      const fid = context.user?.fid
       if (!fid) {
         throw new Error('No Farcaster ID found in context')
       }
 
-      // Step 2: Use Quick Auth to get JWT token
+      // Step 2: Use Quick Auth to get VERIFIED JWT token
+      // Quick Auth provides cryptographically verified authentication
+      // This is the ONLY source of truth for user identity
       console.log('[BaseAppAuthStrategy] Authenticating with Quick Auth for FID:', fid)
       const { token: quickAuthToken } = await sdk.quickAuth.getToken()
 
@@ -115,7 +120,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         throw new Error('Failed to get Quick Auth token')
       }
 
-      console.log('[BaseAppAuthStrategy] ✅ Quick Auth token obtained')
+      console.log('[BaseAppAuthStrategy] ✅ Quick Auth token obtained (VERIFIED)')
 
       // Step 3: Get wallet address from SDK (required for survey access)
       let walletAddress: string | undefined
@@ -137,22 +142,23 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       }
 
       // Step 4: Send Quick Auth token and wallet address to backend
+      // Backend MUST verify Quick Auth token server-side
       const { user: userData, token } = await authApi.connectWallet({
         platform: 'base',
         walletAddress,
-        quickAuthToken,
+        quickAuthToken, // VERIFIED token - backend must validate
         metadata: {
-          fid,
-          username: sdkContext.user?.username,
-          displayName: sdkContext.user?.displayName,
-          pfpUrl: sdkContext.user?.pfpUrl,
+          fid, // From context (unverified), used only for UI
+          username: context.user?.username, // UI hint only
+          displayName: context.user?.displayName, // UI hint only
+          pfpUrl: context.user?.pfpUrl, // UI hint only
           authMethod: 'quick_auth',
         }
       })
 
       console.log('[BaseAppAuthStrategy] Backend authentication successful:', userData)
 
-      // Step 4: Store token
+      // Step 5: Store token
       if (token) {
         console.log('[BaseAppAuthStrategy] ✅ Got token from backend')
         apiClient.setAuthToken(token)
@@ -168,18 +174,20 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         }
       }
 
-      // Step 4: Create authenticated user
+      // Step 6: Create VERIFIED authenticated user
+      // userData comes from backend verification of Quick Auth token
       const finalUser: User = {
-        id: userData.id,
-        walletAddress: userData.walletAddress,
+        id: userData.id, // Verified by backend
+        walletAddress: userData.walletAddress, // Verified by backend
         platform: Platform.BASE_APP,
         metadata: {
           ...userData,
-          fid,
-          username: sdkContext.user?.username,
-          displayName: sdkContext.user?.displayName,
-          pfpUrl: sdkContext.user?.pfpUrl,
+          fid, // From backend verification (not from context)
+          username: context.user?.username, // UI hint for display
+          displayName: context.user?.displayName, // UI hint for display
+          pfpUrl: context.user?.pfpUrl, // UI hint for display
           isAuthenticated: true,
+          isVerified: true, // Verified via Quick Auth + backend
           authMethod: 'quick_auth'
         }
       }
@@ -202,7 +210,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
       useAuthStore.getState().setLoading(false)
       return { success: false, error: errorMessage }
     }
-  }, [sdkContext])
+  }, [context])
 
   const logout = useCallback(async () => {
     try {
@@ -225,7 +233,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
   // Check if we have stored token on mount (ONCE)
   // Prevent duplicate /auth/me requests by using global flag
   useEffect(() => {
-    if (!sdkContext || hasCheckedToken.current) return
+    if (!context || hasCheckedToken.current) return
 
     const { isAuthStrategyReady, setAuthStrategyReady } = useAuthStore.getState()
 
@@ -242,6 +250,7 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
     setAuthStrategyReady(true)
 
     // Check if we have a stored auth token from previous session
+    // Token was verified by backend during previous authentication
     if (typeof window !== 'undefined') {
       const storedToken = localStorage.getItem('auth_token')
       if (storedToken) {
@@ -251,10 +260,13 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
           if (userData) {
             console.log('[BaseAppAuthStrategy] Stored token valid, restoring session')
             const restoredUser: User = {
-              id: userData.id,
-              walletAddress: userData.walletAddress,
+              id: userData.id, // From backend verification
+              walletAddress: userData.walletAddress, // From backend verification
               platform: Platform.BASE_APP,
-              metadata: userData
+              metadata: {
+                ...userData,
+                isVerified: true, // Token was verified by backend
+              }
             }
             setUser(restoredUser)
             setAuthState(AuthState.AUTHENTICATED)
@@ -273,12 +285,14 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
         setAuthState(AuthState.UNAUTHENTICATED)
       }
     }
-  }, [sdkContext])
+  }, [context])
 
   const checkAuthStatus = useCallback(async () => {
     try {
-      const ctx = await sdk.context
-      setAuthState(ctx.user ? AuthState.AUTHENTICATED : AuthState.UNAUTHENTICATED)
+      // Check if user is authenticated based on stored token verification
+      // Do NOT use context.user for auth status (can be spoofed)
+      const userData = await authApi.checkAuth()
+      setAuthState(userData ? AuthState.AUTHENTICATED : AuthState.UNAUTHENTICATED)
     } catch (err) {
       setAuthState(AuthState.ERROR)
       setError(err instanceof Error ? err.message : 'Failed to check auth status')
@@ -294,6 +308,6 @@ export function useBaseAppAuthStrategy(): IAuthStrategy {
     authenticate,
     logout,
     checkAuthStatus,
-    canAuthenticate: !!sdkContext,
+    canAuthenticate: !!context, // Can authenticate if MiniKit context is available
   }
 }

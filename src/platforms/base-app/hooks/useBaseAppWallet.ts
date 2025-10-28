@@ -4,6 +4,19 @@ import { useState, useCallback } from 'react'
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
 import { TransactionRequest } from '../../_core/shared/types'
 
+/**
+ * Base App wallet hook using OnchainKit MiniKit
+ *
+ * SECURITY WARNING:
+ * - Context data (addresses, user info) is UNVERIFIED and can be spoofed
+ * - Use ONLY for display purposes (UI hints, prefill forms)
+ * - For critical operations (transactions, transfers):
+ *   * Use MiniKit transaction trays with explicit user confirmation
+ *   * Verify addresses server-side
+ *   * Never trust client-provided addresses for authorization
+ *
+ * @see https://docs.base.org/mini-apps/security
+ */
 export function useBaseAppWallet() {
   const miniKit = useMiniKit()
 
@@ -11,6 +24,7 @@ export function useBaseAppWallet() {
   const [error, setError] = useState<string | null>(null)
 
   // Get address from MiniKit context
+  // WARNING: Context addresses are UNVERIFIED - use only for display
   const custodyAddress = (miniKit.context?.user as any)?.custody?.address
   const verifiedAddresses = (miniKit.context?.user as any)?.verifications || []
   const address = custodyAddress || verifiedAddresses[0] || null
@@ -65,13 +79,15 @@ export function useBaseAppWallet() {
     const user = miniKit.context?.user
     if (!user) return null
 
+    // SECURITY: This data is UNVERIFIED from context
+    // Use only for UI display, not for authorization
     return {
-      fid: user.fid,
-      username: user.username,
-      displayName: user.displayName,
-      pfpUrl: user.pfpUrl,
-      custody: (user as any).custody,
-      verifications: (user as any).verifications
+      fid: user.fid, // Unverified - for display only
+      username: user.username, // Unverified - for display only
+      displayName: user.displayName, // Unverified - for display only
+      pfpUrl: user.pfpUrl, // Unverified - for display only
+      custody: (user as any).custody, // Unverified - for display only
+      verifications: (user as any).verifications // Unverified - for display only
     }
   }, [miniKit.context?.user])
 
