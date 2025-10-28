@@ -3,8 +3,7 @@
 import React from 'react';
 import { Button } from './ui/button';
 import { Share2 } from 'lucide-react';
-import { useComposeCast } from '@/src/platforms/base-app/hooks/useComposeCast';
-import { useMiniKitContext } from '@/src/platforms/base-app/hooks/useMiniKitContext';
+import { useShare } from '@/src/platforms/_core';
 
 interface ShareButtonProps {
   text: string;
@@ -14,51 +13,27 @@ interface ShareButtonProps {
   className?: string;
 }
 
-export function ShareButton({ 
-  text, 
-  url, 
-  variant = 'outline', 
+export function ShareButton({
+  text,
+  url,
+  variant = 'outline',
   size = 'sm',
-  className 
+  className
 }: ShareButtonProps) {
-  const { composeCast } = useComposeCast();
-  const { isBaseApp, isFarcasterApp, isWebsite } = useMiniKitContext();
+  const { share, canShare } = useShare();
 
-  const handleShare = () => {
-    // Full share text with URL if provided
-    const shareText = url ? `${text}\n\n${url}` : text;
+  const handleShare = async () => {
+    if (!url || !canShare) return;
 
-    if (isBaseApp || isFarcasterApp) {
-      // Use Farcaster compose cast in Mini App context
-      composeCast({
-        text: shareText,
-        embeds: url ? [url] : undefined
+    try {
+      await share({
+        url,
+        text,
+        title: 'HEARD Survey'
       });
-    } else {
-      // Fallback to Web Share API or clipboard in regular websites
-      if (navigator.share && /mobile/i.test(navigator.userAgent)) {
-        navigator.share({
-          title: 'Heard Labs Survey',
-          text: shareText,
-          url: url
-        }).catch((error) => {
-          console.log('Share failed:', error);
-          fallbackShare(shareText);
-        });
-      } else {
-        fallbackShare(shareText);
-      }
+    } catch (error) {
+      console.error('Failed to share:', error);
     }
-  };
-
-  const fallbackShare = (shareText: string) => {
-    // Copy to clipboard as fallback
-    navigator.clipboard.writeText(shareText).then(() => {
-      // Could add toast notification here
-      console.log('Share text copied to clipboard');
-    }).catch((error) => {
-      console.error('Failed to copy to clipboard:', error);
-    });
   };
 
   return (
@@ -67,6 +42,7 @@ export function ShareButton({
       size={size}
       onClick={handleShare}
       className={className}
+      disabled={!canShare || !url}
     >
       <Share2 className="h-4 w-4 mr-2" />
       Share
