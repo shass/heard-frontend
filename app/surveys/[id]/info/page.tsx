@@ -15,7 +15,9 @@ import {
   SurveyStats,
   SurveyInfo,
   SurveyActionButton,
-  SurveyReward
+  SurveyReward,
+  TimeLimitedInfo,
+  WinnerReward
 } from "@/components/survey"
 
 interface SurveyInfoPageProps {
@@ -225,8 +227,14 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
             {/* Survey Stats */}
             <SurveyStats survey={survey} />
 
+            {/* Time-Limited Survey Info */}
+            <TimeLimitedInfo survey={survey} />
+
             {/* Survey Information */}
             <SurveyInfo survey={survey} eligibility={eligibility} />
+
+            {/* Winner Reward (Time-Limited Surveys) */}
+            <WinnerReward surveyId={id} survey={survey} />
 
             {/* Reward Section */}
             {hasCompleted && userReward && (
