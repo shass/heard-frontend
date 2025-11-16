@@ -14,6 +14,7 @@ import {
   Gift,
   Download,
   Crown,
+  Trophy,
   RefreshCw
 } from 'lucide-react'
 import { formatNumber } from '@/lib/utils'
@@ -27,6 +28,7 @@ interface SurveyCardProps {
   onManageWhitelist: (survey: AdminSurveyListItem) => void
   onManageRewardLinks: (survey: AdminSurveyListItem) => void
   onManageSurveyClients: (survey: AdminSurveyListItem) => void
+  onManageWinners?: (survey: AdminSurveyListItem) => void
   onEdit: (survey: AdminSurveyListItem) => void
   onDuplicate: (surveyId: string, currentName: string) => void
   onExport: (surveyId: string) => void
@@ -46,6 +48,7 @@ export function SurveyCard({
   onManageWhitelist,
   onManageRewardLinks,
   onManageSurveyClients,
+  onManageWinners,
   onEdit,
   onDuplicate,
   onExport,
@@ -174,6 +177,17 @@ export function SurveyCard({
             >
               <Crown className="w-4 h-4" />
             </Button>
+
+            {survey.surveyType === 'time_limited' && onManageWinners && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onManageWinners(survey)}
+                title="Manage Winners"
+              >
+                <Trophy className="w-4 h-4" />
+              </Button>
+            )}
           </div>
 
           {/* Edit Actions */}
