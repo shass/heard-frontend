@@ -35,8 +35,27 @@ const surveySchema = z.object({
   rewardAmount: z.number().min(0, 'Reward amount must be positive'),
   rewardToken: z.string().min(1, 'Reward token is required'),
   heardPointsReward: z.number().min(0, 'HeardPoints reward must be positive'),
+  surveyType: z.enum(['standard', 'time_limited']).default('standard'),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  resultsPageUrl: z.string().url('Invalid URL format').optional().or(z.literal('')),
   questions: z.array(questionSchema).min(1, 'At least 1 question is required'),
   isActive: z.boolean().optional()
+}).refine((data) => {
+  // For time_limited surveys, dates are required
+  if (data.surveyType === 'time_limited') {
+    if (!data.startDate) return false
+    if (!data.endDate) return false
+
+    // endDate must be after startDate
+    const start = new Date(data.startDate)
+    const end = new Date(data.endDate)
+    return end > start
+  }
+  return true
+}, {
+  message: 'For time-limited surveys: start and end dates are required, and end date must be after start date',
+  path: ['endDate']
 })
 
 export type SurveyFormData = z.infer<typeof surveySchema>
@@ -60,6 +79,11 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
       rewardAmount: survey.rewardAmount,
       rewardToken: survey.rewardToken,
       heardPointsReward: survey.heardPointsReward,
+      surveyType: survey.surveyType || 'standard',
+      // Convert ISO dates to datetime-local format (YYYY-MM-DDTHH:MM)
+      startDate: survey.startDate ? new Date(survey.startDate).toISOString().slice(0, 16) : '',
+      endDate: survey.endDate ? new Date(survey.endDate).toISOString().slice(0, 16) : '',
+      resultsPageUrl: survey.resultsPageUrl || '',
       questions: [],
       isActive: survey.isActive
     } : {
@@ -71,6 +95,10 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
       rewardAmount: 0,
       rewardToken: 'ETH',
       heardPointsReward: 100,
+      surveyType: 'standard',
+      startDate: '',
+      endDate: '',
+      resultsPageUrl: '',
       questions: [{
         questionText: '',
         questionType: 'single',
@@ -129,9 +157,28 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
   }, [survey?.id, setValue])
 
   const handleFormSubmit = (data: SurveyFormData) => {
-    const submitData = {
+    // Convert datetime-local values to ISO 8601 strings for API
+    const submitData: any = {
       ...data,
       ...(survey ? { id: survey.id } : {})
+    }
+
+    // Format dates to ISO 8601 if they exist
+    if (data.startDate && data.surveyType === 'time_limited') {
+      submitData.startDate = new Date(data.startDate).toISOString()
+    } else {
+      delete submitData.startDate
+    }
+
+    if (data.endDate && data.surveyType === 'time_limited') {
+      submitData.endDate = new Date(data.endDate).toISOString()
+    } else {
+      delete submitData.endDate
+    }
+
+    // Clean up resultsPageUrl if empty
+    if (!data.resultsPageUrl || data.resultsPageUrl === '') {
+      delete submitData.resultsPageUrl
     }
 
     onSubmit(submitData as CreateSurveyRequest | UpdateSurveyRequest)
