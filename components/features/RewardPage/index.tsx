@@ -1,8 +1,9 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { LoadingState } from "@/components/ui/loading-states"
-import { Gift } from "lucide-react"
+import { Gift, Calendar } from "lucide-react"
 import type { Survey } from "@/lib/types"
 import { formatNumber } from "@/lib/utils"
 import { useRewardPage } from './hooks/useRewardPage'
@@ -123,6 +124,25 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
             claimLink={claimLink}
             heardPointsAwarded={heardPointsAwarded}
           />
+
+          {survey.surveyType === 'time_limited' && survey.endDate && (
+            <Card className="text-left">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Calendar className="w-5 h-5" />
+                  Survey End Date
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-base text-zinc-700">
+                  {new Intl.DateTimeFormat('en-US', {
+                    dateStyle: 'long',
+                    timeStyle: 'short'
+                  }).format(new Date(survey.endDate))}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {qrCodeUrl && claimLink && (
             <ClaimSection
