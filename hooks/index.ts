@@ -9,6 +9,8 @@ export * from './use-survey-clients'
 export * from './use-search-surveys'
 export * from './use-create-survey-modal'
 export * from './use-reward'
+export * from './use-winner-status'
+export * from './use-winners'
 
 // User hooks
 export * from './use-users'
