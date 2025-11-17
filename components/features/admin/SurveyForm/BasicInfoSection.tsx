@@ -103,7 +103,7 @@ export function BasicInfoSection({ register, control, watch, errors, isEditMode 
             name="surveyType"
             control={control}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select survey type" />
                 </SelectTrigger>
