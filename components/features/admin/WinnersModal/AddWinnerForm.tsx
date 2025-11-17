@@ -66,7 +66,7 @@ export function AddWinnerForm({ surveyId, onSuccess }: AddWinnerFormProps) {
       <CardHeader>
         <CardTitle>Add Winner</CardTitle>
         <CardDescription>
-          Add a single winner to this survey. One wallet can have multiple rewards - just add separate entries.
+          Add a single winner to this survey. Each wallet can only have one reward per survey.
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -132,7 +132,7 @@ export function WinnersUpload({ surveyId, onSuccess }: WinnersUploadProps) {
 
         <Alert>
           <AlertDescription className="text-xs">
-            <strong>Note:</strong> One wallet can receive multiple rewards. Simply include multiple entries with the same wallet address but different reward links.
+            <strong>Note:</strong> Each wallet can only receive one reward per survey. If you upload a duplicate wallet address, it will replace the existing reward for that wallet.
           </AlertDescription>
         </Alert>
       </CardContent>
