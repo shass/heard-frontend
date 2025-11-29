@@ -4,7 +4,8 @@ export type {
   ButtonState,
   ButtonStateParams,
   RewardDisplayParams,
-  SurveyInfoConfig
+  SurveyInfoConfig,
+  RewardDisplay
 } from './ISurveyStrategy'
 
 // Enums

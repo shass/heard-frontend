@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { Copy, Check, Share2 } from "lucide-react"
 import { MotionSurveyTable } from "@/components/motion-survey-table"
-import { formatNumber, getSurveyTypeLabel, isSurveyEnded } from "@/lib/utils"
+import { isSurveyEnded } from "@/lib/utils"
+import { formatSurveyReward, getSurveyTypeLabel } from "@/lib/survey/helpers"
 import type { Survey } from "@/lib/types"
 import { usePlatformDetector } from "@/src/platforms/_core"
 import { Platform } from "@/src/platforms/config"
@@ -41,6 +42,7 @@ export function DesktopSurveyTable({
             renderRow={(survey) => {
               const isEnded = isSurveyEnded(survey)
               const surveyTypeLabel = getSurveyTypeLabel(survey.surveyType)
+              const rewardDisplay = formatSurveyReward(survey, 'list')
 
               return (
                 <>
@@ -55,8 +57,7 @@ export function DesktopSurveyTable({
                   <td className="px-6 py-4 text-base text-zinc-600">{survey.company}</td>
                   <td className="px-6 py-4">
                     <div className="text-base font-medium text-zinc-900">
-                      {`${formatNumber(survey.rewardAmount)} ${survey.rewardToken}`}
-                      {survey.heardPointsReward > 0 ? ` + ${formatNumber(survey.heardPointsReward)} HP` : ""}
+                      {rewardDisplay}
                     </div>
                   </td>
                   <td className="px-6 py-4">

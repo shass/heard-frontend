@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Copy, Check, Share2 } from "lucide-react"
-import { formatNumber, getSurveyTypeLabel, isSurveyEnded } from "@/lib/utils"
+import { isSurveyEnded } from "@/lib/utils"
+import { formatSurveyReward, getSurveyTypeLabel } from "@/lib/survey/helpers"
 import type { Survey } from "@/lib/types"
 import { usePlatformDetector } from "@/src/platforms/_core"
 import { Platform } from "@/src/platforms/config"
@@ -19,6 +20,7 @@ export function MobileSurveyCard({ survey, onTakeSurvey, onCopyLink, copiedSurve
   const ShareIcon = platform === Platform.BASE_APP || platform === Platform.FARCASTER ? Share2 : Copy
   const isEnded = isSurveyEnded(survey)
   const surveyTypeLabel = getSurveyTypeLabel(survey.surveyType)
+  const rewardDisplay = formatSurveyReward(survey, 'list')
 
   const getButtonStyle = () => {
     return "bg-zinc-900 hover:bg-zinc-800"
@@ -26,12 +28,6 @@ export function MobileSurveyCard({ survey, onTakeSurvey, onCopyLink, copiedSurve
 
   const handleButtonClick = () => {
     onTakeSurvey(survey)
-  }
-
-  const formatReward = (survey: Survey) => {
-    const tokenReward = `${formatNumber(survey.rewardAmount)} ${survey.rewardToken}`
-    const pointsReward = survey.heardPointsReward > 0 ? ` + ${formatNumber(survey.heardPointsReward)} HP` : ""
-    return tokenReward + pointsReward
   }
 
   return (
@@ -48,7 +44,7 @@ export function MobileSurveyCard({ survey, onTakeSurvey, onCopyLink, copiedSurve
         </div>
 
         <div>
-          <div className="text-base font-medium text-zinc-900">{formatReward(survey)}</div>
+          <div className="text-base font-medium text-zinc-900">{rewardDisplay}</div>
         </div>
 
         <div className="flex items-center gap-2">

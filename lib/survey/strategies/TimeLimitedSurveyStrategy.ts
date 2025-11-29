@@ -3,10 +3,12 @@ import type {
   ButtonState,
   ButtonStateParams,
   RewardDisplayParams,
-  SurveyInfoConfig
+  SurveyInfoConfig,
+  RewardDisplay
 } from './ISurveyStrategy'
 import { RewardSource } from './ISurveyStrategy'
 import type { Survey } from '@/lib/types'
+import { formatNumber } from '@/lib/utils'
 
 /**
  * Strategy for time-limited surveys
@@ -173,5 +175,23 @@ export class TimeLimitedSurveyStrategy implements ISurveyStrategy {
     }
 
     return null
+  }
+
+  getRewardDisplay(survey: Survey, _context?: 'list' | 'detail'): RewardDisplay {
+    // Time-limited surveys only show HeardPoints in list view
+    // Token rewards are determined individually for winners
+    return {
+      formatted: `${formatNumber(survey.heardPointsReward)} HP`,
+      parts: {
+        heardPoints: {
+          amount: survey.heardPointsReward
+        }
+      },
+      displayMode: 'simple'
+    }
+  }
+
+  getTypeLabel(): string {
+    return 'Time Limited'
   }
 }

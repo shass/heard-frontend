@@ -1,7 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import type { Survey } from "./types"
-import { SurveyType } from "./types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -98,20 +97,6 @@ export function formatSurveyDate(dateString?: string | null): string {
     minute: '2-digit',
     hour12: false
   }).format(date)
-}
-
-/**
- * Get human-readable label for survey type
- */
-export function getSurveyTypeLabel(surveyType: SurveyType): string {
-  switch (surveyType) {
-    case SurveyType.STANDARD:
-      return 'Standard'
-    case SurveyType.TIME_LIMITED:
-      return 'Time Limited'
-    default:
-      return 'Standard'
-  }
 }
 
 /**

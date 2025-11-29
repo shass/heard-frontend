@@ -3,10 +3,12 @@ import type {
   ButtonState,
   ButtonStateParams,
   RewardDisplayParams,
-  SurveyInfoConfig
+  SurveyInfoConfig,
+  RewardDisplay
 } from './ISurveyStrategy'
 import { RewardSource } from './ISurveyStrategy'
 import type { Survey } from '@/lib/types'
+import { formatNumber } from '@/lib/utils'
 
 /**
  * Strategy for standard surveys
@@ -107,5 +109,37 @@ export class StandardSurveyStrategy implements ISurveyStrategy {
       return "This survey is currently inactive."
     }
     return null
+  }
+
+  getRewardDisplay(survey: Survey, _context?: 'list' | 'detail'): RewardDisplay {
+    const parts: string[] = []
+    const rewardParts: RewardDisplay['parts'] = {}
+
+    // Token reward
+    if (survey.rewardAmount > 0) {
+      parts.push(`${formatNumber(survey.rewardAmount)} ${survey.rewardToken}`)
+      rewardParts.token = {
+        amount: survey.rewardAmount,
+        symbol: survey.rewardToken
+      }
+    }
+
+    // HeardPoints reward
+    if (survey.heardPointsReward > 0) {
+      parts.push(`${formatNumber(survey.heardPointsReward)} HP`)
+      rewardParts.heardPoints = {
+        amount: survey.heardPointsReward
+      }
+    }
+
+    return {
+      formatted: parts.join(' + '),
+      parts: rewardParts,
+      displayMode: 'detailed'
+    }
+  }
+
+  getTypeLabel(): string {
+    return 'Standard'
   }
 }

@@ -7,6 +7,21 @@ export enum RewardSource {
   BOTH = 'both'
 }
 
+// Reward display configuration
+export interface RewardDisplay {
+  formatted: string // Complete formatted string ready for display
+  parts?: {
+    token?: {
+      amount: number
+      symbol: string
+    }
+    heardPoints?: {
+      amount: number
+    }
+  }
+  displayMode: 'simple' | 'detailed'
+}
+
 // Button state for survey action button
 export interface ButtonState {
   text: string
@@ -82,4 +97,14 @@ export interface ISurveyStrategy {
    * Get custom validation message if survey is not available
    */
   getUnavailableMessage(survey: Survey): string | null
+
+  /**
+   * Get formatted reward display for list/table/card views
+   */
+  getRewardDisplay(survey: Survey, context?: 'list' | 'detail'): RewardDisplay
+
+  /**
+   * Get human-readable type label
+   */
+  getTypeLabel(): string
 }
