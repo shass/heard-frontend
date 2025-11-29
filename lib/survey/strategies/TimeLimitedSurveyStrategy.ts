@@ -150,7 +150,8 @@ export class TimeLimitedSurveyStrategy implements ISurveyStrategy {
     return {
       showDates: true,
       showResultsPageLink: hasEnded && !!survey.resultsPageUrl,
-      showWinnerInfo: hasEnded
+      showWinnerInfo: hasEnded,
+      showTokenReward: false
     }
   }
 

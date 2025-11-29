@@ -97,7 +97,8 @@ export class StandardSurveyStrategy implements ISurveyStrategy {
     return {
       showDates: false,
       showResultsPageLink: false,
-      showWinnerInfo: false
+      showWinnerInfo: false,
+      showTokenReward: true
     }
   }
 

@@ -35,6 +35,10 @@ export function SurveyReward({
   // Use strategy to determine if we should show winner info
   const shouldShowWinnerInfo = survey && strategy?.shouldShowWinnerInfo({ survey, userReward, winnerStatus })
 
+  // Use strategy to determine if we should show token reward info
+  const infoConfig = survey && strategy?.getInfoConfig(survey)
+  const showTokenReward = infoConfig?.showTokenReward ?? true
+
   // Format end date for surveys that need it
   const endDateFormatted = survey?.endDate
     ? new Intl.DateTimeFormat('en-US', {
@@ -172,7 +176,9 @@ export function SurveyReward({
                   <span className="font-medium text-green-800">Survey Completed!</span>
                 </div>
                 <div className="text-sm text-green-700">
-                  <p>Token Reward: {formatNumber(userReward.survey?.rewardAmount || 0)} {userReward.survey?.rewardToken}</p>
+                  {showTokenReward && (
+                    <p>Token Reward: {formatNumber(userReward.survey?.rewardAmount || 0)} {userReward.survey?.rewardToken}</p>
+                  )}
                   <p>HeardPoints Earned: {formatNumber(userReward.heardPointsAwarded)} HP</p>
                   {userReward.usedAt && (
                     <p>Reward given: {new Date(userReward.usedAt).toLocaleDateString()}</p>
@@ -184,7 +190,9 @@ export function SurveyReward({
               {hasClaimLink && (
                 <div className="space-y-3">
                   <div className="text-sm text-zinc-600">
-                    Use the link below to claim your {formatNumber(userReward.survey?.rewardAmount || 0)} {userReward.survey?.rewardToken} tokens:
+                    {showTokenReward
+                      ? `Use the link below to claim your ${formatNumber(userReward.survey?.rewardAmount || 0)} ${userReward.survey?.rewardToken} tokens:`
+                      : 'Use the link below to claim your reward:'}
                   </div>
 
                   <div className="flex space-x-3">

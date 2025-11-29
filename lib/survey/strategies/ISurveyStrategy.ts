@@ -40,6 +40,7 @@ export interface SurveyInfoConfig {
   showDates: boolean
   showResultsPageLink: boolean
   showWinnerInfo: boolean
+  showTokenReward: boolean
 }
 
 /**

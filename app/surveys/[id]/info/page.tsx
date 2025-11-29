@@ -222,7 +222,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
             />
 
             {/* Survey Stats */}
-            <SurveyStats survey={survey} />
+            <SurveyStats survey={survey} strategy={strategy} />
 
             {/* Time-Limited Survey Info */}
             <TimeLimitedInfo survey={survey} strategy={strategy} />
