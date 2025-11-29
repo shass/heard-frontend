@@ -46,7 +46,7 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
         isEditMode={!!survey}
       />
 
-      <RewardsSection register={register} errors={errors} />
+      <RewardsSection register={register} watch={watch} errors={errors} />
       
       <QuestionsSection
         questions={questions}
