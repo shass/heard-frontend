@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNotifications } from '@/components/ui/notifications'
-import { useHeardPoints, useUserReward, useWinnerStatus } from '@/hooks'
+import { useHeardPoints, useUserReward, useWinnerStatus, useSurveyStrategy } from '@/hooks'
 import { useOpenUrl } from '@/src/platforms/_core'
 import { useIsAuthenticated, useUser } from '@/lib/store'
-import { SurveyType, type Survey } from '@/lib/types'
+import type { Survey } from '@/lib/types'
+import { RewardSource } from '@/lib/survey/strategies'
 
 type ClaimStatus = 'pending' | 'claimed' | 'error'
 
@@ -17,25 +18,26 @@ export function useRewardPage(survey: Survey, responseId?: string) {
   const isAuthenticated = useIsAuthenticated()
   const notifications = useNotifications()
 
+  // Get strategy for the survey type
+  const strategy = useSurveyStrategy(survey)
+
   // Get user's reward for this survey
   const { data: userReward, isLoading: rewardLoading, error: rewardError } = useUserReward(survey.id)
 
   // Get updated user points
-  const { data: userPoints, refetch: refetchPoints } = useHeardPoints()
+  const { refetch: refetchPoints } = useHeardPoints()
 
-  // Get winner status for time_limited surveys
+  // Get winner status if needed based on survey strategy
+  const rewardSource = strategy?.getRewardSource()
+  const shouldFetchWinnerStatus = rewardSource === RewardSource.WINNER_STATUS || rewardSource === RewardSource.BOTH
   const { data: winnerStatus, isLoading: winnerLoading } = useWinnerStatus(
-    survey.surveyType === SurveyType.TIME_LIMITED ? survey.id : undefined
+    shouldFetchWinnerStatus ? survey.id : undefined
   )
 
-  // Compute reward information
-  // For time_limited surveys, use winner status; for standard surveys, use userReward
-  const claimLink = survey.surveyType === SurveyType.TIME_LIMITED
-    ? winnerStatus?.reward?.rewardLink
-    : userReward?.claimLink
+  // Get claim link using strategy
+  const claimLink = strategy?.getClaimLink({ survey, userReward, winnerStatus })
   const heardPointsAwarded = userReward?.heardPointsAwarded || survey.heardPointsReward || 0
   const rewardIssued = !!userReward?.usedAt
-  const isLinkdropReward = userReward?.type === 'linkdrop'
   const isCompletedNoReward = userReward?.type === 'completed_no_reward'
 
   // Check if there are any rewards available
@@ -105,7 +107,6 @@ export function useRewardPage(survey: Survey, responseId?: string) {
     claimLink,
     heardPointsAwarded,
     rewardIssued,
-    isLinkdropReward,
     isCompletedNoReward,
 
     // Winner data (for time_limited surveys)

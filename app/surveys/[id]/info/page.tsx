@@ -6,19 +6,18 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useSurvey, useSurveyEligibility, useUserReward, useWinnerStatus } from "@/hooks"
+import { useSurvey, useSurveyEligibility, useUserReward, useWinnerStatus, useSurveyStrategy } from "@/hooks"
 import { usePlatformDetector } from "@/src/platforms"
 import { useAuth, useWallet, useOpenUrl } from "@/src/platforms/_core"
 import { Platform } from "@/src/platforms/config"
-import { SurveyType } from "@/lib/types"
+import { RewardSource } from "@/lib/survey/strategies"
 import {
   SurveyHeader,
   SurveyStats,
   SurveyInfo,
   SurveyActionButton,
   SurveyReward,
-  TimeLimitedInfo,
-  WinnerReward
+  TimeLimitedInfo
 } from "@/components/survey"
 
 interface SurveyInfoPageProps {
@@ -59,9 +58,15 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const { data: eligibility } = useSurveyEligibility(id, address ?? undefined)
   // Reward is fetched only if user is authenticated (connected state is not required)
   const { data: userReward } = useUserReward(id, isAuthenticated)
-  // Get winner status for time_limited surveys
+
+  // Get strategy for the survey type
+  const strategy = useSurveyStrategy(survey)
+
+  // Get winner status if needed based on survey strategy
+  const rewardSource = strategy?.getRewardSource()
+  const shouldFetchWinnerStatus = rewardSource === RewardSource.WINNER_STATUS || rewardSource === RewardSource.BOTH
   const { data: winnerStatus, isLoading: isWinnerLoading, error: winnerError } = useWinnerStatus(
-    survey?.surveyType === SurveyType.TIME_LIMITED ? id : undefined
+    shouldFetchWinnerStatus ? id : undefined
   )
 
   const handleStartSurvey = () => {
@@ -187,48 +192,18 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const hasCompleted = eligibility?.hasCompleted
   const isEligible = eligibility?.isEligible ?? true
 
-  // Determine button state based on wallet connection and authentication
-  const getButtonState = () => {
-    if (hasCompleted) {
-      return { text: "Survey Completed", disabled: true, handler: () => {}, loading: false }
-    }
-
-    if (!isConnected) {
-      return { text: "Connect Wallet", disabled: false, handler: handleConnectWallet, loading: false }
-    }
-
-    if (!isEligible) {
-      return { text: "Not Eligible", disabled: true, handler: () => {}, loading: false }
-    }
-
-    // Check time limits for time_limited surveys
-    if (survey.surveyType === SurveyType.TIME_LIMITED) {
-      const now = new Date()
-      const startDate = survey.startDate ? new Date(survey.startDate) : null
-      const endDate = survey.endDate ? new Date(survey.endDate) : null
-
-      if (startDate && now < startDate) {
-        return { text: "Survey Not Started Yet", disabled: true, handler: () => {}, loading: false }
-      }
-
-      if (endDate && now >= endDate) {
-        return { text: "Survey Ended", disabled: true, handler: () => {}, loading: false }
-      }
-    }
-
-    if (!isAuthenticated) {
-      return {
-        text: isAuthLoading ? "Authenticating..." : "Authorize & Start Survey",
-        disabled: isAuthLoading,
-        handler: handleAuthenticate,
-        loading: isAuthLoading
-      }
-    }
-
-    return { text: "Start Survey", disabled: false, handler: handleStartSurvey, loading: false }
-  }
-
-  const buttonState = getButtonState()
+  // Get button state from strategy
+  const buttonState = strategy?.getButtonState({
+    survey: survey!,
+    hasCompleted: hasCompleted || false,
+    isConnected,
+    isEligible,
+    isAuthenticated,
+    isAuthLoading,
+    handleStartSurvey,
+    handleConnectWallet,
+    handleAuthenticate
+  }) || { text: "Loading...", disabled: true, handler: () => {}, loading: false }
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -252,8 +227,6 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
             {/* Survey Information */}
             <SurveyInfo survey={survey} eligibility={eligibility} />
-
-            {/* Winner Reward removed as per new requirements - winners shown in reward section */}
 
             {/* Reward Section */}
             {hasCompleted && userReward && (

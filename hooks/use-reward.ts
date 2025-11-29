@@ -1,18 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api'
-
-interface LinkdropReward {
-  type: 'linkdrop' | 'completed_no_reward'
-  claimLink?: string
-  usedAt?: string
-  heardPointsAwarded: number
-  survey: {
-    name: string
-    rewardAmount: number
-    rewardToken: string
-  }
-  message?: string
-}
+import type { LinkdropReward } from '@/lib/types'
 
 export function useUserReward(surveyId: string, isConnected?: boolean) {
   return useQuery<LinkdropReward>({

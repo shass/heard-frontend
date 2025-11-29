@@ -162,6 +162,20 @@ export interface RewardInfo {
   claimUrl: string
 }
 
+// User reward from survey completion
+export interface LinkdropReward {
+  type: 'linkdrop' | 'completed_no_reward'
+  claimLink?: string
+  usedAt?: string
+  heardPointsAwarded: number
+  survey: {
+    name: string
+    rewardAmount: number
+    rewardToken: string
+  }
+  message?: string
+}
+
 // App state types
 export interface AppState {
   user: User | null

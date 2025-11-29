@@ -11,6 +11,7 @@ export * from './use-create-survey-modal'
 export * from './use-reward'
 export * from './use-winner-status'
 export * from './use-winners'
+export * from './use-survey-strategy'
 
 // User hooks
 export * from './use-users'
