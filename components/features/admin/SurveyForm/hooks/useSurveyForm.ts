@@ -185,12 +185,6 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
       delete submitData.resultsPageUrl
     }
 
-    console.log('📤 Submitting survey data:', {
-      surveyType: submitData.surveyType,
-      resultsPageUrl: submitData.resultsPageUrl,
-      hasResultsPageUrl: 'resultsPageUrl' in submitData
-    })
-
     onSubmit(submitData as CreateSurveyRequest | UpdateSurveyRequest)
   }
 

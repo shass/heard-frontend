@@ -196,6 +196,21 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
       return { text: "Not Eligible", disabled: true, handler: () => {}, loading: false }
     }
 
+    // Check time limits for time_limited surveys
+    if (survey.surveyType === 'time_limited') {
+      const now = new Date()
+      const startDate = survey.startDate ? new Date(survey.startDate) : null
+      const endDate = survey.endDate ? new Date(survey.endDate) : null
+
+      if (startDate && now < startDate) {
+        return { text: "Survey Not Started Yet", disabled: true, handler: () => {}, loading: false }
+      }
+
+      if (endDate && now >= endDate) {
+        return { text: "Survey Ended", disabled: true, handler: () => {}, loading: false }
+      }
+    }
+
     if (!isAuthenticated) {
       return {
         text: isAuthLoading ? "Authenticating..." : "Authorize & Start Survey",
