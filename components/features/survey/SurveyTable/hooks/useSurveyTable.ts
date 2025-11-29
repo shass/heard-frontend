@@ -14,6 +14,7 @@ interface UseSurveyTableProps {
 export function useSurveyTable({ onTakeSurvey }: UseSurveyTableProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCompany, setSelectedCompany] = useState("")
+  const [selectedSurveyType, setSelectedSurveyType] = useState("")
   const [copiedSurveyId, setCopiedSurveyId] = useState<string | null>(null)
 
   // Use search hook for server-side search with throttling
@@ -61,8 +62,11 @@ export function useSurveyTable({ onTakeSurvey }: UseSurveyTableProps) {
     }
   }, [searchQuery, selectedCompany, updateSearch, clearSearch])
 
-  // Surveys are already filtered on server-side, so use them directly
-  const filteredSurveys = surveys
+  // Surveys are already filtered on server-side by search/company
+  // Apply client-side filtering for survey type
+  const filteredSurveys = selectedSurveyType
+    ? surveys.filter(survey => survey.surveyType === selectedSurveyType)
+    : surveys
 
   // Get unique companies for filter (use all surveys for company list)
   const companies = Array.from(new Set(allSurveys.map(s => s.company))).sort()
@@ -107,8 +111,10 @@ export function useSurveyTable({ onTakeSurvey }: UseSurveyTableProps) {
     setSearchQuery,
     selectedCompany,
     setSelectedCompany,
+    selectedSurveyType,
+    setSelectedSurveyType,
     copiedSurveyId,
-    
+
     // Data
     surveys,
     filteredSurveys,
@@ -116,7 +122,7 @@ export function useSurveyTable({ onTakeSurvey }: UseSurveyTableProps) {
     showLoading,
     error,
     isFetching,
-    
+
     // Handlers
     handleTakeSurvey,
     handleCopyLink,
