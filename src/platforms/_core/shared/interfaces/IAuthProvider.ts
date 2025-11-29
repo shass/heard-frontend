@@ -44,6 +44,7 @@ export interface User {
   id: string
   walletAddress?: string
   platform: string
+  role?: 'respondent' | 'admin'
   metadata?: BackendUser | Record<string, any>
 }
 

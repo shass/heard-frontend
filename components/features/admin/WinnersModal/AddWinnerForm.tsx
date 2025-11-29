@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAddWinners } from '@/hooks'
 
 const winnerSchema = z.object({
-  walletAddress: z.string().min(1, 'Wallet address is required').regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address'),
+  walletAddress: z.string().min(1, 'Wallet address is required'),
   rewardLink: z.string().url('Invalid URL'),
   place: z.string().optional(),
   rewardType: z.string().optional(),

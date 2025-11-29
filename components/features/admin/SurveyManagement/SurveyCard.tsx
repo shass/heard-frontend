@@ -220,14 +220,16 @@ export function SurveyCard({
               <List className="w-4 h-4" />
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onManageRewardLinks(survey)}
-              title="Manage Reward Links"
-            >
-              <Gift className="w-4 h-4" />
-            </Button>
+            {survey.surveyType !== 'time_limited' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onManageRewardLinks(survey)}
+                title="Manage Reward Links"
+              >
+                <Gift className="w-4 h-4" />
+              </Button>
+            )}
 
             <Button
               variant="outline"

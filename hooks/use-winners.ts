@@ -24,7 +24,7 @@ export const winnerKeys = {
  */
 export function useWinners(surveyId: string, params: GetWinnersParams = {}) {
   const auth = useAuth()
-  const isAdmin = auth.user?.metadata?.role === 'admin'
+  const isAdmin = auth.user?.role === 'admin'
 
   return useQuery<WinnersPagedData>({
     queryKey: winnerKeys.list(surveyId, params),

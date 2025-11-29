@@ -33,26 +33,39 @@ export function WinnersUpload({ surveyId, onSuccess }: WinnersUploadProps) {
         throw new Error('JSON must be an array of winner objects')
       }
 
-      // Validate each entry
+      // Validate each entry and normalize field names
+      const normalizedEntries: WinnerEntry[] = []
       for (const entry of parsed) {
-        if (!entry.walletAddress || !entry.rewardLink) {
-          throw new Error('Each winner must have walletAddress and rewardLink')
+        // Support both old format (walletAddress/rewardLink) and new format (address/reward)
+        const walletAddress = entry.address || entry.walletAddress
+        const rewardLink = entry.reward || entry.rewardLink
+
+        if (!walletAddress || !rewardLink) {
+          throw new Error('Each winner must have address and reward fields')
         }
 
-        // Validate Ethereum address
-        if (!/^0x[a-fA-F0-9]{40}$/.test(entry.walletAddress)) {
-          throw new Error(`Invalid Ethereum address: ${entry.walletAddress}`)
+        // Basic wallet address validation (just check it's not empty)
+        if (!walletAddress || walletAddress.trim().length === 0) {
+          throw new Error(`Invalid wallet address: ${walletAddress}`)
         }
 
         // Validate URL
         try {
-          new URL(entry.rewardLink)
+          new URL(rewardLink)
         } catch {
-          throw new Error(`Invalid URL: ${entry.rewardLink}`)
+          throw new Error(`Invalid URL: ${rewardLink}`)
         }
+
+        // Normalize to internal format
+        normalizedEntries.push({
+          walletAddress,
+          rewardLink,
+          place: entry.place,
+          rewardType: entry.rewardType
+        })
       }
 
-      setPreview(parsed)
+      setPreview(normalizedEntries)
     } catch (err: any) {
       setError(err.message || 'Invalid JSON format')
     }
@@ -89,7 +102,7 @@ export function WinnersUpload({ surveyId, onSuccess }: WinnersUploadProps) {
           <Textarea
             value={jsonText}
             onChange={(e) => setJsonText(e.target.value)}
-            placeholder={`[\n  {\n    "walletAddress": "0x...",\n    "rewardLink": "https://...",\n    "place": 1,\n    "rewardType": "Grand Prize"\n  }\n]`}
+            placeholder={`[\n  {\n    "address": "0x...",\n    "reward": "https://..."\n  },\n  {\n    "address": "0x...",\n    "reward": "https://..."\n  }\n]`}
             rows={10}
             className="font-mono text-sm"
           />

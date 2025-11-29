@@ -6,7 +6,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useSurvey, useSurveyEligibility, useUserReward } from "@/hooks"
+import { useSurvey, useSurveyEligibility, useUserReward, useWinnerStatus } from "@/hooks"
 import { usePlatformDetector } from "@/src/platforms"
 import { useAuth, useWallet, useOpenUrl } from "@/src/platforms/_core"
 import { Platform } from "@/src/platforms/config"
@@ -58,6 +58,10 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const { data: eligibility } = useSurveyEligibility(id, address ?? undefined)
   // Reward is fetched only if user is authenticated (connected state is not required)
   const { data: userReward } = useUserReward(id, isAuthenticated)
+  // Get winner status for time_limited surveys
+  const { data: winnerStatus, isLoading: isWinnerLoading, error: winnerError } = useWinnerStatus(
+    survey?.surveyType === 'time_limited' ? id : undefined
+  )
 
   const handleStartSurvey = () => {
     router.push(`/surveys/${id}`)
@@ -248,13 +252,16 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
             {/* Survey Information */}
             <SurveyInfo survey={survey} eligibility={eligibility} />
 
-            {/* Winner Reward (Time-Limited Surveys) */}
-            <WinnerReward surveyId={id} survey={survey} />
+            {/* Winner Reward removed as per new requirements - winners shown in reward section */}
 
             {/* Reward Section */}
             {hasCompleted && userReward && (
               <SurveyReward
                 userReward={userReward}
+                survey={survey}
+                winnerStatus={winnerStatus}
+                isWinnerLoading={isWinnerLoading}
+                winnerError={winnerError}
                 onClaimReward={handleClaimReward}
                 onCopyClaimLink={handleCopyClaimLink}
               />

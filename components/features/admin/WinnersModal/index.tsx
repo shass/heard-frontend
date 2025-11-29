@@ -11,17 +11,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { WinnersTable } from './WinnersTable'
 import { AddWinnerForm } from './AddWinnerForm'
 import { WinnersUpload } from './WinnersUpload'
+import type { AdminSurveyListItem } from '@/lib/types'
 
 interface WinnersModalProps {
-  surveyId: string | null
+  survey: AdminSurveyListItem | null
   isOpen: boolean
   onClose: () => void
 }
 
-export function WinnersModal({ surveyId, isOpen, onClose }: WinnersModalProps) {
+export function WinnersModal({ survey, isOpen, onClose }: WinnersModalProps) {
   const [activeTab, setActiveTab] = useState<string>('list')
 
-  if (!surveyId) return null
+  if (!survey) return null
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -38,19 +39,19 @@ export function WinnersModal({ surveyId, isOpen, onClose }: WinnersModalProps) {
           </TabsList>
 
           <TabsContent value="list" className="mt-4">
-            <WinnersTable surveyId={surveyId} />
+            <WinnersTable surveyId={survey.id} />
           </TabsContent>
 
           <TabsContent value="add" className="mt-4">
             <AddWinnerForm
-              surveyId={surveyId}
+              surveyId={survey.id}
               onSuccess={() => setActiveTab('list')}
             />
           </TabsContent>
 
           <TabsContent value="upload" className="mt-4">
             <WinnersUpload
-              surveyId={surveyId}
+              surveyId={survey.id}
               onSuccess={() => setActiveTab('list')}
             />
           </TabsContent>

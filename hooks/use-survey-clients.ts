@@ -30,7 +30,7 @@ export const surveyClientKeys = {
 // Admin hooks for managing survey clients
 export function useSurveyClients(surveyId: string) {
   const auth = useAuth()
-  const isAdmin = auth.user?.metadata?.role === 'admin'
+  const isAdmin = auth.user?.role === 'admin'
 
   return useQuery({
     queryKey: surveyClientKeys.clients(surveyId),
@@ -100,7 +100,7 @@ export function useRemoveSurveyClient() {
 // Visibility management hooks
 export function useSurveyVisibility(surveyId: string) {
   const auth = useAuth()
-  const isAdmin = auth.user?.metadata?.role === 'admin'
+  const isAdmin = auth.user?.role === 'admin'
 
   return useQuery({
     queryKey: surveyClientKeys.visibility(surveyId),
@@ -214,7 +214,7 @@ export function useCanViewResults(surveyId: string, token?: string) {
     
     // Private surveys require authentication and client status
     if (visibilityMode === 'private') {
-      return auth.user?.metadata?.role === 'admin' ||
+      return auth.user?.role === 'admin' ||
              (auth.user?.walletAddress && surveyId) // Will be checked by backend
     }
 

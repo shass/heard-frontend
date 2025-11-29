@@ -49,8 +49,14 @@ export class WebAuthProvider implements IAuthProvider {
       console.log('[WebAuth] Backend verified signature, user:', userData)
       console.log('[WebAuth] HttpOnly cookie should be set by backend')
 
-      // Return full user data without wrapping in metadata
-      const user: User = userData as User
+      // Map backend user data to User interface
+      const user: User = {
+        id: userData.id,
+        walletAddress: userData.walletAddress,
+        platform: Platform.WEB,
+        role: userData.role,
+        metadata: userData
+      }
 
       this.setState(AuthState.AUTHENTICATED)
 
@@ -115,8 +121,14 @@ export class WebAuthProvider implements IAuthProvider {
     try {
       const userData = await authApi.checkAuth()
       if (userData) {
-        // Return full user data without wrapping in metadata
-        return userData as User
+        // Map backend user data to User interface
+        return {
+          id: userData.id,
+          walletAddress: userData.walletAddress,
+          platform: Platform.WEB,
+          role: userData.role,
+          metadata: userData
+        }
       }
     } catch (error) {
       console.warn('Failed to get current user:', error)

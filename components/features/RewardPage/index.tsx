@@ -35,6 +35,8 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
     hasCompletedSurvey,
     shouldShowErrorState,
     isCompletedNoReward,
+    winnerStatus,
+    winnerLoading,
     handleClaimReward,
     handleCopyClaimLink
   } = useRewardPage(survey, responseId)
@@ -79,6 +81,14 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
 
   // If completed but no rewards available, show thank you message
   if (hasCompletedSurvey && (!hasAnyRewards || isCompletedNoReward)) {
+    const isTimeLimited = survey.surveyType === 'time_limited'
+    const endDateFormatted = survey.endDate
+      ? new Intl.DateTimeFormat('en-US', {
+          dateStyle: 'long',
+          timeStyle: 'short'
+        }).format(new Date(survey.endDate))
+      : null
+
     return (
       <section className="w-full py-16">
         <div className="mx-auto max-w-lg px-4 sm:px-6 lg:px-8 text-center">
@@ -90,14 +100,48 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
                 </div>
               </div>
               <h2 className="text-2xl font-semibold text-zinc-900 mb-4">Thank You!</h2>
-              <p className="text-base text-zinc-600">
-                Thank you for completing the <strong>{survey.name}</strong> survey from {survey.company}.
-                Your feedback is valuable to us!
-              </p>
-              {heardPointsAwarded > 0 && (
-                <p className="text-sm text-zinc-500 mt-2">
-                  You have earned <b>{formatNumber(heardPointsAwarded)} HEARD</b> points for completing this survey.
-                </p>
+
+              {isTimeLimited ? (
+                <div className="space-y-4 text-base text-zinc-700">
+                  <p>Thanks for taking part in the prediction survey.</p>
+                  {heardPointsAwarded > 0 && (
+                    <p>
+                      You have just earned <strong>{formatNumber(heardPointsAwarded)} Heard Points</strong>.
+                    </p>
+                  )}
+                  {endDateFormatted && (
+                    <p>
+                      The final results will be announced on <strong>{endDateFormatted}</strong>.
+                    </p>
+                  )}
+                  <p>
+                    Participants who guessed the largest number of popular answers will share the prize pool.
+                    A link to claim your reward will appear on this survey page.
+                  </p>
+
+                  <p>
+                    Follow <a
+                      href="https://x.com/Heard_labs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 underline font-medium"
+                    >
+                      our X
+                    </a> so you do not miss the event.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-base text-zinc-600">
+                    Thank you for completing the <strong>{survey.name}</strong> survey from {survey.company}.
+                    Your feedback is valuable to us!
+                  </p>
+                  {heardPointsAwarded > 0 && (
+                    <p className="text-sm text-zinc-500 mt-2">
+                      You have earned <b>{formatNumber(heardPointsAwarded)} HEARD</b> points for completing this survey.
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
@@ -123,6 +167,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
             survey={survey}
             claimLink={claimLink}
             heardPointsAwarded={heardPointsAwarded}
+            winnerStatus={winnerStatus}
           />
 
           {survey.surveyType === 'time_limited' && survey.endDate && (

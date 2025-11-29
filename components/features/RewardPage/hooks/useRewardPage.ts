@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNotifications } from '@/components/ui/notifications'
-import { useHeardPoints, useUserReward } from '@/hooks'
+import { useHeardPoints, useUserReward, useWinnerStatus } from '@/hooks'
 import { useOpenUrl } from '@/src/platforms/_core'
 import { useIsAuthenticated, useUser } from '@/lib/store'
 import type { Survey } from '@/lib/types'
@@ -23,8 +23,16 @@ export function useRewardPage(survey: Survey, responseId?: string) {
   // Get updated user points
   const { data: userPoints, refetch: refetchPoints } = useHeardPoints()
 
+  // Get winner status for time_limited surveys
+  const { data: winnerStatus, isLoading: winnerLoading } = useWinnerStatus(
+    survey.surveyType === 'time_limited' ? survey.id : undefined
+  )
+
   // Compute reward information
-  const claimLink = userReward?.claimLink
+  // For time_limited surveys, use winner status; for standard surveys, use userReward
+  const claimLink = survey.surveyType === 'time_limited'
+    ? winnerStatus?.reward?.rewardLink
+    : userReward?.claimLink
   const heardPointsAwarded = userReward?.heardPointsAwarded || survey.heardPointsReward || 0
   const rewardIssued = !!userReward?.usedAt
   const isLinkdropReward = userReward?.type === 'linkdrop'
@@ -99,6 +107,10 @@ export function useRewardPage(survey: Survey, responseId?: string) {
     rewardIssued,
     isLinkdropReward,
     isCompletedNoReward,
+
+    // Winner data (for time_limited surveys)
+    winnerStatus,
+    winnerLoading,
 
     // Computed values
     hasTokenRewards,
