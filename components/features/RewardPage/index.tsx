@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { LoadingState } from "@/components/ui/loading-states"
 import { Gift, Calendar } from "lucide-react"
-import type { Survey } from "@/lib/types"
+import { SurveyType, type Survey } from "@/lib/types"
 import { formatNumber } from "@/lib/utils"
 import { useRewardPage } from './hooks/useRewardPage'
 import { RewardHeader } from './RewardHeader'
@@ -81,7 +81,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
 
   // If completed but no rewards available, show thank you message
   if (hasCompletedSurvey && (!hasAnyRewards || isCompletedNoReward)) {
-    const isTimeLimited = survey.surveyType === 'time_limited'
+    const isTimeLimited = survey.surveyType === SurveyType.TIME_LIMITED
     const endDateFormatted = survey.endDate
       ? new Intl.DateTimeFormat('en-US', {
           dateStyle: 'long',
@@ -170,7 +170,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
             winnerStatus={winnerStatus}
           />
 
-          {survey.surveyType === 'time_limited' && survey.endDate && (
+          {survey.surveyType === SurveyType.TIME_LIMITED && survey.endDate && (
             <Card className="text-left">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">

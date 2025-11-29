@@ -10,6 +10,7 @@ import { useSurvey, useSurveyEligibility, useUserReward, useWinnerStatus } from 
 import { usePlatformDetector } from "@/src/platforms"
 import { useAuth, useWallet, useOpenUrl } from "@/src/platforms/_core"
 import { Platform } from "@/src/platforms/config"
+import { SurveyType } from "@/lib/types"
 import {
   SurveyHeader,
   SurveyStats,
@@ -60,7 +61,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const { data: userReward } = useUserReward(id, isAuthenticated)
   // Get winner status for time_limited surveys
   const { data: winnerStatus, isLoading: isWinnerLoading, error: winnerError } = useWinnerStatus(
-    survey?.surveyType === 'time_limited' ? id : undefined
+    survey?.surveyType === SurveyType.TIME_LIMITED ? id : undefined
   )
 
   const handleStartSurvey = () => {
@@ -201,7 +202,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
     }
 
     // Check time limits for time_limited surveys
-    if (survey.surveyType === 'time_limited') {
+    if (survey.surveyType === SurveyType.TIME_LIMITED) {
       const now = new Date()
       const startDate = survey.startDate ? new Date(survey.startDate) : null
       const endDate = survey.endDate ? new Date(survey.endDate) : null

@@ -5,10 +5,11 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { getSurveyQuestions } from '@/lib/api/admin'
-import type {
-  CreateSurveyRequest,
-  UpdateSurveyRequest,
-  AdminSurveyListItem,
+import {
+  SurveyType,
+  type CreateSurveyRequest,
+  type UpdateSurveyRequest,
+  type AdminSurveyListItem,
 } from '@/lib/types'
 
 const answerSchema = z.object({
@@ -35,7 +36,7 @@ const surveySchema = z.object({
   rewardAmount: z.number().min(0, 'Reward amount must be positive'),
   rewardToken: z.string().min(1, 'Reward token is required'),
   heardPointsReward: z.number().min(0, 'HeardPoints reward must be positive'),
-  surveyType: z.enum(['standard', 'time_limited']).default('standard'),
+  surveyType: z.enum([SurveyType.STANDARD, SurveyType.TIME_LIMITED]).default(SurveyType.STANDARD),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   resultsPageUrl: z.union([z.string().url('Invalid URL format'), z.literal('')]).optional(),
@@ -43,7 +44,7 @@ const surveySchema = z.object({
   isActive: z.boolean().optional()
 }).refine((data) => {
   // For time_limited surveys, dates are required
-  if (data.surveyType === 'time_limited') {
+  if (data.surveyType === SurveyType.TIME_LIMITED) {
     if (!data.startDate) return false
     if (!data.endDate) return false
 
@@ -79,7 +80,7 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
       rewardAmount: survey.rewardAmount,
       rewardToken: survey.rewardToken,
       heardPointsReward: survey.heardPointsReward,
-      surveyType: survey.surveyType || 'standard',
+      surveyType: survey.surveyType || SurveyType.STANDARD,
       // Convert ISO dates to datetime-local format (YYYY-MM-DDTHH:MM)
       startDate: survey.startDate ? new Date(survey.startDate).toISOString().slice(0, 16) : '',
       endDate: survey.endDate ? new Date(survey.endDate).toISOString().slice(0, 16) : '',
@@ -95,7 +96,7 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
       rewardAmount: 0,
       rewardToken: 'ETH',
       heardPointsReward: 100,
-      surveyType: 'standard',
+      surveyType: SurveyType.STANDARD,
       startDate: '',
       endDate: '',
       resultsPageUrl: '',
@@ -164,20 +165,20 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
     }
 
     // Format dates to ISO 8601 if they exist
-    if (data.startDate && data.surveyType === 'time_limited') {
+    if (data.startDate && data.surveyType === SurveyType.TIME_LIMITED) {
       submitData.startDate = new Date(data.startDate).toISOString()
     } else {
       delete submitData.startDate
     }
 
-    if (data.endDate && data.surveyType === 'time_limited') {
+    if (data.endDate && data.surveyType === SurveyType.TIME_LIMITED) {
       submitData.endDate = new Date(data.endDate).toISOString()
     } else {
       delete submitData.endDate
     }
 
     // Handle resultsPageUrl for time_limited surveys
-    if (data.surveyType === 'time_limited') {
+    if (data.surveyType === SurveyType.TIME_LIMITED) {
       // Always include the field, even if it's an empty string (to allow clearing)
       submitData.resultsPageUrl = data.resultsPageUrl ?? ''
     } else {

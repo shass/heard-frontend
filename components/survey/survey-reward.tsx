@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { ExternalLink, Copy, CheckCircle2, Trophy, XCircle } from "lucide-react"
 import { formatNumber } from "@/lib/utils"
-import type { Survey, WinnerStatus } from "@/lib/types"
+import { SurveyType, type Survey, type WinnerStatus } from "@/lib/types"
 
 interface UserReward {
   claimLink?: string
@@ -36,7 +36,7 @@ export function SurveyReward({
   onCopyClaimLink
 }: SurveyRewardProps) {
   const hasClaimLink = !!userReward?.claimLink
-  const isTimeLimited = survey?.surveyType === 'time_limited'
+  const isTimeLimited = survey?.surveyType === SurveyType.TIME_LIMITED
 
   // Format end date for time_limited surveys
   const endDateFormatted = survey?.endDate

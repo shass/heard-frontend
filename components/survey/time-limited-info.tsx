@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Calendar, ExternalLink } from "lucide-react"
-import type { Survey } from "@/lib/types"
+import { SurveyType, type Survey } from "@/lib/types"
 
 interface TimeLimitedInfoProps {
   survey: Survey
@@ -11,7 +11,7 @@ interface TimeLimitedInfoProps {
 
 export function TimeLimitedInfo({ survey }: TimeLimitedInfoProps) {
   // Only show for time-limited surveys
-  if (survey.surveyType !== 'time_limited') return null
+  if (survey.surveyType !== SurveyType.TIME_LIMITED) return null
   if (!survey.endDate) return null
 
   const now = new Date()

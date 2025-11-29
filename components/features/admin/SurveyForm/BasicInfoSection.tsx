@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { UseFormRegister, FieldErrors, Control, Controller, UseFormWatch } from 'react-hook-form'
+import { SurveyType } from '@/lib/types'
 import { SurveyFormData } from './hooks/useSurveyForm'
 
 interface BasicInfoSectionProps {
@@ -108,8 +109,8 @@ export function BasicInfoSection({ register, control, watch, errors, isEditMode 
                   <SelectValue placeholder="Select survey type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="standard">Standard Survey</SelectItem>
-                  <SelectItem value="time_limited">Time-Limited Survey</SelectItem>
+                  <SelectItem value={SurveyType.STANDARD}>Standard Survey</SelectItem>
+                  <SelectItem value={SurveyType.TIME_LIMITED}>Time-Limited Survey</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -120,7 +121,7 @@ export function BasicInfoSection({ register, control, watch, errors, isEditMode 
         </div>
 
         {/* Time-Limited Survey Fields */}
-        {surveyType === 'time_limited' && (
+        {surveyType === SurveyType.TIME_LIMITED && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

@@ -15,7 +15,10 @@ export interface User {
 }
 
 // Survey types (compatible with backend)
-export type SurveyType = 'standard' | 'time_limited'
+export enum SurveyType {
+  STANDARD = 'standard',
+  TIME_LIMITED = 'time_limited'
+}
 
 export interface Survey {
   id: string
@@ -151,7 +154,7 @@ export interface EligibilityResponse {
   reason?: string
 }
 
-// Reward types  
+// Reward types
 export interface RewardInfo {
   amount: number
   token: string

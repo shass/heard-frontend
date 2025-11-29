@@ -20,7 +20,7 @@ import {
   Clock
 } from 'lucide-react'
 import { formatNumber, getSurveyTimeStatus, formatSurveyDate } from '@/lib/utils'
-import type { AdminSurveyListItem } from '@/lib/types'
+import { SurveyType, type AdminSurveyListItem } from '@/lib/types'
 
 interface SurveyCardProps {
   survey: AdminSurveyListItem
@@ -61,7 +61,7 @@ export function SurveyCard({
   isExportPending,
   isDeletePending
 }: SurveyCardProps) {
-  const timeStatus = survey.surveyType === 'time_limited'
+  const timeStatus = survey.surveyType === SurveyType.TIME_LIMITED
     ? getSurveyTimeStatus(survey.startDate, survey.endDate)
     : null
 
@@ -105,9 +105,9 @@ export function SurveyCard({
             </Badge>
             <Badge
               variant="outline"
-              className={survey.surveyType === 'time_limited' ? 'border-purple-500 text-purple-700 bg-purple-50' : 'border-blue-500 text-blue-700 bg-blue-50'}
+              className={survey.surveyType === SurveyType.TIME_LIMITED ? 'border-purple-500 text-purple-700 bg-purple-50' : 'border-blue-500 text-blue-700 bg-blue-50'}
             >
-              {survey.surveyType === 'time_limited' ? 'Time Limited' : 'Standard'}
+              {survey.surveyType === SurveyType.TIME_LIMITED ? 'Time Limited' : 'Standard'}
             </Badge>
             {timeStatus && (
               <Badge variant="outline" className={getStatusBadgeVariant(timeStatus)}>
@@ -121,7 +121,7 @@ export function SurveyCard({
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-700 line-clamp-3">{survey.description}</p>
 
-        {survey.surveyType === 'time_limited' && (
+        {survey.surveyType === SurveyType.TIME_LIMITED && (
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 space-y-2 text-sm">
             <div className="flex items-center gap-2 text-purple-900">
               <Calendar className="w-4 h-4" />
@@ -220,7 +220,7 @@ export function SurveyCard({
               <List className="w-4 h-4" />
             </Button>
 
-            {survey.surveyType !== 'time_limited' && (
+            {survey.surveyType !== SurveyType.TIME_LIMITED && (
               <Button
                 variant="outline"
                 size="sm"
@@ -240,7 +240,7 @@ export function SurveyCard({
               <Crown className="w-4 h-4" />
             </Button>
 
-            {survey.surveyType === 'time_limited' && onManageWinners && (
+            {survey.surveyType === SurveyType.TIME_LIMITED && onManageWinners && (
               <Button
                 variant="outline"
                 size="sm"
