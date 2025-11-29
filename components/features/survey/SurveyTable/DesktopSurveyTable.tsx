@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Copy, Check, Share2 } from "lucide-react"
 import { MotionSurveyTable } from "@/components/motion-survey-table"
-import { formatNumber } from "@/lib/utils"
+import { formatNumber, getSurveyTypeLabel, isSurveyEnded } from "@/lib/utils"
 import type { Survey } from "@/lib/types"
 import { usePlatformDetector } from "@/src/platforms/_core"
 import { Platform } from "@/src/platforms/config"
@@ -38,30 +38,36 @@ export function DesktopSurveyTable({
           </thead>
           <MotionSurveyTable
             surveys={surveys}
-            renderRow={(survey) => (
-              <>
-                <td className="px-6 py-4">
-                  <div>
-                    <div className="text-base font-medium text-zinc-900">{survey.name}</div>
-                    <div className="text-sm text-zinc-500">{survey.totalQuestions} questions</div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-base text-zinc-600">{survey.company}</td>
-                <td className="px-6 py-4">
-                  <div className="text-base font-medium text-zinc-900">
-                    {`${formatNumber(survey.rewardAmount)} ${survey.rewardToken}`}
-                    {survey.heardPointsReward > 0 ? ` + ${formatNumber(survey.heardPointsReward)} HP` : ""}
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <Button
-                    onClick={() => onTakeSurvey(survey)}
-                    className="text-white rounded-lg px-4 py-2 text-sm font-medium bg-zinc-900 hover:bg-zinc-800"
-                    title="View survey information"
-                  >
-                    Take
-                  </Button>
-                </td>
+            renderRow={(survey) => {
+              const isEnded = isSurveyEnded(survey)
+              const surveyTypeLabel = getSurveyTypeLabel(survey.surveyType)
+
+              return (
+                <>
+                  <td className="px-6 py-4">
+                    <div>
+                      <div className="text-base font-medium text-zinc-900">
+                        {isEnded && 'Finished: '}{survey.name}
+                      </div>
+                      <div className="text-sm text-zinc-500">{surveyTypeLabel}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-base text-zinc-600">{survey.company}</td>
+                  <td className="px-6 py-4">
+                    <div className="text-base font-medium text-zinc-900">
+                      {`${formatNumber(survey.rewardAmount)} ${survey.rewardToken}`}
+                      {survey.heardPointsReward > 0 ? ` + ${formatNumber(survey.heardPointsReward)} HP` : ""}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <Button
+                      onClick={() => onTakeSurvey(survey)}
+                      className="text-white rounded-lg px-4 py-2 text-sm font-medium bg-zinc-900 hover:bg-zinc-800"
+                      title="View survey information"
+                    >
+                      {isEnded ? 'Check' : 'Take'}
+                    </Button>
+                  </td>
                 <td className="px-6 py-4">
                   <Button
                     variant="outline"
@@ -77,7 +83,8 @@ export function DesktopSurveyTable({
                   </Button>
                 </td>
               </>
-            )}
+            )
+            }}
           />
         </table>
       </div>

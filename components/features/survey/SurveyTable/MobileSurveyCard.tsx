@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Copy, Check, Share2 } from "lucide-react"
-import { formatNumber } from "@/lib/utils"
+import { formatNumber, getSurveyTypeLabel, isSurveyEnded } from "@/lib/utils"
 import type { Survey } from "@/lib/types"
 import { usePlatformDetector } from "@/src/platforms/_core"
 import { Platform } from "@/src/platforms/config"
@@ -17,6 +17,9 @@ export function MobileSurveyCard({ survey, onTakeSurvey, onCopyLink, copiedSurve
 
   // Show Share icon in Base App and Farcaster, Copy icon in Web
   const ShareIcon = platform === Platform.BASE_APP || platform === Platform.FARCASTER ? Share2 : Copy
+  const isEnded = isSurveyEnded(survey)
+  const surveyTypeLabel = getSurveyTypeLabel(survey.surveyType)
+
   const getButtonStyle = () => {
     return "bg-zinc-900 hover:bg-zinc-800"
   }
@@ -35,10 +38,12 @@ export function MobileSurveyCard({ survey, onTakeSurvey, onCopyLink, copiedSurve
     <div className="bg-white border border-zinc-200 rounded-lg p-6">
       <div className="space-y-4">
         <div>
-          <h3 className="text-base font-semibold text-zinc-900">{survey.name}</h3>
+          <h3 className="text-base font-semibold text-zinc-900">
+            {isEnded && 'Finished: '}{survey.name}
+          </h3>
           <p className="text-sm text-zinc-600">{survey.company}</p>
           <p className="text-xs text-zinc-500 mt-1">
-            {survey.totalQuestions} questions
+            {surveyTypeLabel}
           </p>
         </div>
 
@@ -52,7 +57,7 @@ export function MobileSurveyCard({ survey, onTakeSurvey, onCopyLink, copiedSurve
             className={`text-white rounded-lg px-4 py-2 text-sm font-medium ${getButtonStyle()}`}
             title="View survey information"
           >
-            Take
+            {isEnded ? 'Check' : 'Take'}
           </Button>
           <Button
             variant="outline"
