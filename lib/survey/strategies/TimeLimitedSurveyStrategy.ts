@@ -194,4 +194,9 @@ export class TimeLimitedSurveyStrategy implements ISurveyStrategy {
   getTypeLabel(): string {
     return 'Time Limited'
   }
+
+  shouldShowEndDateCard(survey: Survey): boolean {
+    // Show end date card if survey has an end date
+    return !!survey.endDate
+  }
 }

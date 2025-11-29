@@ -1,6 +1,7 @@
 import { CheckCircle2, Trophy, XCircle } from 'lucide-react'
 import { formatNumber } from '@/lib/utils'
-import { SurveyType, type Survey, type WinnerStatus } from '@/lib/types'
+import { useSurveyStrategy } from '@/hooks/use-survey-strategy'
+import type { Survey, WinnerStatus } from '@/lib/types'
 
 interface RewardDetailsProps {
   survey: Survey
@@ -15,8 +16,12 @@ export function RewardDetails({
   heardPointsAwarded,
   winnerStatus
 }: RewardDetailsProps) {
-  // Handle time_limited surveys differently
-  if (survey.surveyType === SurveyType.TIME_LIMITED) {
+  const strategy = useSurveyStrategy(survey)
+
+  // Use strategy to determine if this survey type shows winner info
+  const shouldShowWinnerInfo = strategy?.shouldShowWinnerInfo({ survey })
+
+  if (shouldShowWinnerInfo) {
     return (
       <div className="bg-zinc-50 rounded-lg p-6 space-y-4">
         <h3 className="text-lg font-medium text-zinc-900">Your Reward</h3>

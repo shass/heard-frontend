@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { LoadingState } from "@/components/ui/loading-states"
 import { Gift, Calendar } from "lucide-react"
-import { SurveyType, type Survey } from "@/lib/types"
+import type { Survey } from "@/lib/types"
 import { formatNumber } from "@/lib/utils"
+import { useSurveyStrategy } from "@/hooks/use-survey-strategy"
 import { useRewardPage } from './hooks/useRewardPage'
 import { RewardHeader } from './RewardHeader'
 import { RewardDetails } from './RewardDetails'
@@ -19,6 +20,8 @@ interface RewardPageProps {
 }
 
 export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPageProps) {
+  const strategy = useSurveyStrategy(survey)
+
   const {
     qrCodeUrl,
     claimStatus,
@@ -81,7 +84,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
 
   // If completed but no rewards available, show thank you message
   if (hasCompletedSurvey && (!hasAnyRewards || isCompletedNoReward)) {
-    const isTimeLimited = survey.surveyType === SurveyType.TIME_LIMITED
+    const showWinnerInfo = strategy?.shouldShowWinnerInfo({ survey })
     const endDateFormatted = survey.endDate
       ? new Intl.DateTimeFormat('en-US', {
           dateStyle: 'long',
@@ -101,7 +104,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
               </div>
               <h2 className="text-2xl font-semibold text-zinc-900 mb-4">Thank You!</h2>
 
-              {isTimeLimited ? (
+              {showWinnerInfo ? (
                 <div className="space-y-4 text-base text-zinc-700">
                   <p>Thanks for taking part in the prediction survey.</p>
                   {heardPointsAwarded > 0 && (
@@ -170,7 +173,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
             winnerStatus={winnerStatus}
           />
 
-          {survey.surveyType === SurveyType.TIME_LIMITED && survey.endDate && (
+          {strategy?.shouldShowEndDateCard(survey) && (
             <Card className="text-left">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
@@ -183,7 +186,7 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
                   {new Intl.DateTimeFormat('en-US', {
                     dateStyle: 'long',
                     timeStyle: 'short'
-                  }).format(new Date(survey.endDate))}
+                  }).format(new Date(survey.endDate!))}
                 </p>
               </CardContent>
             </Card>

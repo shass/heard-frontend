@@ -107,4 +107,9 @@ export interface ISurveyStrategy {
    * Get human-readable type label
    */
   getTypeLabel(): string
+
+  /**
+   * Check if survey should display end date card on reward page
+   */
+  shouldShowEndDateCard(survey: Survey): boolean
 }

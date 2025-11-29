@@ -142,4 +142,9 @@ export class StandardSurveyStrategy implements ISurveyStrategy {
   getTypeLabel(): string {
     return 'Standard'
   }
+
+  shouldShowEndDateCard(_survey: Survey): boolean {
+    // Standard surveys don't have end date display on reward page
+    return false
+  }
 }
