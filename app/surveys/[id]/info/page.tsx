@@ -133,14 +133,16 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   }
 
   const handleClaimReward = () => {
-    if (userReward?.claimLink) {
-      openUrl(userReward.claimLink)
+    const claimLink = strategy?.getClaimLink({ survey: survey!, userReward, winnerStatus })
+    if (claimLink) {
+      openUrl(claimLink)
     }
   }
 
   const handleCopyClaimLink = () => {
-    if (userReward?.claimLink) {
-      navigator.clipboard.writeText(userReward.claimLink)
+    const claimLink = strategy?.getClaimLink({ survey: survey!, userReward, winnerStatus })
+    if (claimLink) {
+      navigator.clipboard.writeText(claimLink)
       // TODO: Add notification
     }
   }
@@ -223,7 +225,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
             <SurveyStats survey={survey} />
 
             {/* Time-Limited Survey Info */}
-            <TimeLimitedInfo survey={survey} />
+            <TimeLimitedInfo survey={survey} strategy={strategy} />
 
             {/* Survey Information */}
             <SurveyInfo survey={survey} eligibility={eligibility} />
@@ -233,6 +235,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
               <SurveyReward
                 userReward={userReward}
                 survey={survey}
+                strategy={strategy}
                 winnerStatus={winnerStatus}
                 isWinnerLoading={isWinnerLoading}
                 winnerError={winnerError}

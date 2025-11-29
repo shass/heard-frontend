@@ -4,21 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { ExternalLink, Copy, CheckCircle2, Trophy, XCircle } from "lucide-react"
 import { formatNumber } from "@/lib/utils"
-import { SurveyType, type Survey, type WinnerStatus } from "@/lib/types"
-
-interface UserReward {
-  claimLink?: string
-  heardPointsAwarded: number
-  usedAt?: string
-  survey?: {
-    rewardAmount: number
-    rewardToken: string
-  }
-}
+import type { Survey, WinnerStatus, LinkdropReward } from "@/lib/types"
+import type { ISurveyStrategy } from "@/lib/survey/strategies"
 
 interface SurveyRewardProps {
-  userReward: UserReward
+  userReward: LinkdropReward
   survey?: Survey
+  strategy?: ISurveyStrategy | null
   winnerStatus?: WinnerStatus
   isWinnerLoading?: boolean
   winnerError?: any
@@ -29,16 +21,21 @@ interface SurveyRewardProps {
 export function SurveyReward({
   userReward,
   survey,
+  strategy,
   winnerStatus,
   isWinnerLoading,
   winnerError,
   onClaimReward,
   onCopyClaimLink
 }: SurveyRewardProps) {
-  const hasClaimLink = !!userReward?.claimLink
-  const isTimeLimited = survey?.surveyType === SurveyType.TIME_LIMITED
+  // Use strategy to get claim link
+  const claimLink = survey && strategy?.getClaimLink({ survey, userReward, winnerStatus })
+  const hasClaimLink = !!claimLink
 
-  // Format end date for time_limited surveys
+  // Use strategy to determine if we should show winner info
+  const shouldShowWinnerInfo = survey && strategy?.shouldShowWinnerInfo({ survey, userReward, winnerStatus })
+
+  // Format end date for surveys that need it
   const endDateFormatted = survey?.endDate
     ? new Intl.DateTimeFormat('en-US', {
         dateStyle: 'long',
@@ -46,19 +43,19 @@ export function SurveyReward({
       }).format(new Date(survey.endDate))
     : null
 
-  // Check if survey has ended (for time_limited surveys)
+  // Check if survey has ended
   const surveyHasEnded = survey?.endDate ? new Date() >= new Date(survey.endDate) : false
 
   // Determine if we should show "waiting for results" message
-  // Show this if: survey hasn't ended OR (survey ended but no winners file uploaded yet)
-  const showWaitingMessage = isTimeLimited && (!surveyHasEnded || isWinnerLoading || winnerError || !winnerStatus)
+  // Show this if winner info should be shown but survey hasn't ended OR winners not announced yet
+  const showWaitingMessage = shouldShowWinnerInfo && (!surveyHasEnded || isWinnerLoading || winnerError || !winnerStatus)
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Your Reward</CardTitle>
         <CardDescription>
-          {isTimeLimited
+          {shouldShowWinnerInfo
             ? "Thank you for participating in this prediction survey!"
             : "Congratulations! You have completed this survey and earned your reward."}
         </CardDescription>
@@ -106,8 +103,8 @@ export function SurveyReward({
                 </a> so you do not miss the event.
               </p>
             </div>
-          ) : isTimeLimited && winnerStatus?.isWinner ? (
-            // Time Limited Survey - User is a winner
+          ) : shouldShowWinnerInfo && winnerStatus?.isWinner ? (
+            // Winner announcement - User is a winner
             <div className="space-y-4">
               <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                 <div className="flex items-center space-x-2 mb-2">
@@ -124,7 +121,7 @@ export function SurveyReward({
                 </div>
               </div>
 
-              {winnerStatus.reward?.rewardLink && (
+              {claimLink && (
                 <div className="space-y-3">
                   <div className="text-sm text-zinc-600">
                     Use the link below to claim your reward:
@@ -132,7 +129,7 @@ export function SurveyReward({
 
                   <div className="flex space-x-3">
                     <Button
-                      onClick={() => window.open(winnerStatus.reward!.rewardLink, '_blank')}
+                      onClick={onClaimReward}
                       className="bg-green-600 hover:bg-green-700 text-white flex-1"
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
@@ -140,9 +137,7 @@ export function SurveyReward({
                     </Button>
 
                     <Button
-                      onClick={() => {
-                        navigator.clipboard.writeText(winnerStatus.reward!.rewardLink)
-                      }}
+                      onClick={onCopyClaimLink}
                       variant="outline"
                       className="border-green-300 text-green-700 hover:bg-green-50"
                     >
@@ -152,8 +147,8 @@ export function SurveyReward({
                 </div>
               )}
             </div>
-          ) : isTimeLimited && !winnerStatus?.isWinner ? (
-            // Time Limited Survey - User is not a winner
+          ) : shouldShowWinnerInfo && !winnerStatus?.isWinner ? (
+            // Winner announcement - User is not a winner
             <div className="bg-zinc-50 rounded-lg p-4 border border-zinc-200">
               <div className="flex items-center space-x-2 mb-2">
                 <XCircle className="w-5 h-5 text-zinc-500" />

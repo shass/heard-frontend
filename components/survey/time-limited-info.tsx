@@ -3,15 +3,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Calendar, ExternalLink } from "lucide-react"
-import { SurveyType, type Survey } from "@/lib/types"
+import type { Survey } from "@/lib/types"
+import type { ISurveyStrategy } from "@/lib/survey/strategies"
 
 interface TimeLimitedInfoProps {
   survey: Survey
+  strategy?: ISurveyStrategy | null
 }
 
-export function TimeLimitedInfo({ survey }: TimeLimitedInfoProps) {
-  // Only show for time-limited surveys
-  if (survey.surveyType !== SurveyType.TIME_LIMITED) return null
+export function TimeLimitedInfo({ survey, strategy }: TimeLimitedInfoProps) {
+  // Use strategy to determine if we should show dates
+  const infoConfig = strategy?.getInfoConfig(survey)
+  if (!infoConfig?.showDates) return null
   if (!survey.endDate) return null
 
   const now = new Date()
