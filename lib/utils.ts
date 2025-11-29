@@ -51,3 +51,49 @@ export function formatAddress(address: string): string {
 export function formatNumber(num: number, locale = 'en-US'): string {
   return new Intl.NumberFormat(locale).format(num)
 }
+
+/**
+ * Survey time status for time-limited surveys
+ */
+export type SurveyTimeStatus = 'planned' | 'started' | 'finished'
+
+/**
+ * Get survey time status based on current time and survey dates
+ */
+export function getSurveyTimeStatus(
+  startDate?: string | null,
+  endDate?: string | null
+): SurveyTimeStatus {
+  if (!startDate || !endDate) {
+    return 'planned'
+  }
+
+  const now = new Date()
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+
+  if (now < start) {
+    return 'planned'
+  } else if (now >= start && now < end) {
+    return 'started'
+  } else {
+    return 'finished'
+  }
+}
+
+/**
+ * Format date for survey display
+ */
+export function formatSurveyDate(dateString?: string | null): string {
+  if (!dateString) return 'Not set'
+
+  const date = new Date(dateString)
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(date)
+}

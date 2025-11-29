@@ -79,12 +79,12 @@ export const getAdminSurveys = async (params?: {
 }
 
 export const createSurvey = async (surveyData: CreateSurveyRequest): Promise<Survey> => {
-  const data = await apiClient.post<Survey>('/admin/surveys/create', surveyData)
+  const data = await apiClient.post<Survey>('/admin/surveys', surveyData)
   return data
 }
 
 export const updateSurvey = async (surveyData: UpdateSurveyRequest): Promise<Survey> => {
-  const data = await apiClient.put<Survey>(`/admin/surveys/${surveyData.id}/update`, surveyData)
+  const data = await apiClient.put<Survey>(`/admin/surveys/${surveyData.id}`, surveyData)
   return data
 }
 

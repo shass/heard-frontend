@@ -38,7 +38,7 @@ const surveySchema = z.object({
   surveyType: z.enum(['standard', 'time_limited']).default('standard'),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-  resultsPageUrl: z.string().url('Invalid URL format').optional().or(z.literal('')),
+  resultsPageUrl: z.union([z.string().url('Invalid URL format'), z.literal('')]).optional(),
   questions: z.array(questionSchema).min(1, 'At least 1 question is required'),
   isActive: z.boolean().optional()
 }).refine((data) => {
@@ -176,10 +176,20 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
       delete submitData.endDate
     }
 
-    // Clean up resultsPageUrl if empty
-    if (!data.resultsPageUrl || data.resultsPageUrl === '') {
+    // Handle resultsPageUrl for time_limited surveys
+    if (data.surveyType === 'time_limited') {
+      // Always include the field, even if it's an empty string (to allow clearing)
+      submitData.resultsPageUrl = data.resultsPageUrl ?? ''
+    } else {
+      // For standard surveys, remove the field
       delete submitData.resultsPageUrl
     }
+
+    console.log('📤 Submitting survey data:', {
+      surveyType: submitData.surveyType,
+      resultsPageUrl: submitData.resultsPageUrl,
+      hasResultsPageUrl: 'resultsPageUrl' in submitData
+    })
 
     onSubmit(submitData as CreateSurveyRequest | UpdateSurveyRequest)
   }
@@ -206,15 +216,15 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
     watch,
     setValue,
     errors,
-    
+
     // Question management
     questions,
     addNewQuestion,
     removeQuestion,
-    
+
     // State
     loadingQuestions,
-    
+
     // Handlers
     handleFormSubmit,
   }

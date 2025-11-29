@@ -15,15 +15,23 @@ export function TimeLimitedInfo({ survey }: TimeLimitedInfoProps) {
   if (!survey.endDate) return null
 
   const now = new Date()
+  const startDate = survey.startDate ? new Date(survey.startDate) : null
   const endDate = new Date(survey.endDate)
   const isEnded = now >= endDate
+  const hasStarted = startDate ? now >= startDate : true
 
-  // Format end date with user's timezone
-  const formattedEndDate = new Intl.DateTimeFormat('en-US', {
+  // Date formatting options
+  const dateFormatOptions: Intl.DateTimeFormatOptions = {
     dateStyle: 'long',
     timeStyle: 'short',
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-  }).format(endDate)
+  }
+
+  const formattedStartDate = startDate
+    ? new Intl.DateTimeFormat('en-US', dateFormatOptions).format(startDate)
+    : null
+
+  const formattedEndDate = new Intl.DateTimeFormat('en-US', dateFormatOptions).format(endDate)
 
   return (
     <Card>
@@ -34,16 +42,36 @@ export function TimeLimitedInfo({ survey }: TimeLimitedInfoProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          {!isEnded && (
+        <div className="space-y-4">
+          {/* Survey Dates */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {formattedStartDate && (
+              <div>
+                <p className="text-sm text-zinc-600 mb-1">Start Date:</p>
+                <p className="text-base font-medium text-zinc-900">{formattedStartDate}</p>
+              </div>
+            )}
             <div>
-              <p className="text-sm text-zinc-600 mb-1">This survey will end on:</p>
-              <p className="text-lg font-semibold text-zinc-900">{formattedEndDate}</p>
+              <p className="text-sm text-zinc-600 mb-1">End Date:</p>
+              <p className="text-base font-medium text-zinc-900">{formattedEndDate}</p>
+            </div>
+          </div>
+
+          {/* Survey Status Messages */}
+          {!hasStarted && (
+            <div className="pt-2 border-t">
+              <p className="text-sm text-amber-600 font-medium">This survey has not started yet.</p>
+            </div>
+          )}
+
+          {hasStarted && !isEnded && (
+            <div className="pt-2 border-t">
+              <p className="text-sm text-green-600 font-medium">This survey is currently active.</p>
             </div>
           )}
 
           {isEnded && survey.resultsPageUrl && (
-            <div className="space-y-3">
+            <div className="space-y-3 pt-2 border-t">
               <p className="text-sm text-zinc-600">This survey has ended.</p>
               <Button asChild className="w-full sm:w-auto">
                 <a href={survey.resultsPageUrl} target="_blank" rel="noopener noreferrer">
@@ -55,7 +83,7 @@ export function TimeLimitedInfo({ survey }: TimeLimitedInfoProps) {
           )}
 
           {isEnded && !survey.resultsPageUrl && (
-            <div>
+            <div className="pt-2 border-t">
               <p className="text-sm text-zinc-600">This survey has ended.</p>
               <p className="text-sm text-zinc-500 mt-1">Results will be available soon.</p>
             </div>
