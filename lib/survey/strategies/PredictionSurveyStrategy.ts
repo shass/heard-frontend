@@ -146,7 +146,7 @@ export class PredictionSurveyStrategy implements ISurveyStrategy {
       showDates: true,
       showResultsPageLink: hasEnded && !!survey.resultsPageUrl,
       showWinnerInfo: hasEnded,
-      showTokenReward: false
+      showTokenReward: true
     }
   }
 

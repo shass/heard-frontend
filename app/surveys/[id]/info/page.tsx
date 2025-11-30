@@ -80,28 +80,14 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   }
 
   const handleAuthenticate = async () => {
-    console.log('[Survey] 🚀 handleAuthenticate called')
-    console.log('[Survey] Current state:', {
-      isAuthenticated,
-      isAuthLoading,
-      address,
-      isConnected,
-      authError: authError || 'None'
-    })
-
     try {
-      console.log('[Survey] 🔄 Calling login()...')
       const result = await login()
-
-      console.log('[Survey] ✅ login() completed, result:', result)
 
       // Check result directly instead of waiting for state updates
       if (result?.success) {
-        console.log('[Survey] ✅ User authenticated successfully')
 
         // Check eligibility before redirecting
         if (eligibility?.isEligible !== false) {
-          console.log('[Survey] ✅ User eligible or eligibility unknown, redirecting to survey...')
           router.push(`/surveys/${id}`)
         } else {
           console.log('[Survey] ⚠️ User authenticated but not eligible for this survey')
@@ -119,12 +105,6 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
         type: error?.constructor?.name || typeof error,
         fullError: error
       })
-
-      // Try to extract more meaningful error information
-      if (error && typeof error === 'object') {
-        console.error('[Survey] Error object keys:', Object.keys(error))
-        console.error('[Survey] Error stringified:', JSON.stringify(error, null, 2))
-      }
     }
   }
 
