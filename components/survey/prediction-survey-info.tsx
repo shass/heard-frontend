@@ -4,14 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Calendar, ExternalLink } from "lucide-react"
 import type { Survey } from "@/lib/types"
-import type { ISurveyStrategy } from "@/lib/survey/strategies"
+import { ISurveyStrategy, PredictionSurveyStrategy } from '@/lib/survey/strategies'
 
-interface TimeLimitedInfoProps {
+interface PredictionSurveyInfoProps {
   survey: Survey
   strategy?: ISurveyStrategy | null
 }
 
-export function TimeLimitedInfo({ survey, strategy }: TimeLimitedInfoProps) {
+export function PredictionSurveyInfo({ survey, strategy }: PredictionSurveyInfoProps) {
   // Use strategy to determine if we should show dates
   const infoConfig = strategy?.getInfoConfig(survey)
   if (!infoConfig?.showDates) return null

@@ -1,4 +1,4 @@
-// React Query hooks for winners management (Time-Limited Surveys)
+// React Query hooks for winners management (Prediction Surveys)
 
 'use client'
 

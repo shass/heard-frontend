@@ -66,7 +66,7 @@ export function SurveyReward({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Time Limited Survey - Show completion message if survey not ended or no winners file */}
+          {/* Prediction Survey - Show completion message if survey not ended or no winners file */}
           {showWaitingMessage ? (
             <div className="space-y-4 text-sm text-zinc-700">
               <div className="bg-green-50 rounded-lg p-4 border border-green-200">
@@ -97,14 +97,16 @@ export function SurveyReward({
                 A link to claim your reward will appear on this survey page.
               </p>
               <p>
-                Follow <a
-                  href="https://x.com/Heard_labs"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-700 underline font-medium"
-                >
-                  our X
-                </a> so you do not miss the event.
+                <span className="font-bold">
+                  Follow <a
+                    href="https://x.com/Heard_labs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-700 underline"
+                  >
+                    our X
+                  </a> so you do not miss the event.
+                </span>
               </p>
             </div>
           ) : shouldShowWinnerInfo && winnerStatus?.isWinner ? (

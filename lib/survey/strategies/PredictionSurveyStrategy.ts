@@ -11,10 +11,10 @@ import type { Survey } from '@/lib/types'
 import { formatNumber } from '@/lib/utils'
 
 /**
- * Strategy for time-limited surveys
+ * Strategy for prediction surveys
  * These surveys have start/end dates and may have winners
  */
-export class TimeLimitedSurveyStrategy implements ISurveyStrategy {
+export class PredictionSurveyStrategy implements ISurveyStrategy {
   getButtonState(params: ButtonStateParams): ButtonState {
     const {
       survey,
@@ -123,17 +123,17 @@ export class TimeLimitedSurveyStrategy implements ISurveyStrategy {
   }
 
   getRewardSource(): RewardSource {
-    // Time-limited surveys use winnerStatus for claim links
+    // Prediction surveys use winnerStatus for claim links
     return RewardSource.WINNER_STATUS
   }
 
   getClaimLink(params: RewardDisplayParams): string | undefined {
-    // For time-limited surveys, claim link comes from winner status
+    // For prediction surveys, claim link comes from winner status
     return params.winnerStatus?.reward?.rewardLink
   }
 
   shouldShowWinnerInfo(_params: RewardDisplayParams): boolean {
-    // Always show time-limited specific message for this survey type
+    // Always show specific message for this survey type
     return true
   }
 
@@ -171,7 +171,7 @@ export class TimeLimitedSurveyStrategy implements ISurveyStrategy {
   }
 
   getRewardDisplay(survey: Survey, _context?: 'list' | 'detail'): RewardDisplay {
-    // Time-limited surveys only show HeardPoints in list view
+    // Prediction surveys only show HeardPoints in list view
     // Token rewards are determined individually for winners
     return {
       formatted: `${formatNumber(survey.heardPointsReward)} HP`,
@@ -185,7 +185,7 @@ export class TimeLimitedSurveyStrategy implements ISurveyStrategy {
   }
 
   getTypeLabel(): string {
-    return 'Time Limited'
+    return 'Prediction Survey'
   }
 
   shouldShowEndDateCard(survey: Survey): boolean {

@@ -33,7 +33,7 @@ export function getSurveyRewardDisplay(
 /**
  * Get human-readable label for survey type
  * @param surveyType - Survey type enum value
- * @returns Type label (e.g., "Standard", "Time Limited")
+ * @returns Type label (e.g., "Standard", "Prediction")
  */
 export function getSurveyTypeLabel(surveyType: SurveyType): string {
   const strategy = SurveyStrategyFactory.getStrategy(surveyType)

@@ -109,7 +109,7 @@ export function useRewardPage(survey: Survey, responseId?: string) {
     rewardIssued,
     isCompletedNoReward,
 
-    // Winner data (for time_limited surveys)
+    // Winner data (for prediction surveys)
     winnerStatus,
     winnerLoading,
 

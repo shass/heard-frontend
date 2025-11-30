@@ -13,7 +13,7 @@ export { RewardSource } from './ISurveyStrategy'
 
 // Strategy implementations
 export { StandardSurveyStrategy } from './StandardSurveyStrategy'
-export { TimeLimitedSurveyStrategy } from './TimeLimitedSurveyStrategy'
+export { PredictionSurveyStrategy } from './PredictionSurveyStrategy'
 
 // Factory
 export { SurveyStrategyFactory } from './SurveyStrategyFactory'

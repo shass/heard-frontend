@@ -17,7 +17,7 @@ export interface User {
 // Survey types (compatible with backend)
 export enum SurveyType {
   STANDARD = 'standard',
-  TIME_LIMITED = 'time_limited'
+  PREDICTION = 'prediction'
 }
 
 export interface Survey {
@@ -390,7 +390,7 @@ export interface ImportRewardLinksRequest {
   txtData: string
 }
 
-// Winner Types (Time-Limited Surveys)
+// Winner Types (Prediction Surveys)
 export interface Winner {
   id: string
   surveyId: string

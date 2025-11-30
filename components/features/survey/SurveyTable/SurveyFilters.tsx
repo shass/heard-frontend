@@ -50,7 +50,7 @@ export function SurveyFilters({
         >
           <option value="">All Types</option>
           <option value={SurveyType.STANDARD}>Standard</option>
-          <option value={SurveyType.TIME_LIMITED}>Time Limited</option>
+          <option value={SurveyType.PREDICTION}>Prediction</option>
         </select>
       </div>
       <div className="sm:w-48">

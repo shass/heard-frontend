@@ -14,8 +14,8 @@ interface WinnerRewardProps {
 }
 
 export function WinnerReward({ surveyId, survey }: WinnerRewardProps) {
-  // Only show for time-limited surveys
-  if (survey.surveyType !== SurveyType.TIME_LIMITED) return null
+  // Only show for prediction surveys
+  if (survey.surveyType !== SurveyType.PREDICTION) return null
   if (!survey.endDate) return null
 
   const now = new Date()

@@ -61,7 +61,7 @@ export function SurveyCard({
   isExportPending,
   isDeletePending
 }: SurveyCardProps) {
-  const timeStatus = survey.surveyType === SurveyType.TIME_LIMITED
+  const timeStatus = survey.surveyType === SurveyType.PREDICTION
     ? getSurveyTimeStatus(survey.startDate, survey.endDate)
     : null
 
@@ -105,9 +105,9 @@ export function SurveyCard({
             </Badge>
             <Badge
               variant="outline"
-              className={survey.surveyType === SurveyType.TIME_LIMITED ? 'border-purple-500 text-purple-700 bg-purple-50' : 'border-blue-500 text-blue-700 bg-blue-50'}
+              className={survey.surveyType === SurveyType.PREDICTION ? 'border-purple-500 text-purple-700 bg-purple-50' : 'border-blue-500 text-blue-700 bg-blue-50'}
             >
-              {survey.surveyType === SurveyType.TIME_LIMITED ? 'Time Limited' : 'Standard'}
+              {survey.surveyType === SurveyType.PREDICTION ? 'Prediction Survey' : 'Standard'}
             </Badge>
             {timeStatus && (
               <Badge variant="outline" className={getStatusBadgeVariant(timeStatus)}>
@@ -121,7 +121,7 @@ export function SurveyCard({
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-700 line-clamp-3">{survey.description}</p>
 
-        {survey.surveyType === SurveyType.TIME_LIMITED && (
+        {survey.surveyType === SurveyType.PREDICTION && (
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 space-y-2 text-sm">
             <div className="flex items-center gap-2 text-purple-900">
               <Calendar className="w-4 h-4" />
@@ -220,7 +220,7 @@ export function SurveyCard({
               <List className="w-4 h-4" />
             </Button>
 
-            {survey.surveyType !== SurveyType.TIME_LIMITED && (
+            {survey.surveyType !== SurveyType.PREDICTION && (
               <Button
                 variant="outline"
                 size="sm"
@@ -240,7 +240,7 @@ export function SurveyCard({
               <Crown className="w-4 h-4" />
             </Button>
 
-            {survey.surveyType === SurveyType.TIME_LIMITED && onManageWinners && (
+            {survey.surveyType === SurveyType.PREDICTION && onManageWinners && (
               <Button
                 variant="outline"
                 size="sm"

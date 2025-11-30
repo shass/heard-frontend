@@ -6,7 +6,7 @@ import { useAuth } from '@/src/platforms'
 import type { WinnerStatus } from '@/lib/types'
 
 /**
- * Hook to check if current authenticated user is a winner for a time-limited survey
+ * Hook to check if current authenticated user is a winner for a prediction survey
  * @param surveyId - Survey ID to check winner status for
  * @returns React Query result with winner status data
  */

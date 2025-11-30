@@ -1,4 +1,4 @@
-// Winners API endpoints (Time-Limited Surveys)
+// Winners API endpoints (Prediction Surveys)
 
 import { apiClient } from './client'
 import type {

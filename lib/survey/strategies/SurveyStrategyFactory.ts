@@ -1,7 +1,7 @@
 import { SurveyType } from '@/lib/types'
 import type { ISurveyStrategy } from './ISurveyStrategy'
 import { StandardSurveyStrategy } from './StandardSurveyStrategy'
-import { TimeLimitedSurveyStrategy } from './TimeLimitedSurveyStrategy'
+import { PredictionSurveyStrategy } from './PredictionSurveyStrategy'
 
 /**
  * Factory for creating survey strategy instances
@@ -10,7 +10,7 @@ import { TimeLimitedSurveyStrategy } from './TimeLimitedSurveyStrategy'
 export class SurveyStrategyFactory {
   private static strategies = new Map<SurveyType, ISurveyStrategy>([
     [SurveyType.STANDARD, new StandardSurveyStrategy()],
-    [SurveyType.TIME_LIMITED, new TimeLimitedSurveyStrategy()],
+    [SurveyType.PREDICTION, new PredictionSurveyStrategy()],
   ])
 
   /**

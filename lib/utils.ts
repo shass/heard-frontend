@@ -54,7 +54,7 @@ export function formatNumber(num: number, locale = 'en-US'): string {
 }
 
 /**
- * Survey time status for time-limited surveys
+ * Survey time status for prediction surveys
  */
 export type SurveyTimeStatus = 'planned' | 'started' | 'finished'
 

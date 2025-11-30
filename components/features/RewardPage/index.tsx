@@ -123,23 +123,25 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
                   </p>
 
                   <p>
-                    Follow <a
-                      href="https://x.com/Heard_labs"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-700 underline font-medium"
-                    >
-                      our X
-                    </a> so you do not miss the event.
+                    <span className="font-bold">
+                      Follow <a
+                          href="https://x.com/Heard_labs"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-700 underline"
+                        >
+                        our X
+                      </a> so you do not miss the event.
+                    </span>
                   </p>
                 </div>
               ) : (
                 <>
                   <p className="text-base text-zinc-600">
-                    Thank you for completing the <strong>{survey.name}</strong> survey from {survey.company}.
+                    Thank you for completing the <strong>{ survey.name }</strong> survey from { survey.company }.
                     Your feedback is valuable to us!
                   </p>
-                  {heardPointsAwarded > 0 && (
+                  { heardPointsAwarded > 0 && (
                     <p className="text-sm text-zinc-500 mt-2">
                       You have earned <b>{formatNumber(heardPointsAwarded)} HEARD</b> points for completing this survey.
                     </p>

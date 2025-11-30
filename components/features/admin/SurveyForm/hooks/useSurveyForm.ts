@@ -36,15 +36,15 @@ const surveySchema = z.object({
   rewardAmount: z.number().min(0, 'Reward amount must be positive'),
   rewardToken: z.string().min(1, 'Reward token is required'),
   heardPointsReward: z.number().min(0, 'HeardPoints reward must be positive'),
-  surveyType: z.enum([SurveyType.STANDARD, SurveyType.TIME_LIMITED]).default(SurveyType.STANDARD),
+  surveyType: z.enum([SurveyType.STANDARD, SurveyType.PREDICTION]).default(SurveyType.STANDARD),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   resultsPageUrl: z.union([z.string().url('Invalid URL format'), z.literal('')]).optional(),
   questions: z.array(questionSchema).min(1, 'At least 1 question is required'),
   isActive: z.boolean().optional()
 }).refine((data) => {
-  // For time_limited surveys, dates are required
-  if (data.surveyType === SurveyType.TIME_LIMITED) {
+  // For prediction surveys, dates are required
+  if (data.surveyType === SurveyType.PREDICTION) {
     if (!data.startDate) return false
     if (!data.endDate) return false
 
@@ -55,7 +55,7 @@ const surveySchema = z.object({
   }
   return true
 }, {
-  message: 'For time-limited surveys: start and end dates are required, and end date must be after start date',
+  message: 'For prediction surveys: start and end dates are required, and end date must be after start date',
   path: ['endDate']
 })
 
@@ -165,20 +165,20 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
     }
 
     // Format dates to ISO 8601 if they exist
-    if (data.startDate && data.surveyType === SurveyType.TIME_LIMITED) {
+    if (data.startDate && data.surveyType === SurveyType.PREDICTION) {
       submitData.startDate = new Date(data.startDate).toISOString()
     } else {
       delete submitData.startDate
     }
 
-    if (data.endDate && data.surveyType === SurveyType.TIME_LIMITED) {
+    if (data.endDate && data.surveyType === SurveyType.PREDICTION) {
       submitData.endDate = new Date(data.endDate).toISOString()
     } else {
       delete submitData.endDate
     }
 
-    // Handle resultsPageUrl for time_limited surveys
-    if (data.surveyType === SurveyType.TIME_LIMITED) {
+    // Handle resultsPageUrl for prediction surveys
+    if (data.surveyType === SurveyType.PREDICTION) {
       // Always include the field, even if it's an empty string (to allow clearing)
       submitData.resultsPageUrl = data.resultsPageUrl ?? ''
     } else {

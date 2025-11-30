@@ -22,8 +22,8 @@ export function RewardsSection({ register, watch, errors }: RewardsSectionProps)
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Hide Token Reward fields for Time Limited surveys */}
-          {surveyType !== SurveyType.TIME_LIMITED && (
+          {/* Hide Token Reward fields for Prediction surveys */}
+          {surveyType !== SurveyType.PREDICTION && (
             <>
               <div>
                 <Label htmlFor="rewardAmount">Reward Amount *</Label>

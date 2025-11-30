@@ -110,7 +110,7 @@ export function BasicInfoSection({ register, control, watch, errors, isEditMode 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={SurveyType.STANDARD}>Standard Survey</SelectItem>
-                  <SelectItem value={SurveyType.TIME_LIMITED}>Time-Limited Survey</SelectItem>
+                  <SelectItem value={SurveyType.PREDICTION}>Prediction Survey</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -120,8 +120,8 @@ export function BasicInfoSection({ register, control, watch, errors, isEditMode 
           )}
         </div>
 
-        {/* Time-Limited Survey Fields */}
-        {surveyType === SurveyType.TIME_LIMITED && (
+        {/* Prediction Survey Fields */}
+        {surveyType === SurveyType.PREDICTION && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
