@@ -3,18 +3,15 @@
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { UseFormRegister, FieldErrors, UseFormWatch } from 'react-hook-form'
+import { UseFormRegister, FieldErrors } from 'react-hook-form'
 import { SurveyFormData } from './hooks/useSurveyForm'
-import { SurveyType } from '@/lib/types'
 
 interface RewardsSectionProps {
   register: UseFormRegister<SurveyFormData>
-  watch: UseFormWatch<SurveyFormData>
   errors: FieldErrors<SurveyFormData>
 }
 
-export function RewardsSection({ register, watch, errors }: RewardsSectionProps) {
-  const surveyType = watch('surveyType')
+export function RewardsSection({ register, errors }: RewardsSectionProps) {
   return (
     <Card>
       <CardHeader>
@@ -22,36 +19,31 @@ export function RewardsSection({ register, watch, errors }: RewardsSectionProps)
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Hide Token Reward fields for Prediction surveys */}
-          {surveyType !== SurveyType.PREDICTION && (
-            <>
-              <div>
-                <Label htmlFor="rewardAmount">Reward Amount *</Label>
-                <Input
-                  id="rewardAmount"
-                  type="number"
-                  step="0.001"
-                  {...register('rewardAmount', { valueAsNumber: true })}
-                  placeholder="0.01"
-                />
-                {errors.rewardAmount && (
-                  <p className="text-sm text-red-600 mt-1">{errors.rewardAmount.message}</p>
-                )}
-              </div>
+          <div>
+            <Label htmlFor="rewardAmount">Reward Amount *</Label>
+            <Input
+              id="rewardAmount"
+              type="number"
+              step="0.001"
+              {...register('rewardAmount', { valueAsNumber: true })}
+              placeholder="0.01"
+            />
+            {errors.rewardAmount && (
+              <p className="text-sm text-red-600 mt-1">{errors.rewardAmount.message}</p>
+            )}
+          </div>
 
-              <div>
-                <Label htmlFor="rewardToken">Reward Token *</Label>
-                <Input
-                  id="rewardToken"
-                  placeholder="e.g. ETH, USDC, TokenName"
-                  {...register('rewardToken')}
-                />
-                {errors.rewardToken && (
-                  <p className="text-sm text-red-600 mt-1">{errors.rewardToken.message}</p>
-                )}
-              </div>
-            </>
-          )}
+          <div>
+            <Label htmlFor="rewardToken">Reward Token *</Label>
+            <Input
+              id="rewardToken"
+              placeholder="e.g. ETH, USDC, TokenName"
+              {...register('rewardToken')}
+            />
+            {errors.rewardToken && (
+              <p className="text-sm text-red-600 mt-1">{errors.rewardToken.message}</p>
+            )}
+          </div>
 
           <div>
             <Label htmlFor="heardPointsReward">HeardPoints Reward *</Label>
