@@ -132,16 +132,9 @@ export class TimeLimitedSurveyStrategy implements ISurveyStrategy {
     return params.winnerStatus?.reward?.rewardLink
   }
 
-  shouldShowWinnerInfo(params: RewardDisplayParams): boolean {
-    // Show winner info if the survey has ended
-    const { survey } = params
-    if (!survey.endDate) {
-      return false
-    }
-
-    const now = new Date()
-    const endDate = new Date(survey.endDate)
-    return now >= endDate
+  shouldShowWinnerInfo(_params: RewardDisplayParams): boolean {
+    // Always show time-limited specific message for this survey type
+    return true
   }
 
   getInfoConfig(survey: Survey): SurveyInfoConfig {
