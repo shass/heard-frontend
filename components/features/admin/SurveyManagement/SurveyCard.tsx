@@ -122,19 +122,20 @@ export function SurveyCard({
         <p className="text-sm text-gray-700 line-clamp-3">{survey.description}</p>
 
         {survey.surveyType === SurveyType.PREDICTION && (
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 space-y-2 text-sm">
-            <div className="flex items-center gap-2 text-purple-900">
-              <Calendar className="w-4 h-4" />
+          <div className="text-sm">
+            <span className="text-gray-500">Dates:</span>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4"/>
               <span className="font-medium">Start:</span>
-              <span>{formatSurveyDate(survey.startDate)}</span>
+              <span>{ formatSurveyDate(survey.startDate) }</span>
             </div>
-            <div className="flex items-center gap-2 text-purple-900">
-              <Clock className="w-4 h-4" />
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4"/>
               <span className="font-medium">End:</span>
-              <span>{formatSurveyDate(survey.endDate)}</span>
+              <span>{ formatSurveyDate(survey.endDate) }</span>
             </div>
           </div>
-        )}
+        ) }
 
         <div className="space-y-3 text-sm">
           <div className="grid grid-cols-2 gap-4">

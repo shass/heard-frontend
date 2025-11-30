@@ -20,6 +20,8 @@ export function SurveyManagement() {
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    typeFilter,
+    setTypeFilter,
     selectedSurvey,
     setSelectedSurvey,
     isCreateDialogOpen,
@@ -124,6 +126,8 @@ export function SurveyManagement() {
         onSearchChange={setSearchTerm}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
+        typeFilter={typeFilter}
+        onTypeFilterChange={setTypeFilter}
         onRefreshStats={() => refreshStatsMutation.mutate(undefined)}
         isRefreshStatsPending={refreshStatsMutation.isPending}
         onCreateSurvey={() => setIsCreateDialogOpen(true)}
