@@ -45,7 +45,7 @@ interface VisibilityManagerProps {
 
 export function VisibilityManager({ surveyId }: VisibilityManagerProps) {
   const auth = useAuth()
-  const isAdmin = auth.user?.metadata?.role === 'admin'
+  const isAdmin = auth.user?.role === 'admin'
 
   const { data: visibility, isLoading } = useSurveyVisibility(surveyId)
   const updateVisibility = useUpdateSurveyVisibility()

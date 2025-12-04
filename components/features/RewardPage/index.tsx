@@ -1,10 +1,12 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { LoadingState } from "@/components/ui/loading-states"
-import { Gift } from "lucide-react"
+import { Gift, Calendar } from "lucide-react"
 import type { Survey } from "@/lib/types"
 import { formatNumber } from "@/lib/utils"
+import { useSurveyStrategy } from "@/hooks/use-survey-strategy"
 import { useRewardPage } from './hooks/useRewardPage'
 import { RewardHeader } from './RewardHeader'
 import { RewardDetails } from './RewardDetails'
@@ -18,6 +20,8 @@ interface RewardPageProps {
 }
 
 export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPageProps) {
+  const strategy = useSurveyStrategy(survey)
+
   const {
     qrCodeUrl,
     claimStatus,
@@ -34,6 +38,8 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
     hasCompletedSurvey,
     shouldShowErrorState,
     isCompletedNoReward,
+    winnerStatus,
+    winnerLoading,
     handleClaimReward,
     handleCopyClaimLink
   } = useRewardPage(survey, responseId)
@@ -78,6 +84,14 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
 
   // If completed but no rewards available, show thank you message
   if (hasCompletedSurvey && (!hasAnyRewards || isCompletedNoReward)) {
+    const showWinnerInfo = strategy?.shouldShowWinnerInfo({ survey })
+    const endDateFormatted = survey.endDate
+      ? new Intl.DateTimeFormat('en-US', {
+          dateStyle: 'long',
+          timeStyle: 'short'
+        }).format(new Date(survey.endDate))
+      : null
+
     return (
       <section className="w-full py-16">
         <div className="mx-auto max-w-lg px-4 sm:px-6 lg:px-8 text-center">
@@ -89,14 +103,50 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
                 </div>
               </div>
               <h2 className="text-2xl font-semibold text-zinc-900 mb-4">Thank You!</h2>
-              <p className="text-base text-zinc-600">
-                Thank you for completing the <strong>{survey.name}</strong> survey from {survey.company}.
-                Your feedback is valuable to us!
-              </p>
-              {heardPointsAwarded > 0 && (
-                <p className="text-sm text-zinc-500 mt-2">
-                  You have earned <b>{formatNumber(heardPointsAwarded)} HEARD</b> points for completing this survey.
-                </p>
+
+              {showWinnerInfo ? (
+                <div className="space-y-4 text-base text-zinc-700">
+                  <p>Thanks for taking part in the prediction survey.</p>
+                  {heardPointsAwarded > 0 && (
+                    <p>
+                      You have just earned <strong>{formatNumber(heardPointsAwarded)} Heard Points</strong>.
+                    </p>
+                  )}
+                  {endDateFormatted && (
+                    <p>
+                      The final results will be announced on <strong>{endDateFormatted}</strong>.
+                    </p>
+                  )}
+                  <p>
+                    Participants who guessed the largest number of popular answers will share the prize pool.
+                    A link to claim your reward will appear on this survey page.
+                  </p>
+
+                  <p>
+                    <span className="font-bold">
+                      Follow <a
+                          href="https://x.com/Heard_labs"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-700 underline"
+                        >
+                        our X
+                      </a> so you do not miss the event.
+                    </span>
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-base text-zinc-600">
+                    Thank you for completing the <strong>{ survey.name }</strong> survey from { survey.company }.
+                    Your feedback is valuable to us!
+                  </p>
+                  { heardPointsAwarded > 0 && (
+                    <p className="text-sm text-zinc-500 mt-2">
+                      You have earned <b>{formatNumber(heardPointsAwarded)} HEARD</b> points for completing this survey.
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
@@ -122,7 +172,27 @@ export function RewardPage({ survey, onBackToSurveys, responseId }: RewardPagePr
             survey={survey}
             claimLink={claimLink}
             heardPointsAwarded={heardPointsAwarded}
+            winnerStatus={winnerStatus}
           />
+
+          {strategy?.shouldShowEndDateCard(survey) && (
+            <Card className="text-left">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Calendar className="w-5 h-5" />
+                  Survey End Date
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-base text-zinc-700">
+                  {new Intl.DateTimeFormat('en-US', {
+                    dateStyle: 'long',
+                    timeStyle: 'short'
+                  }).format(new Date(survey.endDate!))}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {qrCodeUrl && claimLink && (
             <ClaimSection

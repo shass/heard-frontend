@@ -14,12 +14,15 @@ import {
   FileText,
   CheckCircle
 } from 'lucide-react'
+import { SurveyType } from '@/lib/types'
 
 interface SurveyActionsProps {
   searchTerm: string
   onSearchChange: (value: string) => void
   statusFilter: 'all' | 'active' | 'inactive'
   onStatusFilterChange: (value: 'all' | 'active' | 'inactive') => void
+  typeFilter: SurveyType | 'all'
+  onTypeFilterChange: (value: SurveyType | 'all') => void
   onRefreshStats: () => void
   isRefreshStatsPending: boolean
   onCreateSurvey: () => void
@@ -42,6 +45,8 @@ export function SurveyActions({
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
+  typeFilter,
+  onTypeFilterChange,
   onRefreshStats,
   isRefreshStatsPending,
   onCreateSurvey,
@@ -67,14 +72,24 @@ export function SurveyActions({
           />
         </div>
         <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-36">
             <Filter className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Filter by status" />
+            <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Surveys</SelectItem>
+            <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={typeFilter} onValueChange={onTypeFilterChange as (value: string) => void}>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value={SurveyType.STANDARD}>Standard</SelectItem>
+            <SelectItem value={SurveyType.PREDICTION}>Prediction</SelectItem>
           </SelectContent>
         </Select>
       </div>

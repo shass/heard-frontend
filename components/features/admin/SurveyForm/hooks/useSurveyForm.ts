@@ -5,10 +5,11 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { getSurveyQuestions } from '@/lib/api/admin'
-import type {
-  CreateSurveyRequest,
-  UpdateSurveyRequest,
-  AdminSurveyListItem,
+import {
+  SurveyType,
+  type CreateSurveyRequest,
+  type UpdateSurveyRequest,
+  type AdminSurveyListItem,
 } from '@/lib/types'
 
 const answerSchema = z.object({
@@ -35,8 +36,27 @@ const surveySchema = z.object({
   rewardAmount: z.number().min(0, 'Reward amount must be positive'),
   rewardToken: z.string().min(1, 'Reward token is required'),
   heardPointsReward: z.number().min(0, 'HeardPoints reward must be positive'),
+  surveyType: z.enum([SurveyType.STANDARD, SurveyType.PREDICTION]).default(SurveyType.STANDARD),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  resultsPageUrl: z.union([z.string().url('Invalid URL format'), z.literal('')]).optional(),
   questions: z.array(questionSchema).min(1, 'At least 1 question is required'),
   isActive: z.boolean().optional()
+}).refine((data) => {
+  // For prediction surveys, dates are required
+  if (data.surveyType === SurveyType.PREDICTION) {
+    if (!data.startDate) return false
+    if (!data.endDate) return false
+
+    // endDate must be after startDate
+    const start = new Date(data.startDate)
+    const end = new Date(data.endDate)
+    return end > start
+  }
+  return true
+}, {
+  message: 'For prediction surveys: start and end dates are required, and end date must be after start date',
+  path: ['endDate']
 })
 
 export type SurveyFormData = z.infer<typeof surveySchema>
@@ -60,6 +80,11 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
       rewardAmount: survey.rewardAmount,
       rewardToken: survey.rewardToken,
       heardPointsReward: survey.heardPointsReward,
+      surveyType: survey.surveyType || SurveyType.STANDARD,
+      // Convert ISO dates to datetime-local format (YYYY-MM-DDTHH:MM)
+      startDate: survey.startDate ? new Date(survey.startDate).toISOString().slice(0, 16) : '',
+      endDate: survey.endDate ? new Date(survey.endDate).toISOString().slice(0, 16) : '',
+      resultsPageUrl: survey.resultsPageUrl || '',
       questions: [],
       isActive: survey.isActive
     } : {
@@ -71,6 +96,10 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
       rewardAmount: 0,
       rewardToken: 'ETH',
       heardPointsReward: 100,
+      surveyType: SurveyType.STANDARD,
+      startDate: '',
+      endDate: '',
+      resultsPageUrl: '',
       questions: [{
         questionText: '',
         questionType: 'single',
@@ -129,9 +158,32 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
   }, [survey?.id, setValue])
 
   const handleFormSubmit = (data: SurveyFormData) => {
-    const submitData = {
+    // Convert datetime-local values to ISO 8601 strings for API
+    const submitData: any = {
       ...data,
       ...(survey ? { id: survey.id } : {})
+    }
+
+    // Format dates to ISO 8601 if they exist
+    if (data.startDate && data.surveyType === SurveyType.PREDICTION) {
+      submitData.startDate = new Date(data.startDate).toISOString()
+    } else {
+      delete submitData.startDate
+    }
+
+    if (data.endDate && data.surveyType === SurveyType.PREDICTION) {
+      submitData.endDate = new Date(data.endDate).toISOString()
+    } else {
+      delete submitData.endDate
+    }
+
+    // Handle resultsPageUrl for prediction surveys
+    if (data.surveyType === SurveyType.PREDICTION) {
+      // Always include the field, even if it's an empty string (to allow clearing)
+      submitData.resultsPageUrl = data.resultsPageUrl ?? ''
+    } else {
+      // For standard surveys, remove the field
+      delete submitData.resultsPageUrl
     }
 
     onSubmit(submitData as CreateSurveyRequest | UpdateSurveyRequest)
@@ -159,15 +211,15 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
     watch,
     setValue,
     errors,
-    
+
     // Question management
     questions,
     addNewQuestion,
     removeQuestion,
-    
+
     // State
     loadingQuestions,
-    
+
     // Handlers
     handleFormSubmit,
   }

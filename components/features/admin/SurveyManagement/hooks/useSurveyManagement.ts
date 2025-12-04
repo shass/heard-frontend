@@ -15,12 +15,13 @@ import {
   refreshSurveyStats
 } from '@/lib/api/admin'
 import { useNotifications } from '@/components/ui/notifications'
-import type { AdminSurveyListItem, CreateSurveyRequest, UpdateSurveyRequest } from '@/lib/types'
+import { SurveyType, type AdminSurveyListItem, type CreateSurveyRequest, type UpdateSurveyRequest } from '@/lib/types'
 
 export function useSurveyManagement() {
   const { isAuthenticated, user } = useAuthStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [typeFilter, setTypeFilter] = useState<SurveyType | 'all'>('all')
   const [selectedSurvey, setSelectedSurvey] = useState<AdminSurveyListItem | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -40,10 +41,11 @@ export function useSurveyManagement() {
   const queryClient = useQueryClient()
 
   const { data: surveysData, isLoading, error } = useQuery({
-    queryKey: ['admin-surveys', { search: searchTerm, status: statusFilter }],
+    queryKey: ['admin-surveys', { search: searchTerm, status: statusFilter, type: typeFilter }],
     queryFn: () => getAdminSurveys({
       search: searchTerm || undefined,
       status: statusFilter === 'all' ? undefined : statusFilter,
+      surveyType: typeFilter,
       limit: 50
     }),
     enabled: isAuthenticated && user?.role === 'admin',
@@ -242,6 +244,8 @@ export function useSurveyManagement() {
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    typeFilter,
+    setTypeFilter,
     selectedSurvey,
     setSelectedSurvey,
     isCreateDialogOpen,

@@ -16,6 +16,7 @@ interface SurveyListProps {
   onManageWhitelist: (survey: AdminSurveyListItem) => void
   onManageRewardLinks: (survey: AdminSurveyListItem) => void
   onManageSurveyClients: (survey: AdminSurveyListItem) => void
+  onManageWinners?: (survey: AdminSurveyListItem) => void
   onEdit: (survey: AdminSurveyListItem) => void
   onDuplicate: (surveyId: string, currentName: string) => void
   onExport: (surveyId: string) => void
@@ -38,6 +39,7 @@ export function SurveyList({
   onManageWhitelist,
   onManageRewardLinks,
   onManageSurveyClients,
+  onManageWinners,
   onEdit,
   onDuplicate,
   onExport,
@@ -78,6 +80,7 @@ export function SurveyList({
           onManageWhitelist={onManageWhitelist}
           onManageRewardLinks={onManageRewardLinks}
           onManageSurveyClients={onManageSurveyClients}
+          onManageWinners={onManageWinners}
           onEdit={onEdit}
           onDuplicate={onDuplicate}
           onExport={onExport}

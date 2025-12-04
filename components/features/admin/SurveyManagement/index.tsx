@@ -7,9 +7,11 @@ import { SurveyResponses } from '@/components/admin/survey-responses'
 import { WhitelistModal } from '@/components/admin/whitelist-modal'
 import { RewardLinksModalPaginated } from '@/components/admin/reward-links-modal-paginated'
 import { SurveyClientsModal } from '@/components/admin/survey-clients-modal'
+import { WinnersModal } from '../WinnersModal'
 import { SurveyActions } from './SurveyActions'
 import { SurveyList } from './SurveyList'
 import { useSurveyManagement } from './hooks/useSurveyManagement'
+import { useState } from 'react'
 
 export function SurveyManagement() {
   const {
@@ -18,6 +20,8 @@ export function SurveyManagement() {
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    typeFilter,
+    setTypeFilter,
     selectedSurvey,
     setSelectedSurvey,
     isCreateDialogOpen,
@@ -64,6 +68,9 @@ export function SurveyManagement() {
     resetImport
   } = useSurveyManagement()
 
+  // Local state for winners modal
+  const [isWinnersModalOpen, setIsWinnersModalOpen] = useState(false)
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -101,6 +108,11 @@ export function SurveyManagement() {
     setIsSurveyClientsModalOpen(true)
   }
 
+  const handleManageWinners = (survey: any) => {
+    setSelectedSurvey(survey)
+    setIsWinnersModalOpen(true)
+  }
+
   const handleEdit = (survey: any) => {
     setSelectedSurvey(survey)
     setIsEditDialogOpen(true)
@@ -114,6 +126,8 @@ export function SurveyManagement() {
         onSearchChange={setSearchTerm}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
+        typeFilter={typeFilter}
+        onTypeFilterChange={setTypeFilter}
         onRefreshStats={() => refreshStatsMutation.mutate(undefined)}
         isRefreshStatsPending={refreshStatsMutation.isPending}
         onCreateSurvey={() => setIsCreateDialogOpen(true)}
@@ -142,6 +156,7 @@ export function SurveyManagement() {
         onManageWhitelist={handleManageWhitelist}
         onManageRewardLinks={handleManageRewardLinks}
         onManageSurveyClients={handleManageSurveyClients}
+        onManageWinners={handleManageWinners}
         onEdit={handleEdit}
         onDuplicate={handleDuplicateSurvey}
         onExport={handleExportSurvey}
@@ -227,6 +242,16 @@ export function SurveyManagement() {
         isOpen={isSurveyClientsModalOpen}
         onClose={() => {
           setIsSurveyClientsModalOpen(false)
+          setSelectedSurvey(null)
+        }}
+      />
+
+      {/* Winners Management Modal */}
+      <WinnersModal
+        survey={selectedSurvey}
+        isOpen={isWinnersModalOpen}
+        onClose={() => {
+          setIsWinnersModalOpen(false)
           setSelectedSurvey(null)
         }}
       />

@@ -1,18 +1,19 @@
 import { apiClient } from './client'
-import type {
-  AdminDashboardStats,
-  AdminSurveyListItem,
-  CreateSurveyRequest,
-  UpdateSurveyRequest,
-  WhitelistPagedData,
-  RewardLink,
-  UsedRewardLink,
-  RewardLinksData,
-  ImportRewardLinksRequest,
-  Survey,
-  AdminSurveyResponse,
-  User,
-  PaginationMeta
+import {
+  SurveyType,
+  type AdminDashboardStats,
+  type AdminSurveyListItem,
+  type CreateSurveyRequest,
+  type UpdateSurveyRequest,
+  type WhitelistPagedData,
+  type RewardLink,
+  type UsedRewardLink,
+  type RewardLinksData,
+  type ImportRewardLinksRequest,
+  type Survey,
+  type AdminSurveyResponse,
+  type User,
+  type PaginationMeta
 } from '../types'
 
 // Admin Dashboard Stats
@@ -54,6 +55,7 @@ export const getAdminSurveys = async (params?: {
   offset?: number
   search?: string
   status?: 'active' | 'inactive' | 'all'
+  surveyType?: SurveyType | 'all'
 }): Promise<{ surveys: AdminSurveyListItem[]; meta: PaginationMeta }> => {
   const data = await apiClient.get<{
     items: AdminSurveyListItem[]
@@ -63,7 +65,8 @@ export const getAdminSurveys = async (params?: {
       limit: params?.limit || 20,
       offset: params?.offset || 0,
       search: params?.search,
-      status: params?.status
+      status: params?.status,
+      surveyType: params?.surveyType === 'all' ? undefined : params?.surveyType
     }
   })
 
@@ -79,12 +82,12 @@ export const getAdminSurveys = async (params?: {
 }
 
 export const createSurvey = async (surveyData: CreateSurveyRequest): Promise<Survey> => {
-  const data = await apiClient.post<Survey>('/admin/surveys/create', surveyData)
+  const data = await apiClient.post<Survey>('/admin/surveys', surveyData)
   return data
 }
 
 export const updateSurvey = async (surveyData: UpdateSurveyRequest): Promise<Survey> => {
-  const data = await apiClient.put<Survey>(`/admin/surveys/${surveyData.id}/update`, surveyData)
+  const data = await apiClient.put<Survey>(`/admin/surveys/${surveyData.id}`, surveyData)
   return data
 }
 

@@ -14,7 +14,12 @@ export interface User {
   platform?: Platform | string // Platform identifier from Platform enum
 }
 
-// Survey types (compatible with backend) 
+// Survey types (compatible with backend)
+export enum SurveyType {
+  STANDARD = 'standard',
+  PREDICTION = 'prediction'
+}
+
 export interface Survey {
   id: string
   name: string
@@ -28,6 +33,10 @@ export interface Survey {
   totalQuestions: number
   responseCount: number
   isActive: boolean
+  surveyType: SurveyType
+  startDate?: string // ISO 8601 datetime string
+  endDate?: string // ISO 8601 datetime string
+  resultsPageUrl?: string
   createdAt: string
 }
 
@@ -145,12 +154,26 @@ export interface EligibilityResponse {
   reason?: string
 }
 
-// Reward types  
+// Reward types
 export interface RewardInfo {
   amount: number
   token: string
   linkDropCode: string
   claimUrl: string
+}
+
+// User reward from survey completion
+export interface LinkdropReward {
+  type: 'linkdrop' | 'completed_no_reward'
+  claimLink?: string
+  usedAt?: string
+  heardPointsAwarded: number
+  survey: {
+    name: string
+    rewardAmount: number
+    rewardToken: string
+  }
+  message?: string
 }
 
 // App state types
@@ -283,6 +306,10 @@ export interface CreateSurveyRequest {
   rewardAmount: number
   rewardToken: string
   heardPointsReward: number
+  surveyType?: SurveyType
+  startDate?: string // ISO 8601 datetime string
+  endDate?: string // ISO 8601 datetime string
+  resultsPageUrl?: string
   questions: CreateQuestionRequest[]
   whitelist?: string[]
 }
@@ -361,6 +388,48 @@ export interface RewardLinksData {
 
 export interface ImportRewardLinksRequest {
   txtData: string
+}
+
+// Winner Types (Prediction Surveys)
+export interface Winner {
+  id: string
+  surveyId: string
+  walletAddress: string
+  rewardLink: string
+  place?: number
+  rewardType?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface WinnerEntry {
+  walletAddress: string
+  rewardLink: string
+  place?: number
+  rewardType?: string
+}
+
+export interface WinnerStatus {
+  isWinner: boolean
+  reward?: {
+    rewardLink: string
+    place?: number
+    rewardType?: string
+  }
+}
+
+export interface AddWinnersRequest {
+  winners: WinnerEntry[]
+}
+
+export interface WinnersPagedData {
+  winners: Winner[]
+  pagination: {
+    total: number
+    limit: number
+    offset: number
+    hasMore: boolean
+  }
 }
 
 export interface AdminSurveyListItem extends Survey {

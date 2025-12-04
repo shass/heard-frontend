@@ -38,8 +38,14 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-      <BasicInfoSection register={register} errors={errors} />
-      
+      <BasicInfoSection
+        register={register}
+        control={control}
+        watch={watch}
+        errors={errors}
+        isEditMode={!!survey}
+      />
+
       <RewardsSection register={register} errors={errors} />
       
       <QuestionsSection

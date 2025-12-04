@@ -20,8 +20,10 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
     setSearchQuery,
     selectedCompany,
     setSelectedCompany,
+    selectedSurveyType,
+    setSelectedSurveyType,
     copiedSurveyId,
-    
+
     // Data
     surveys,
     filteredSurveys,
@@ -29,7 +31,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
     showLoading,
     error,
     isFetching,
-    
+
     // Handlers
     handleTakeSurvey,
     handleCopyLink,
@@ -49,6 +51,8 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
           setSearchQuery={setSearchQuery}
           selectedCompany={selectedCompany}
           setSelectedCompany={setSelectedCompany}
+          selectedSurveyType={selectedSurveyType}
+          setSelectedSurveyType={setSelectedSurveyType}
           companies={companies}
           isFetching={isFetching}
         />
@@ -57,7 +61,7 @@ export function SurveyTable({ onTakeSurvey }: SurveyTableProps) {
           loading={showLoading}
           error={error ? "Failed to load surveys" : null}
           empty={filteredSurveys.length === 0}
-          emptyMessage={searchQuery || selectedCompany ? "No surveys match your filters" : "No surveys available"}
+          emptyMessage={searchQuery || selectedCompany || selectedSurveyType ? "No surveys match your filters" : "No surveys available"}
           skeleton={<SurveyTableSkeleton rows={5} />}
         >
           {/* Desktop Table */}

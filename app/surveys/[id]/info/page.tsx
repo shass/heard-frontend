@@ -6,16 +6,18 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useSurvey, useSurveyEligibility, useUserReward } from "@/hooks"
+import { useSurvey, useSurveyEligibility, useUserReward, useWinnerStatus, useSurveyStrategy } from "@/hooks"
 import { usePlatformDetector } from "@/src/platforms"
 import { useAuth, useWallet, useOpenUrl } from "@/src/platforms/_core"
 import { Platform } from "@/src/platforms/config"
+import { RewardSource } from "@/lib/survey/strategies"
 import {
   SurveyHeader,
   SurveyStats,
   SurveyInfo,
   SurveyActionButton,
-  SurveyReward
+  SurveyReward,
+  PredictionSurveyInfo
 } from "@/components/survey"
 
 interface SurveyInfoPageProps {
@@ -57,6 +59,16 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   // Reward is fetched only if user is authenticated (connected state is not required)
   const { data: userReward } = useUserReward(id, isAuthenticated)
 
+  // Get strategy for the survey type
+  const strategy = useSurveyStrategy(survey)
+
+  // Get winner status if needed based on survey strategy
+  const rewardSource = strategy?.getRewardSource()
+  const shouldFetchWinnerStatus = rewardSource === RewardSource.WINNER_STATUS || rewardSource === RewardSource.BOTH
+  const { data: winnerStatus, isLoading: isWinnerLoading, error: winnerError } = useWinnerStatus(
+    shouldFetchWinnerStatus ? id : undefined
+  )
+
   const handleStartSurvey = () => {
     router.push(`/surveys/${id}`)
   }
@@ -68,28 +80,14 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   }
 
   const handleAuthenticate = async () => {
-    console.log('[Survey] 🚀 handleAuthenticate called')
-    console.log('[Survey] Current state:', {
-      isAuthenticated,
-      isAuthLoading,
-      address,
-      isConnected,
-      authError: authError || 'None'
-    })
-
     try {
-      console.log('[Survey] 🔄 Calling login()...')
       const result = await login()
-
-      console.log('[Survey] ✅ login() completed, result:', result)
 
       // Check result directly instead of waiting for state updates
       if (result?.success) {
-        console.log('[Survey] ✅ User authenticated successfully')
 
         // Check eligibility before redirecting
         if (eligibility?.isEligible !== false) {
-          console.log('[Survey] ✅ User eligible or eligibility unknown, redirecting to survey...')
           router.push(`/surveys/${id}`)
         } else {
           console.log('[Survey] ⚠️ User authenticated but not eligible for this survey')
@@ -107,12 +105,6 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
         type: error?.constructor?.name || typeof error,
         fullError: error
       })
-
-      // Try to extract more meaningful error information
-      if (error && typeof error === 'object') {
-        console.error('[Survey] Error object keys:', Object.keys(error))
-        console.error('[Survey] Error stringified:', JSON.stringify(error, null, 2))
-      }
     }
   }
 
@@ -121,14 +113,16 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   }
 
   const handleClaimReward = () => {
-    if (userReward?.claimLink) {
-      openUrl(userReward.claimLink)
+    const claimLink = strategy?.getClaimLink({ survey: survey!, userReward, winnerStatus })
+    if (claimLink) {
+      openUrl(claimLink)
     }
   }
 
   const handleCopyClaimLink = () => {
-    if (userReward?.claimLink) {
-      navigator.clipboard.writeText(userReward.claimLink)
+    const claimLink = strategy?.getClaimLink({ survey: survey!, userReward, winnerStatus })
+    if (claimLink) {
+      navigator.clipboard.writeText(claimLink)
       // TODO: Add notification
     }
   }
@@ -180,33 +174,18 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const hasCompleted = eligibility?.hasCompleted
   const isEligible = eligibility?.isEligible ?? true
 
-  // Determine button state based on wallet connection and authentication
-  const getButtonState = () => {
-    if (hasCompleted) {
-      return { text: "Survey Completed", disabled: true, handler: () => {}, loading: false }
-    }
-
-    if (!isConnected) {
-      return { text: "Connect Wallet", disabled: false, handler: handleConnectWallet, loading: false }
-    }
-
-    if (!isEligible) {
-      return { text: "Not Eligible", disabled: true, handler: () => {}, loading: false }
-    }
-
-    if (!isAuthenticated) {
-      return {
-        text: isAuthLoading ? "Authenticating..." : "Authorize & Start Survey",
-        disabled: isAuthLoading,
-        handler: handleAuthenticate,
-        loading: isAuthLoading
-      }
-    }
-
-    return { text: "Start Survey", disabled: false, handler: handleStartSurvey, loading: false }
-  }
-
-  const buttonState = getButtonState()
+  // Get button state from strategy
+  const buttonState = strategy?.getButtonState({
+    survey: survey!,
+    hasCompleted: hasCompleted || false,
+    isConnected,
+    isEligible,
+    isAuthenticated,
+    isAuthLoading,
+    handleStartSurvey,
+    handleConnectWallet,
+    handleAuthenticate
+  }) || { text: "Loading...", disabled: true, handler: () => {}, loading: false }
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -223,7 +202,10 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
             />
 
             {/* Survey Stats */}
-            <SurveyStats survey={survey} />
+            <SurveyStats survey={survey} strategy={strategy} />
+
+            {/* Prediction Survey Info */}
+            <PredictionSurveyInfo survey={survey} strategy={strategy} />
 
             {/* Survey Information */}
             <SurveyInfo survey={survey} eligibility={eligibility} />
@@ -232,6 +214,11 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
             {hasCompleted && userReward && (
               <SurveyReward
                 userReward={userReward}
+                survey={survey}
+                strategy={strategy}
+                winnerStatus={winnerStatus}
+                isWinnerLoading={isWinnerLoading}
+                winnerError={winnerError}
                 onClaimReward={handleClaimReward}
                 onCopyClaimLink={handleCopyClaimLink}
               />
