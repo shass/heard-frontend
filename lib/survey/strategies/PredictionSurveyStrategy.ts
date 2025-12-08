@@ -171,16 +171,30 @@ export class PredictionSurveyStrategy implements ISurveyStrategy {
   }
 
   getRewardDisplay(survey: Survey, _context?: 'list' | 'detail'): RewardDisplay {
-    // Prediction surveys only show HeardPoints in list view
-    // Token rewards are determined individually for winners
+    const parts: string[] = []
+    const rewardParts: RewardDisplay['parts'] = {}
+
+    // Token reward
+    if (survey.rewardAmount > 0) {
+      parts.push(`${formatNumber(survey.rewardAmount)} ${survey.rewardToken}`)
+      rewardParts.token = {
+        amount: survey.rewardAmount,
+        symbol: survey.rewardToken
+      }
+    }
+
+    // HeardPoints reward
+    if (survey.heardPointsReward > 0) {
+      parts.push(`${formatNumber(survey.heardPointsReward)} HP`)
+      rewardParts.heardPoints = {
+        amount: survey.heardPointsReward
+      }
+    }
+
     return {
-      formatted: `${formatNumber(survey.heardPointsReward)} HP`,
-      parts: {
-        heardPoints: {
-          amount: survey.heardPointsReward
-        }
-      },
-      displayMode: 'simple'
+      formatted: parts.join(' + '),
+      parts: rewardParts,
+      displayMode: 'detailed'
     }
   }
 
