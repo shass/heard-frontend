@@ -13,11 +13,13 @@ import {
 } from '@/lib/types'
 
 const answerSchema = z.object({
+  id: z.string().optional(), // Preserve ID for existing answers
   text: z.string().min(1, 'Answer text is required'),
   order: z.number()
 })
 
 const questionSchema = z.object({
+  id: z.string().optional(), // Preserve ID for existing questions
   questionText: z.string().min(1, 'Question text is required'),
   questionType: z.enum(['single', 'multiple'], {
     required_error: 'Question type is required'
@@ -135,11 +137,13 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
       getSurveyQuestions(survey.id)
         .then((response) => {
           const formattedQuestions = response.questions.map(q => ({
+            id: q.id, // Preserve question ID for updates
             questionText: q.questionText,
             questionType: q.questionType,
             order: q.order,
             isRequired: q.isRequired,
             answers: q.answers.map(a => ({
+              id: a.id, // Preserve answer ID for updates
               text: a.text,
               order: a.order
             }))
