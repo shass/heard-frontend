@@ -28,7 +28,22 @@ export class PredictionSurveyStrategy implements ISurveyStrategy {
       handleAuthenticate
     } = params
 
-    // Survey already completed
+    // Check if survey has ended
+    const now = new Date()
+    const endDate = survey.endDate ? new Date(survey.endDate) : null
+    const hasEnded = endDate ? now >= endDate : false
+
+    // Survey completed but user needs to authenticate to see results/rewards
+    if (hasCompleted && hasEnded && !isAuthenticated && isConnected) {
+      return {
+        text: isAuthLoading ? "Authenticating..." : "Sign to check your results",
+        disabled: isAuthLoading,
+        handler: handleAuthenticate,
+        loading: isAuthLoading
+      }
+    }
+
+    // Survey already completed (and authenticated or still ongoing)
     if (hasCompleted) {
       return {
         text: "Survey Completed",
@@ -59,9 +74,7 @@ export class PredictionSurveyStrategy implements ISurveyStrategy {
     }
 
     // Check time constraints
-    const now = new Date()
     const startDate = survey.startDate ? new Date(survey.startDate) : null
-    const endDate = survey.endDate ? new Date(survey.endDate) : null
 
     if (startDate && now < startDate) {
       return {
@@ -72,7 +85,7 @@ export class PredictionSurveyStrategy implements ISurveyStrategy {
       }
     }
 
-    if (endDate && now >= endDate) {
+    if (hasEnded) {
       return {
         text: "Survey Ended",
         disabled: true,

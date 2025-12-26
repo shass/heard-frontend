@@ -3,8 +3,9 @@
 import React from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Spinner } from '@/components/ui/loading-states'
-import { BarChart3, Users, FileText, Settings } from 'lucide-react'
+import { BarChart3, FileText, Settings, UserSearch } from 'lucide-react'
 import { SurveyManagement } from '../SurveyManagement'
+import { UserLookup } from '../UserLookup'
 import { AdminAuthWrapper } from '@/components/admin/admin-auth-wrapper'
 import { DashboardHeader } from './DashboardHeader'
 import { OverviewTab } from './OverviewTab'
@@ -54,10 +55,14 @@ export function AdminDashboard() {
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="surveys">
                 <FileText className="w-4 h-4 mr-2" />
                 Surveys
+              </TabsTrigger>
+              <TabsTrigger value="user-lookup">
+                <UserSearch className="w-4 h-4 mr-2" />
+                User Lookup
               </TabsTrigger>
               <TabsTrigger value="overview">
                 <BarChart3 className="w-4 h-4 mr-2" />
@@ -69,14 +74,19 @@ export function AdminDashboard() {
               </TabsTrigger>
             </TabsList>
 
-            {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-6">
-              <OverviewTab stats={stats} />
-            </TabsContent>
-
             {/* Surveys Tab */}
             <TabsContent value="surveys">
               <SurveyManagement />
+            </TabsContent>
+
+            {/* User Lookup Tab */}
+            <TabsContent value="user-lookup">
+              <UserLookup />
+            </TabsContent>
+
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-6">
+              <OverviewTab stats={stats} />
             </TabsContent>
 
             {/* Settings Tab */}

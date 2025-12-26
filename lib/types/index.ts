@@ -443,3 +443,15 @@ export interface AdminSurveyListItem extends Survey {
   completionRate: number
   averageReward: number
 }
+
+// Admin types moved to lib/types/admin.ts
+export { ResponseStatus } from './admin'
+export type {
+  WalletLookupUser,
+  WalletSurveyReward,
+  WalletSurveyResponse,
+  WalletLookupStats,
+  WalletLookupResponse,
+  WalletResponseAnswer,
+  WalletResponseDetails
+} from './admin'

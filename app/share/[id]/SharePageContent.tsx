@@ -44,7 +44,7 @@ export function SharePageContent({ survey }: SharePageContentProps) {
   }, [survey.id, router])
 
   const handleOpenInApp = () => {
-    // Create Coinbase Wallet deeplink
+    // Create Base App deeplink
     const surveyUrl = `${env.PUBLIC_URL}/surveys/${survey.id}/info`
     const deeplink = `cbwallet://miniapp?url=${encodeURIComponent(surveyUrl)}`
 
@@ -125,7 +125,7 @@ export function SharePageContent({ survey }: SharePageContentProps) {
                 className="w-full bg-zinc-900 hover:bg-zinc-800 text-white"
               >
                 <ExternalLink className="w-5 h-5 mr-2" />
-                Open in Coinbase Wallet
+                Open in Base App
               </Button>
 
               <Button
