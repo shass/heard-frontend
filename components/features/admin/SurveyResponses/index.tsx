@@ -31,6 +31,8 @@ export function SurveyResponses({ survey, open, onOpenChange }: SurveyResponsesP
     isLoading,
     error,
     isDeleting,
+    isExporting,
+    exportLimit,
 
     // Handlers
     handleViewDetails,
@@ -53,6 +55,9 @@ export function SurveyResponses({ survey, open, onOpenChange }: SurveyResponsesP
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
                 onExportResponses={handleExportResponses}
+                isExporting={isExporting}
+                totalResponses={pagination.total}
+                exportLimit={exportLimit}
               />
             </DialogTitle>
           </DialogHeader>

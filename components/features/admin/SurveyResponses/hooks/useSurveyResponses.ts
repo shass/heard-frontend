@@ -2,11 +2,17 @@
 
 import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getSurveyResponses, deleteSurveyResponse } from '@/lib/api/admin'
+import { getSurveyResponses, deleteSurveyResponse, exportSurveyResponsesCsv } from '@/lib/api/admin'
 import type { AdminSurveyResponse, AdminSurveyListItem, PaginationMeta } from '@/lib/types'
 import { useNotifications } from '@/components/ui/notifications'
 
 const PAGE_SIZE = 20
+const EXPORT_LIMIT = 10000
+
+interface ExportParams {
+  offset: number
+  limit: number
+}
 
 interface UseSurveyResponsesProps {
   survey: AdminSurveyListItem
@@ -20,6 +26,7 @@ export function useSurveyResponses({ survey, open }: UseSurveyResponsesProps) {
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
   const [responseToDelete, setResponseToDelete] = useState<AdminSurveyResponse | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
   const queryClient = useQueryClient()
   const notifications = useNotifications()
@@ -86,10 +93,43 @@ export function useSurveyResponses({ survey, open }: UseSurveyResponsesProps) {
     setResponseToDelete(null)
   }
 
-  const handleExportResponses = () => {
-    // TODO: Implement CSV export
-    console.log('Exporting responses for survey:', survey.id)
-  }
+  const handleExportResponses = useCallback(async (params?: ExportParams) => {
+    if (isExporting) return
+
+    setIsExporting(true)
+    try {
+      const exportOffset = params?.offset ?? 0
+      const exportLimit = params?.limit ?? EXPORT_LIMIT
+
+      const blob = await exportSurveyResponsesCsv(survey.id, {
+        offset: exportOffset,
+        limit: exportLimit
+      })
+
+      // Create filename with range info if offset > 0
+      const safeName = survey.name.replace(/[^a-zA-Z0-9]/g, '_')
+      const dateStr = new Date().toISOString().split('T')[0]
+      const rangeInfo = exportOffset > 0 ? `_from${exportOffset + 1}` : ''
+      const filename = `${safeName}_responses${rangeInfo}_${dateStr}.csv`
+
+      // Create and download file
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      notifications.success('Export complete', 'Survey responses exported to CSV.')
+    } catch (error: any) {
+      const errorMessage = error?.error?.message || error?.message || 'An error occurred while exporting responses'
+      notifications.error('Export failed', errorMessage)
+    } finally {
+      setIsExporting(false)
+    }
+  }, [survey.id, survey.name, notifications, isExporting])
 
   const handleNextPage = useCallback(() => {
     if (pagination.hasMore) {
@@ -123,6 +163,8 @@ export function useSurveyResponses({ survey, open }: UseSurveyResponsesProps) {
     isLoading,
     error,
     isDeleting: deleteMutation.isPending,
+    isExporting,
+    exportLimit: EXPORT_LIMIT,
 
     // Handlers
     handleViewDetails,
