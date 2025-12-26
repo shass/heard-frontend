@@ -3,26 +3,37 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Spinner } from '@/components/ui/loading-states'
-import { Eye, Calendar, Clock, Trash2 } from 'lucide-react'
-import type { AdminSurveyResponse } from '@/lib/types'
+import { Eye, Calendar, Clock, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import type { AdminSurveyResponse, PaginationMeta } from '@/lib/types'
 
 interface ResponsesListProps {
   responses: AdminSurveyResponse[]
+  pagination: PaginationMeta
   isLoading: boolean
   error: Error | null
   onViewDetails: (response: AdminSurveyResponse) => void
   onDelete: (response: AdminSurveyResponse) => void
+  onNextPage: () => void
+  onPrevPage: () => void
 }
 
 export function ResponsesList({
   responses,
+  pagination,
   isLoading,
   error,
   onViewDetails,
-  onDelete
+  onDelete,
+  onNextPage,
+  onPrevPage
 }: ResponsesListProps) {
+  const currentPage = Math.floor(pagination.offset / pagination.limit) + 1
+  const totalPages = Math.ceil(pagination.total / pagination.limit)
+  const hasPrevPage = pagination.offset > 0
+
   return (
-    <ScrollArea className="h-[400px] border rounded-lg">
+    <div className="space-y-2">
+      <ScrollArea className="h-[350px] border rounded-lg">
       {isLoading ? (
         <div className="flex items-center justify-center h-32">
           <Spinner size="lg" />
@@ -97,5 +108,38 @@ export function ResponsesList({
         </div>
       )}
     </ScrollArea>
+
+      {/* Pagination Controls */}
+      {pagination.total > pagination.limit && (
+        <div className="flex items-center justify-between px-2 py-2 border rounded-lg bg-muted/30">
+          <div className="text-sm text-muted-foreground">
+            Showing {pagination.offset + 1}-{Math.min(pagination.offset + pagination.limit, pagination.total)} of {pagination.total}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onPrevPage}
+              disabled={!hasPrevPage || isLoading}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onNextPage}
+              disabled={!pagination.hasMore || isLoading}
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

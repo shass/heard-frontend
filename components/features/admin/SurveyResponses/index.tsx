@@ -27,6 +27,7 @@ export function SurveyResponses({ survey, open, onOpenChange }: SurveyResponsesP
 
     // Data
     responses,
+    pagination,
     isLoading,
     error,
     isDeleting,
@@ -36,7 +37,9 @@ export function SurveyResponses({ survey, open, onOpenChange }: SurveyResponsesP
     handleDeleteClick,
     handleConfirmDelete,
     handleCancelDelete,
-    handleExportResponses
+    handleExportResponses,
+    handleNextPage,
+    handlePrevPage
   } = useSurveyResponses({ survey, open })
 
   return (
@@ -56,15 +59,18 @@ export function SurveyResponses({ survey, open, onOpenChange }: SurveyResponsesP
 
           <div className="space-y-4">
             {/* Stats */}
-            <ResponsesStats responses={responses} />
+            <ResponsesStats responses={responses} pagination={pagination} />
 
             {/* Responses List */}
             <ResponsesList
               responses={responses}
+              pagination={pagination}
               isLoading={isLoading}
               error={error}
               onViewDetails={handleViewDetails}
               onDelete={handleDeleteClick}
+              onNextPage={handleNextPage}
+              onPrevPage={handlePrevPage}
             />
           </div>
         </DialogContent>

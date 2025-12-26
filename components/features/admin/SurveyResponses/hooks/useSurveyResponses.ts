@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getSurveyResponses, deleteSurveyResponse } from '@/lib/api/admin'
-import type { AdminSurveyResponse, AdminSurveyListItem } from '@/lib/types'
+import type { AdminSurveyResponse, AdminSurveyListItem, PaginationMeta } from '@/lib/types'
 import { useNotifications } from '@/components/ui/notifications'
+
+const PAGE_SIZE = 20
 
 interface UseSurveyResponsesProps {
   survey: AdminSurveyListItem
@@ -13,6 +15,7 @@ interface UseSurveyResponsesProps {
 
 export function useSurveyResponses({ survey, open }: UseSurveyResponsesProps) {
   const [searchTerm, setSearchTerm] = useState('')
+  const [offset, setOffset] = useState(0)
   const [selectedResponse, setSelectedResponse] = useState<AdminSurveyResponse | null>(null)
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
   const [responseToDelete, setResponseToDelete] = useState<AdminSurveyResponse | null>(null)
@@ -22,12 +25,22 @@ export function useSurveyResponses({ survey, open }: UseSurveyResponsesProps) {
   const notifications = useNotifications()
 
   const { data: responsesData, isLoading, error } = useQuery({
-    queryKey: ['survey-responses', survey.id, { search: searchTerm }],
-    queryFn: () => getSurveyResponses(survey.id, { search: searchTerm }),
-    enabled: open, // Only fetch when dialog is open
+    queryKey: ['survey-responses', survey.id, { search: searchTerm, offset }],
+    queryFn: () => getSurveyResponses(survey.id, {
+      search: searchTerm,
+      offset,
+      limit: PAGE_SIZE
+    }),
+    enabled: open,
   })
 
   const responses = responsesData?.responses || []
+  const pagination: PaginationMeta = responsesData?.meta || {
+    limit: PAGE_SIZE,
+    offset: 0,
+    total: 0,
+    hasMore: false
+  }
 
   const deleteMutation = useMutation({
     mutationFn: ({ surveyId, walletAddress }: { surveyId: string; walletAddress: string }) =>
@@ -37,9 +50,7 @@ export function useSurveyResponses({ survey, open }: UseSurveyResponsesProps) {
         'Response deleted',
         `Deleted ${data.deletedCount} response(s). User can now retake the survey.`
       )
-      // Invalidate and refetch responses
       queryClient.invalidateQueries({ queryKey: ['survey-responses', survey.id] })
-      // Close delete dialog
       setIsDeleteDialogOpen(false)
       setResponseToDelete(null)
     },
@@ -80,10 +91,25 @@ export function useSurveyResponses({ survey, open }: UseSurveyResponsesProps) {
     console.log('Exporting responses for survey:', survey.id)
   }
 
+  const handleNextPage = useCallback(() => {
+    if (pagination.hasMore) {
+      setOffset(prev => prev + PAGE_SIZE)
+    }
+  }, [pagination.hasMore])
+
+  const handlePrevPage = useCallback(() => {
+    setOffset(prev => Math.max(0, prev - PAGE_SIZE))
+  }, [])
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchTerm(value)
+    setOffset(0)
+  }, [])
+
   return {
     // State
     searchTerm,
-    setSearchTerm,
+    setSearchTerm: handleSearchChange,
     selectedResponse,
     setSelectedResponse,
     isDetailDialogOpen,
@@ -93,6 +119,7 @@ export function useSurveyResponses({ survey, open }: UseSurveyResponsesProps) {
 
     // Data
     responses,
+    pagination,
     isLoading,
     error,
     isDeleting: deleteMutation.isPending,
@@ -102,6 +129,8 @@ export function useSurveyResponses({ survey, open }: UseSurveyResponsesProps) {
     handleDeleteClick,
     handleConfirmDelete,
     handleCancelDelete,
-    handleExportResponses
+    handleExportResponses,
+    handleNextPage,
+    handlePrevPage
   }
 }
