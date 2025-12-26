@@ -13,7 +13,9 @@ import {
   type Survey,
   type AdminSurveyResponse,
   type User,
-  type PaginationMeta
+  type PaginationMeta,
+  type WalletLookupResponse,
+  type WalletResponseDetails
 } from '../types'
 
 // Admin Dashboard Stats
@@ -434,5 +436,21 @@ export const importRewardLinks = async (surveyId: string, request: ImportRewardL
     failedLinks: string[],
     message: string
   }>(`/admin/surveys/${surveyId}/rewards/import`, request)
+  return data
+}
+
+// Wallet Lookup
+export const lookupWallet = async (walletAddress: string): Promise<WalletLookupResponse> => {
+  const data = await apiClient.get<WalletLookupResponse>(`/admin/users/lookup/${walletAddress}`)
+  return data
+}
+
+export const getWalletResponseDetails = async (
+  walletAddress: string,
+  surveyId: string
+): Promise<WalletResponseDetails> => {
+  const data = await apiClient.get<WalletResponseDetails>(
+    `/admin/users/lookup/${walletAddress}/responses/${surveyId}`
+  )
   return data
 }
