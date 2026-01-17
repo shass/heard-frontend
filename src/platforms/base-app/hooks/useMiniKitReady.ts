@@ -20,7 +20,7 @@ export function useMiniKitReady() {
 
   useEffect(() => {
     // Prevent double initialization
-    if (hasCalledReady.current || isMiniAppReady) return
+    if (hasCalledReady.current) return
 
     hasCalledReady.current = true
 
