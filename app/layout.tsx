@@ -40,12 +40,18 @@ export const metadata: Metadata = {
     images: ['/hero-1200x630.png'],
   },
   other: {
-    // Farcaster Frame embed metadata for sharing
-    'fc:frame': 'vNext',
-    'fc:frame:image': `${env.PUBLIC_URL}/hero-1200x630.png`,
-    'fc:frame:button:1': 'Start Survey',
-    'fc:frame:button:1:action': 'link',
-    'fc:frame:button:1:target': env.PUBLIC_URL || '',
+    // Farcaster Mini App metadata for sharing
+    'fc:miniapp': JSON.stringify({
+      version: 'next',
+      imageUrl: `${env.PUBLIC_URL}/hero-1200x630.png`,
+      button: {
+        title: 'Open HEARD',
+        action: {
+          type: 'launch_frame',
+          url: env.PUBLIC_URL || '',
+        },
+      },
+    }),
   },
   icons: {
     icon: [
