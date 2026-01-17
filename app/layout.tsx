@@ -48,6 +48,7 @@ export const metadata: Metadata = {
         title: 'Open HEARD',
         action: {
           type: 'launch_frame',
+          name: 'launch',
           url: env.PUBLIC_URL || '',
         },
       },
