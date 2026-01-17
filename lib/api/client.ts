@@ -227,6 +227,26 @@ class ApiClient {
 
     return this.handleResponse<T>(response)
   }
+
+  // Blob download helper for file exports
+  async getBlob(url: string, config?: RequestInit): Promise<Blob> {
+    const response = await this.fetchWithTimeout(`${this.baseURL}${url}`, {
+      method: 'GET',
+      ...config,
+    })
+
+    if (!response.ok) {
+      let errorData: ApiError
+      try {
+        errorData = await response.json()
+      } catch {
+        errorData = this.formatError(new Error(`HTTP ${response.status}: ${response.statusText}`))
+      }
+      throw errorData
+    }
+
+    return response.blob()
+  }
 }
 
 // Export singleton instance

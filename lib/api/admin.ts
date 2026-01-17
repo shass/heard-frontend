@@ -180,6 +180,20 @@ export const deleteSurveyResponse = async (surveyId: string, walletAddress: stri
   return data
 }
 
+export const exportSurveyResponsesCsv = async (
+  surveyId: string,
+  params?: { offset?: number; limit?: number }
+): Promise<Blob> => {
+  const searchParams = new URLSearchParams()
+  if (params?.offset !== undefined) searchParams.append('offset', String(params.offset))
+  if (params?.limit !== undefined) searchParams.append('limit', String(params.limit))
+
+  const queryString = searchParams.toString()
+  const url = `/admin/surveys/${surveyId}/responses/export${queryString ? `?${queryString}` : ''}`
+
+  return apiClient.getBlob(url)
+}
+
 // New paginated whitelist function with search and completion status
 export const getWhitelistEntriesPaged = async (surveyId: string, params?: {
   limit?: number
