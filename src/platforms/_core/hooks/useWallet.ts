@@ -19,25 +19,15 @@ export function useWallet(): IWalletStrategy {
       return useBaseAppWalletStrategy()
     }
 
-    case Platform.FARCASTER:
+    case Platform.FARCASTER: {
+      const { useFarcasterWalletStrategy } = require('@/src/platforms/farcaster/strategies/useFarcasterWalletStrategy')
+      return useFarcasterWalletStrategy()
+    }
+
     default: {
-      // Farcaster doesn't have wallet strategy yet - return stub
-      return {
-        address: undefined,
-        isConnected: false,
-        chainId: undefined,
-        balance: undefined,
-        isLoading: false,
-        error: null,
-        connect: async () => {},
-        disconnect: async () => {},
-        signMessage: async () => { throw new Error('Not implemented') },
-        sendTransaction: async () => { throw new Error('Not implemented') },
-        getConnectors: () => [],
-        canConnect: false,
-        canSignMessage: false,
-        canSendTransaction: false,
-      }
+      // Fallback to Web wallet strategy
+      const { useWebWalletStrategy } = require('@/src/platforms/web/strategies/useWebWalletStrategy')
+      return useWebWalletStrategy()
     }
   }
 }
