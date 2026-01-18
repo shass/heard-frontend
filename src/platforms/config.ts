@@ -8,10 +8,12 @@ export enum Platform {
 
 /**
  * Farcaster Client FID identifiers for platform detection
+ * NOTE: clientFid is self-reported and should be considered untrusted
+ * Use only for UI decisions, NOT for authorization
  */
 export const FARCASTER_CLIENT_FID = {
-  BASE_APP: '309857',
-    FARCASTER: '1',
+  BASE_APP: '309857',    // Coinbase Base App
+  FARCASTER: '9152',     // Warpcast (official Farcaster client)
 } as const
 
 /**
