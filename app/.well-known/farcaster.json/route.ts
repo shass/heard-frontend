@@ -43,11 +43,11 @@ export async function GET() {
       // Extended metadata fields
       description: "Earn crypto rewards by completing surveys on the Web3 platform",
       primaryCategory: "social",
-      tags: ["survey", "poll", "social", "heard"],
+      tags: ["survey", "poll", "social", "heard", "crypto"],
 
       // Open Graph metadata (required for Base App)
       ogTitle: "HEARD - Everyone Will Be HEARD",
-      ogDescription: "Surveys gated by verified Web2 & Web3 behavior. Earn crypto rewards for your opinions.",
+      ogDescription: "Surveys gated by verified Web2 and Web3 behavior. Earn crypto rewards for your opinions.",
       ogImageUrl: `${env.PUBLIC_URL}/hero-1200x630.png`,
 
       // screenshots: [] // TODO: Add screenshots when available
