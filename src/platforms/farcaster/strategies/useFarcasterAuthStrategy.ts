@@ -27,11 +27,35 @@ export function useFarcasterAuthStrategy(): IAuthStrategy {
   // Never use context data for authorization or security decisions
   const { context } = useMiniKit()
 
-  const [user, setUser] = useState<User | null>(null)
-  const [authState, setAuthState] = useState<AuthState>(AuthState.UNAUTHENTICATED)
-  const [isLoading, setIsLoading] = useState(false)
+  // Read auth state from global store instead of local state
+  const storeUser = useAuthStore((state) => state.user)
+  const storeIsAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const storeIsLoading = useAuthStore((state) => state.loading)
+
+  // Convert store user (BackendUser type) to Platform User type
+  const platformUser: User | null = storeUser ? toPlatformUser(storeUser, Platform.FARCASTER) : null
+
+  const [user, setUser] = useState<User | null>(platformUser)
+  const [authState, setAuthState] = useState<AuthState>(
+    storeIsAuthenticated ? AuthState.AUTHENTICATED : AuthState.UNAUTHENTICATED
+  )
+  const [isLoading, setIsLoading] = useState(storeIsLoading)
   const [error, setError] = useState<string | null>(null)
   const hasCheckedToken = useRef(false)
+
+  // Sync local state with store on mount and when store changes
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[FarcasterAuthStrategy] Syncing with store:', {
+        storeUser: !!storeUser,
+        storeIsAuthenticated,
+        storeIsLoading
+      })
+    }
+    const platformUser: User | null = storeUser ? toPlatformUser(storeUser, Platform.FARCASTER) : null
+    setUser(platformUser)
+    setAuthState(storeIsAuthenticated ? AuthState.AUTHENTICATED : AuthState.UNAUTHENTICATED)
+  }, [storeUser, storeIsAuthenticated, storeIsLoading])
 
   // Initialize UI state based on context (UI hints only)
   useEffect(() => {
@@ -276,7 +300,7 @@ export function useFarcasterAuthStrategy(): IAuthStrategy {
   // Check if we have stored token on mount (ONCE)
   // Prevent duplicate /auth/me requests by using global flag
   useEffect(() => {
-    if (!context || hasCheckedToken.current) return
+    if (hasCheckedToken.current) return
 
     const { isAuthStrategyReady, setAuthStrategyReady } = useAuthStore.getState()
 
@@ -302,6 +326,10 @@ export function useFarcasterAuthStrategy(): IAuthStrategy {
         if (process.env.NODE_ENV === 'development') {
           console.log('[FarcasterAuthStrategy] Found stored token, verifying...')
         }
+        // Set loading while verifying
+        setIsLoading(true)
+        useAuthStore.getState().setLoading(true)
+
         // Verify token is still valid
         authApi.checkAuth().then((userData) => {
           if (userData) {
@@ -319,26 +347,34 @@ export function useFarcasterAuthStrategy(): IAuthStrategy {
             }
             setUser(restoredUser)
             setAuthState(AuthState.AUTHENTICATED)
+            setIsLoading(false)
             useAuthStore.getState().setUser(toBackendUser(restoredUser))
+            useAuthStore.getState().setLoading(false)
           } else {
             if (process.env.NODE_ENV === 'development') {
               console.log('[FarcasterAuthStrategy] Stored token invalid')
             }
             setAuthState(AuthState.UNAUTHENTICATED)
+            setIsLoading(false)
+            useAuthStore.getState().setLoading(false)
           }
         }).catch(() => {
           if (process.env.NODE_ENV === 'development') {
             console.log('[FarcasterAuthStrategy] Token verification failed')
           }
           setAuthState(AuthState.UNAUTHENTICATED)
+          setIsLoading(false)
+          useAuthStore.getState().setLoading(false)
           localStorage.removeItem('auth_token')
         })
       } else {
         // No stored token - user needs to authenticate
         setAuthState(AuthState.UNAUTHENTICATED)
+        setIsLoading(false)
+        useAuthStore.getState().setLoading(false)
       }
     }
-  }, [context])
+  }, [])
 
   const checkAuthStatus = useCallback(async () => {
     try {

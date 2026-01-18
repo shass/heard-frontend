@@ -18,6 +18,11 @@ export function FarcasterAuthSection() {
   const { authenticate: login, logout, isAuthenticated, user, isLoading } = auth
   const notifications = useNotifications()
 
+  // Debug logging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[FarcasterAuthSection] Render:', { isAuthenticated, hasUser: !!user, isLoading })
+  }
+
   const handleLogin = async () => {
     try {
       console.log('[FarcasterAuthSection] Initiating Farcaster Quick Auth')
@@ -56,10 +61,10 @@ export function FarcasterAuthSection() {
         <Button
           onClick={handleLogin}
           disabled={isLoading}
-          className="bg-purple-600 hover:bg-purple-700 text-white rounded-lg px-4 py-2 font-medium flex items-center space-x-2"
+          className="bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg px-4 py-2 font-medium flex items-center space-x-2"
         >
           <Wallet className="w-4 h-4" />
-          <span>{isLoading ? 'Connecting...' : 'Quick Connect'}</span>
+          <span>{isLoading ? 'Connecting...' : 'Connect Wallet'}</span>
         </Button>
       </div>
     )
