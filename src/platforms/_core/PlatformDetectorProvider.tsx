@@ -5,7 +5,7 @@ import { Platform, FARCASTER_CLIENT_FID } from '../config'
 import { sdk } from '@farcaster/miniapp-sdk'
 import { platformState } from '@/lib/platform/platformState'
 import { apiClient } from '@/lib/api/client'
-import { LocalStorageTokenStorage, NoOpTokenStorage } from '@/lib/api/token-storage'
+import { NoOpTokenStorage } from '@/lib/api/token-storage'
 
 interface PlatformDetectorContext {
   platform: Platform
@@ -65,9 +65,28 @@ export function PlatformDetectorProvider({ children }: { children: ReactNode }) 
       platformState.setPlatform(detected)
 
       // Configure ApiClient with platform-specific token storage
-      const tokenStorage = detected === Platform.BASE_APP
-        ? new LocalStorageTokenStorage()
-        : new NoOpTokenStorage()
+      // Each platform exports its own createTokenStorage function
+      let tokenStorage
+      switch (detected) {
+        case Platform.BASE_APP: {
+          const { createTokenStorage } = require('@/src/platforms/base-app/config')
+          tokenStorage = createTokenStorage()
+          break
+        }
+        case Platform.FARCASTER: {
+          const { createTokenStorage } = require('@/src/platforms/farcaster/config')
+          tokenStorage = createTokenStorage()
+          break
+        }
+        case Platform.WEB: {
+          const { createTokenStorage } = require('@/src/platforms/web/config')
+          tokenStorage = createTokenStorage()
+          break
+        }
+        default: {
+          tokenStorage = new NoOpTokenStorage()
+        }
+      }
 
       apiClient.setTokenStorage(tokenStorage)
       console.log('[PlatformDetector] ApiClient configured for platform:', detected)
