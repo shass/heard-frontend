@@ -1,6 +1,8 @@
 'use client'
 
 import { ReactNode } from 'react'
+import { OnchainKitProvider } from '@coinbase/onchainkit'
+import { base } from 'wagmi/chains'
 import { CreateSurveyModalProvider } from '@/components/providers/create-survey-modal-provider'
 import { NavigationProvider } from '@/components/providers/navigation-provider'
 import { NotificationContainer } from '@/components/ui/notifications'
@@ -14,12 +16,18 @@ export default function FarcasterLayout({ children }: FarcasterLayoutProps) {
   console.log('[FarcasterLayout] Rendering Farcaster layout')
 
   return (
-    <CreateSurveyModalProvider>
-      <NavigationProvider>
-        <MiniKitReady />
-        {children}
-        <NotificationContainer />
-      </NavigationProvider>
-    </CreateSurveyModalProvider>
+    <OnchainKitProvider
+      apiKey={process.env.NEXT_PUBLIC_CDP_CLIENT_API_KEY}
+      chain={base}
+      miniKit={{ enabled: true }}
+    >
+      <CreateSurveyModalProvider>
+        <NavigationProvider>
+          <MiniKitReady />
+          {children}
+          <NotificationContainer />
+        </NavigationProvider>
+      </CreateSurveyModalProvider>
+    </OnchainKitProvider>
   )
 }
