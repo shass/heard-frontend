@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useEffect, useRef } from 'react'
+import { useMemo, useEffect, useRef, useCallback } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { useSafeMiniKit } from './useSafeMiniKit'
 import { IAuthStrategy } from '@/src/platforms/_core/shared/interfaces/IAuthStrategy'
@@ -34,6 +34,18 @@ export function useAuth(): IAuthStrategy {
   const wasConnectedRef = useRef(false)
   const hasCheckedTokenRef = useRef(false)
 
+  // Memoize wagmi dependencies to prevent unnecessary strategy recreations
+  const wagmiDeps = useMemo(
+    () => ({ address, isConnected }),
+    [address, isConnected]
+  )
+
+  // Memoize sign message function to prevent unnecessary strategy recreations
+  const signFn = useCallback(
+    async (message: string) => signMessageAsync({ message }),
+    [signMessageAsync]
+  )
+
   // Create strategy with dependency injection
   const authStrategy = useMemo(() => {
     if (isLoading) {
@@ -66,11 +78,15 @@ export function useAuth(): IAuthStrategy {
         // Create strategy instance only once
         if (!strategyRef.current) {
           strategy = new WebAuthStrategy(
-            { address, isConnected },
-            async (message: string) => signMessageAsync({ message }),
+            wagmiDeps,
+            signFn,
             true // checkAuthOnInit
           )
           strategyRef.current = strategy
+
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[useAuth] Created auth strategy for platform:', platform.name)
+          }
         } else {
           strategy = strategyRef.current
         }
@@ -82,6 +98,10 @@ export function useAuth(): IAuthStrategy {
         // Always create new strategy with current context
         strategy = new BaseAppAuthStrategy(miniKitContext)
         strategyRef.current = strategy
+
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[useAuth] Created auth strategy for platform:', platform.name)
+        }
       } else if (platform.id === 'farcaster') {
         // Farcaster uses MiniKit SDK
         if (!miniKitContext) {
@@ -90,16 +110,12 @@ export function useAuth(): IAuthStrategy {
         // Always create new strategy with current context
         strategy = new FarcasterAuthStrategy(miniKitContext)
         strategyRef.current = strategy
+
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[useAuth] Created auth strategy for platform:', platform.name)
+        }
       } else {
         throw new Error(`[useAuth] Unknown platform: ${platform.id}`)
-      }
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log(
-          '[useAuth] Created auth strategy for platform:',
-          platform.name,
-          typeof strategy
-        )
       }
 
       return strategy
@@ -110,7 +126,7 @@ export function useAuth(): IAuthStrategy {
       }
       throw error
     }
-  }, [platform, isLoading, error, address, isConnected, signMessageAsync, miniKitContext])
+  }, [platform, isLoading, error, wagmiDeps, signFn, miniKitContext])
 
   // Update wagmi account when it changes (Web platform only)
   useEffect(() => {
