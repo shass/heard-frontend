@@ -7,10 +7,11 @@ import { Footer } from "@/components/footer"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSurvey, useSurveyEligibility, useUserReward, useWinnerStatus, useSurveyStrategy } from "@/hooks"
-import { usePlatformDetector } from "@/src/platforms"
+import { usePlatform } from "@/src/core/hooks/usePlatform"
 import { useAuth, useWallet, useOpenUrl } from "@/src/platforms/_core"
 import { Platform } from "@/src/platforms/config"
 import { RewardSource } from "@/lib/survey/strategies"
+import { useAuthStore } from "@/lib/store"
 import {
   SurveyHeader,
   SurveyStats,
@@ -28,7 +29,8 @@ interface SurveyInfoPageProps {
 
 // Hook to safely use RainbowKit only on Web platform
 const useWebConnectModal = () => {
-  const { platform } = usePlatformDetector()
+  const { platform: platformPlugin } = usePlatform()
+  const platform = platformPlugin?.id as Platform | undefined
 
   if (platform === Platform.WEB) {
     const { useConnectModal } = require('@rainbow-me/rainbowkit')
@@ -42,8 +44,12 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
   const openUrl = useOpenUrl()
   const auth = useAuth()
-  const { authenticate: login, isAuthenticated, isLoading: isAuthLoading, user, error: authError } = auth
+  const { authenticate: login, isLoading: isAuthLoading, error: authError } = auth
   const wallet = useWallet()
+
+  // Read auth state from store for reactivity
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+  const user = useAuthStore(state => state.user)
 
   // Wallet connection is handled by platform-specific strategies
   const isConnected = wallet.isConnected
@@ -85,9 +91,12 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
       // Check result directly instead of waiting for state updates
       if (result?.success) {
-
-        // Check eligibility before redirecting
-        if (eligibility?.isEligible !== false) {
+        // If user has completed the survey, stay on info page to show results
+        // Otherwise redirect to survey page
+        if (hasCompleted) {
+          console.log('[Survey] ✅ User authenticated, staying on info page to show results')
+          // UI will automatically update via isAuthenticated state change
+        } else if (eligibility?.isEligible !== false) {
           router.push(`/surveys/${id}`)
         } else {
           console.log('[Survey] ⚠️ User authenticated but not eligible for this survey')
@@ -172,12 +181,14 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   }
 
   const hasCompleted = eligibility?.hasCompleted
+  const hasStarted = eligibility?.hasStarted || false
   const isEligible = eligibility?.isEligible ?? true
 
   // Get button state from strategy
   const buttonState = strategy?.getButtonState({
     survey: survey!,
     hasCompleted: hasCompleted || false,
+    hasStarted,
     isConnected,
     isEligible,
     isAuthenticated,

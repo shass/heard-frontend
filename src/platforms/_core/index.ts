@@ -1,5 +1,5 @@
-// Platform Detector
-export * from './PlatformDetectorProvider'
+// Platform Provider (re-export from core)
+export { usePlatform, PlatformProvider } from '@/src/core/hooks/usePlatform'
 export { platformState } from '@/lib/platform/platformState'
 
 // Hooks

@@ -19,6 +19,7 @@ export class PredictionSurveyStrategy implements ISurveyStrategy {
     const {
       survey,
       hasCompleted,
+      hasStarted,
       isConnected,
       isEligible,
       isAuthenticated,
@@ -104,9 +105,9 @@ export class PredictionSurveyStrategy implements ISurveyStrategy {
       }
     }
 
-    // Ready to start
+    // Ready to continue or start
     return {
-      text: "Start Survey",
+      text: hasStarted ? "Continue" : "Start Survey",
       disabled: false,
       handler: handleStartSurvey,
       loading: false

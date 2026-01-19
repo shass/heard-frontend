@@ -1,38 +1,31 @@
 'use client'
 
-import { usePlatformDetector } from '../PlatformDetectorProvider'
-import { Platform } from '../../config'
+import { useMemo } from 'react'
+import { usePlatform } from '@/src/core/hooks/usePlatform'
 import type { IShareStrategy } from '../shared/interfaces/IShareStrategy'
 
 /**
  * Platform-agnostic share hook using Strategy Pattern
- * - Base App: HTTPS URL via native share API or clipboard
- * - Farcaster: HTTPS URL via composeCast from @farcaster/miniapp-sdk
- * - Web: HTTPS URL via clipboard copy
- *
- * All platforms share /share/[id] URLs that work in messengers
- * and auto-redirect to the appropriate platform when opened
+ * Gets share strategy from active platform plugin
  */
-export function useShare() {
-  const { platform } = usePlatformDetector()
+export function useShare(): IShareStrategy {
+  const { platform, isLoading, error } = usePlatform()
 
-  const getStrategy = (): IShareStrategy => {
-    switch (platform) {
-      case Platform.BASE_APP: {
-        const { useBaseAppShareStrategy } = require('@/src/platforms/base-app/strategies/useBaseAppShareStrategy')
-        return useBaseAppShareStrategy()
-      }
-      case Platform.FARCASTER: {
-        const { useFarcasterShareStrategy } = require('@/src/platforms/farcaster/strategies/useFarcasterShareStrategy')
-        return useFarcasterShareStrategy()
-      }
-      case Platform.WEB:
-      default: {
-        const { useWebShareStrategy } = require('@/src/platforms/web/strategies/useWebShareStrategy')
-        return useWebShareStrategy()
-      }
+  const shareStrategy = useMemo(() => {
+    if (isLoading) {
+      throw new Error('[useShare] Platform is still loading')
     }
-  }
 
-  return getStrategy()
+    if (error) {
+      throw error
+    }
+
+    if (!platform) {
+      throw new Error('[useShare] No active platform detected')
+    }
+
+    return platform.createShareStrategy()
+  }, [platform, isLoading, error])
+
+  return shareStrategy
 }

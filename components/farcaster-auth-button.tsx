@@ -4,10 +4,8 @@ import React from 'react';
 import { Button } from './ui/button';
 import { LogIn } from 'lucide-react';
 import { useNotifications } from './ui/notifications';
-import {
-  useAuth,
-  PlatformSwitch
-} from '@/src/platforms';
+import { useAuth } from '@/src/platforms';
+import { usePlatform } from '@/src/core/hooks/usePlatform';
 
 interface FarcasterAuthButtonProps {
   onSuccess?: (result: any) => void;
@@ -25,6 +23,7 @@ function ModernFarcasterAuthButton({
 }: FarcasterAuthButtonProps) {
   const auth = useAuth();
   const notifications = useNotifications();
+  const { platform } = usePlatform();
 
   const handleAuth = async () => {
     try {
@@ -42,36 +41,33 @@ function ModernFarcasterAuthButton({
     }
   };
 
+  // Don't show on web platform
+  if (platform?.id === 'web') {
+    return null;
+  }
+
+  // Get platform-specific button text
+  const getButtonText = () => {
+    if (auth.isLoading) {
+      return platform?.id === 'base-app' ? 'Processing...' : 'Signing in...';
+    }
+    if (auth.isAuthenticated) {
+      return 'Sign Out';
+    }
+    return platform?.id === 'base-app' ? 'Sign in with Base' : 'Quick Auth';
+  };
+
   return (
-    <PlatformSwitch
-      web={null} // Don't show on web platform
-      baseApp={
-        <Button
-          variant={variant}
-          size={size}
-          onClick={handleAuth}
-          disabled={auth.isLoading}
-          className={className}
-        >
-          <LogIn className="h-4 w-4 mr-2" />
-          {auth.isLoading ? 'Processing...' :
-           auth.isAuthenticated ? 'Sign Out' : 'Sign in with Base'}
-        </Button>
-      }
-      farcaster={
-        <Button
-          variant={variant}
-          size={size}
-          onClick={handleAuth}
-          disabled={auth.isLoading}
-          className={className}
-        >
-          <LogIn className="h-4 w-4 mr-2" />
-          {auth.isLoading ? 'Signing in...' :
-           auth.isAuthenticated ? 'Sign Out' : 'Quick Auth'}
-        </Button>
-      }
-    />
+    <Button
+      variant={variant}
+      size={size}
+      onClick={handleAuth}
+      disabled={auth.isLoading}
+      className={className}
+    >
+      <LogIn className="h-4 w-4 mr-2" />
+      {getButtonText()}
+    </Button>
   );
 }
 

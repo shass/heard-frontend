@@ -21,8 +21,8 @@ export function useRewardPage(survey: Survey, responseId?: string) {
   // Get strategy for the survey type
   const strategy = useSurveyStrategy(survey)
 
-  // Get user's reward for this survey
-  const { data: userReward, isLoading: rewardLoading, error: rewardError } = useUserReward(survey.id)
+  // Get user's reward for this survey (only if authenticated)
+  const { data: userReward, isLoading: rewardLoading, error: rewardError } = useUserReward(survey.id, isAuthenticated)
 
   // Get updated user points
   const { refetch: refetchPoints } = useHeardPoints()

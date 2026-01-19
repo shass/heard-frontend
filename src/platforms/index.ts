@@ -1,22 +1,15 @@
-// Platform system exports
+// Platform system exports - NEW REGISTRY-BASED ARCHITECTURE
+
+// Legacy platform config (for backward compatibility)
 export { Platform, platformToApiValue } from './config'
 export type { PlatformConfig } from './config'
 
-export { PlatformDetectorProvider, usePlatformDetector } from './_core/PlatformDetectorProvider'
-
-// Web platform specific exports
+// Web platform specific exports (still needed for some components)
 export { WebAuthProvider } from './web/providers/WebAuthProvider'
 
-// Note: BaseAppAuthProvider, FarcasterAuthProvider, useBaseAppWallet, useFarcasterWallet
-// are deprecated - they use old @coinbase/onchainkit/minikit SDK
-// Use useAuth() and useWallet() instead with new @farcaster/miniapp-sdk
-
-// Integration layer - unified hooks with Strategy pattern
+// NEW: Core hooks using plugin system
 export { useAuth } from './_core/hooks/useAuth'
 export { useWallet } from './_core/hooks/useWallet'
-export { PlatformSwitch, useMigrationChoice } from './_core/components/PlatformSwitch'
-export { AuthSectionSwitch } from './_core/components/AuthSectionSwitch'
-export { PlatformLayoutSwitch } from './_core/components/PlatformLayoutSwitch'
 
 // Strategy interfaces
 export type { IAuthStrategy } from './_core/shared/interfaces/IAuthStrategy'

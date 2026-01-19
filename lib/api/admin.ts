@@ -85,6 +85,17 @@ export const getAdminSurveys = async (params?: {
 
 export const createSurvey = async (surveyData: CreateSurveyRequest): Promise<Survey> => {
   const data = await apiClient.post<Survey>('/admin/surveys', surveyData)
+
+  // Call lifecycle hook after survey creation
+  try {
+    const { surveyTypeRegistry } = await import('@/src/core/registry/SurveyTypeRegistry')
+    const surveyType = surveyTypeRegistry.get(data.surveyType)
+    await surveyType.onSurveyCreate?.(data)
+  } catch (error) {
+    console.error('Survey type lifecycle hook failed:', error)
+    // Don't block the main flow
+  }
+
   return data
 }
 

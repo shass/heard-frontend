@@ -3,7 +3,7 @@ import { Copy, Check, Share2 } from "lucide-react"
 import { isSurveyEnded } from "@/lib/utils"
 import { formatSurveyReward, getSurveyTypeLabel } from "@/lib/survey/helpers"
 import type { Survey } from "@/lib/types"
-import { usePlatformDetector } from "@/src/platforms/_core"
+import { usePlatform } from "@/src/core/hooks/usePlatform"
 import { Platform } from "@/src/platforms/config"
 
 interface MobileSurveyCardProps {
@@ -14,7 +14,8 @@ interface MobileSurveyCardProps {
 }
 
 export function MobileSurveyCard({ survey, onTakeSurvey, onCopyLink, copiedSurveyId }: MobileSurveyCardProps) {
-  const { platform } = usePlatformDetector()
+  const { platform: platformPlugin } = usePlatform()
+  const platform = platformPlugin?.id as Platform | undefined
 
   // Show Share icon in Base App and Farcaster, Copy icon in Web
   const ShareIcon = platform === Platform.BASE_APP || platform === Platform.FARCASTER ? Share2 : Copy

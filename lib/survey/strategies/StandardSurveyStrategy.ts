@@ -18,6 +18,7 @@ export class StandardSurveyStrategy implements ISurveyStrategy {
   getButtonState(params: ButtonStateParams): ButtonState {
     const {
       hasCompleted,
+      hasStarted,
       isConnected,
       isEligible,
       isAuthenticated,
@@ -67,9 +68,9 @@ export class StandardSurveyStrategy implements ISurveyStrategy {
       }
     }
 
-    // Ready to start
+    // Ready to continue or start
     return {
-      text: "Start Survey",
+      text: hasStarted ? "Continue" : "Start Survey",
       disabled: false,
       handler: handleStartSurvey,
       loading: false
