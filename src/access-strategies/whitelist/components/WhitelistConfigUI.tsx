@@ -17,10 +17,9 @@ export function WhitelistConfigUI({ config, onChange }: ConfigUIProps) {
   const [newAddress, setNewAddress] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const isValidEthereumAddress = (address: string): boolean => {
-    // Basic Ethereum address validation (0x + 40 hex chars)
-    const ethAddressRegex = /^0x[a-fA-F0-9]{40}$/
-    return ethAddressRegex.test(address)
+  const isValidAddress = (address: string): boolean => {
+    // Accept any non-empty string (supports Ethereum, Solana, Bitcoin, etc.)
+    return address.length > 0 && /\S/.test(address)
   }
 
   const handleAddAddress = () => {
@@ -33,8 +32,8 @@ export function WhitelistConfigUI({ config, onChange }: ConfigUIProps) {
 
     const trimmedAddress = newAddress.trim()
 
-    if (!isValidEthereumAddress(trimmedAddress)) {
-      setError('Invalid Ethereum address format. Must start with 0x and be 42 characters long')
+    if (!isValidAddress(trimmedAddress)) {
+      setError('Invalid address format')
       return
     }
 
@@ -62,7 +61,7 @@ export function WhitelistConfigUI({ config, onChange }: ConfigUIProps) {
     onChange(updatedConfig)
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault()
       handleAddAddress()
@@ -88,10 +87,10 @@ export function WhitelistConfigUI({ config, onChange }: ConfigUIProps) {
               <Input
                 id="wallet-address"
                 type="text"
-                placeholder="0x..."
+                placeholder="Enter wallet address (any blockchain)"
                 value={newAddress}
                 onChange={(e) => setNewAddress(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 className="flex-1"
               />
               <Button onClick={handleAddAddress} type="button">
