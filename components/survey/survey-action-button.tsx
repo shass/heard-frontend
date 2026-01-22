@@ -15,6 +15,8 @@ interface SurveyActionButtonProps {
 }
 
 export function SurveyActionButton({ buttonState }: SurveyActionButtonProps) {
+  const showArrow = (buttonState.text === "Start Survey" || buttonState.text === "Continue") && !buttonState.loading
+
   return (
     <div className="flex justify-center pt-4">
       <Button
@@ -24,7 +26,7 @@ export function SurveyActionButton({ buttonState }: SurveyActionButtonProps) {
       >
         {buttonState.loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
         {buttonState.text}
-        {buttonState.text === "Start Survey" && !buttonState.loading && <ArrowRight className="w-4 h-4 ml-2" />}
+        {showArrow && <ArrowRight className="w-4 h-4 ml-2" />}
       </Button>
     </div>
   )

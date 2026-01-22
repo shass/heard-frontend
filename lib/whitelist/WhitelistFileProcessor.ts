@@ -82,7 +82,7 @@ export class WhitelistFileProcessor {
           invalidAddresses.push({
             value: line,
             line: currentLine,
-            error: 'Некорректный формат Ethereum адреса'
+            error: 'Некорректный формат адреса'
           })
           continue
         }
@@ -120,7 +120,7 @@ export class WhitelistFileProcessor {
         invalidAddresses.push({
           value: buffer.trim(),
           line: currentLine,
-          error: 'Некорректный формат Ethereum адреса'
+          error: 'Некорректный формат адреса'
         })
       }
     }
@@ -183,7 +183,7 @@ export class WhitelistFileProcessor {
         invalidAddresses.push({
           value: trimmed,
           line: index + 1,
-          error: 'Некорректный формат Ethereum адреса'
+          error: 'Некорректный формат адреса'
         })
         return
       }

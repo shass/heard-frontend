@@ -2,12 +2,13 @@
 
 import { useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { usePlatformDetector } from '@/src/platforms/_core/PlatformDetectorProvider'
+import { usePlatform } from '@/src/core/hooks/usePlatform'
 import { Platform } from '@/src/platforms/config'
 
 export function useNavigationFix() {
   const router = useRouter()
-  const { platform } = usePlatformDetector()
+  const { platform: platformPlugin } = usePlatform()
+  const platform = platformPlugin?.id as Platform | undefined
   const routerRef = useRef(router)
 
   // Keep router ref up to date

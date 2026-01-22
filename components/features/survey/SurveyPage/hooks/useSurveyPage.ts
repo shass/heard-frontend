@@ -213,6 +213,23 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
         selectedAnswers
       })
 
+      // Call lifecycle hook after answer submission
+      try {
+        const { surveyTypeRegistry } = await import('@/src/core/registry/SurveyTypeRegistry')
+        const { useAuthStore } = await import('@/lib/store')
+
+        const { user } = useAuthStore.getState()
+        if (user) {
+          // Ensure user has platform field for lifecycle hooks
+          const userWithPlatform = { ...user, platform: user.platform || 'web' }
+          const surveyType = surveyTypeRegistry.get(survey.surveyType)
+          await surveyType.onQuestionAnswer?.(userWithPlatform as any, survey, currentQuestion, selectedAnswers)
+        }
+      } catch (error) {
+        console.error('Survey type lifecycle hook failed:', error)
+        // Don't block the main flow
+      }
+
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2000)
 
@@ -224,6 +241,30 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
         try {
           await responseState.submitSurvey({ responseId })
           console.log('Survey submitted successfully')
+
+          // Call lifecycle hook after survey completion
+          try {
+            const { surveyTypeRegistry } = await import('@/src/core/registry/SurveyTypeRegistry')
+            const { useAuthStore } = await import('@/lib/store')
+
+            const { user } = useAuthStore.getState()
+            if (user) {
+              // Build responses array from answers
+              const responses = Object.entries(answers).map(([questionId, selectedAnswers]) => ({
+                questionId,
+                selectedAnswers
+              }))
+
+              // Ensure user has platform field for lifecycle hooks
+              const userWithPlatform = { ...user, platform: user.platform || 'web' }
+              const surveyType = surveyTypeRegistry.get(survey.surveyType)
+              await surveyType.onSurveyComplete?.(userWithPlatform as any, survey, responses)
+            }
+          } catch (error) {
+            console.error('Survey type lifecycle hook failed:', error)
+            // Don't block the main flow
+          }
+
           setIsRedirecting(true) // Keep UI blocked during redirect
           onSubmit(responseId)
         } finally {

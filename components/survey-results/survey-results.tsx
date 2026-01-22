@@ -46,8 +46,8 @@ export function SurveyResults({
     isError
   } = useSurveyResultsWithQuestions(surveyId, token || undefined)
 
-  // Get user's reward if authenticated and connected
-  const { data: userReward } = useUserReward(surveyId, isAuthenticated && isConnected)
+  // Get user's reward if authenticated (backend auth required, not just wallet connection)
+  const { data: userReward } = useUserReward(surveyId, isAuthenticated)
 
   const handleClaimReward = () => {
     if (userReward?.claimLink) {

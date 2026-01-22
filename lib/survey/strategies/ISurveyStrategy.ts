@@ -34,6 +34,7 @@ export interface ButtonState {
 export interface ButtonStateParams {
   survey: Survey
   hasCompleted: boolean
+  hasStarted: boolean
   isConnected: boolean
   isEligible: boolean
   isAuthenticated: boolean
