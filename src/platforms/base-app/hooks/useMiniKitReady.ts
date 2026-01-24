@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
 import { sdk } from '@farcaster/miniapp-sdk'
+import { useBootstrap } from '@/src/core/components/AppBootstrap'
 
 /**
  * Initializes MiniKit by calling both setMiniAppReady() and sdk.actions.ready()
@@ -16,11 +17,18 @@ import { sdk } from '@farcaster/miniapp-sdk'
  */
 export function useMiniKitReady() {
   const { setMiniAppReady, isMiniAppReady } = useMiniKit()
+  const { isBootstrapped } = useBootstrap()
   const hasCalledReady = useRef(false)
 
   useEffect(() => {
     // Prevent double initialization
     if (hasCalledReady.current) return
+
+    // Wait for bootstrap to complete
+    if (!isBootstrapped) {
+      console.log('[MiniKitReady] Waiting for bootstrap...')
+      return
+    }
 
     hasCalledReady.current = true
 
@@ -38,5 +46,5 @@ export function useMiniKitReady() {
     }
 
     initializeSDK()
-  }, [setMiniAppReady, isMiniAppReady])
+  }, [setMiniAppReady, isMiniAppReady, isBootstrapped])
 }

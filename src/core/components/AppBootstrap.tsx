@@ -7,7 +7,7 @@
  * Must be called once before any platform-dependent code runs
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, createContext, useContext, ReactNode } from 'react'
 import { bootstrapApplication } from '@/src/app-bootstrap'
 import {
   withRetry,
@@ -16,6 +16,14 @@ import {
   ERROR_MESSAGES
 } from '@/src/core/utils/error-handling'
 import { PlatformErrorBoundary } from './ErrorBoundary'
+
+interface BootstrapContextType {
+  isBootstrapped: boolean
+  isLoading: boolean
+  error: Error | null
+}
+
+const BootstrapContext = createContext<BootstrapContextType | undefined>(undefined)
 
 interface AppBootstrapProps {
   children: React.ReactNode
@@ -27,6 +35,12 @@ export function AppBootstrap({ children, fallback, onReady }: AppBootstrapProps)
   const [isReady, setIsReady] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const [retryCount, setRetryCount] = useState(0)
+
+  const contextValue: BootstrapContextType = {
+    isBootstrapped: isReady,
+    isLoading: !isReady && !error,
+    error,
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -148,8 +162,20 @@ export function AppBootstrap({ children, fallback, onReady }: AppBootstrapProps)
   }
 
   return (
-    <PlatformErrorBoundary>
-      {children}
-    </PlatformErrorBoundary>
+    <BootstrapContext.Provider value={contextValue}>
+      <PlatformErrorBoundary>
+        {children}
+      </PlatformErrorBoundary>
+    </BootstrapContext.Provider>
   )
+}
+
+export function useBootstrap(): BootstrapContextType {
+  const context = useContext(BootstrapContext)
+
+  if (!context) {
+    throw new Error('[useBootstrap] Hook must be used within AppBootstrap')
+  }
+
+  return context
 }
