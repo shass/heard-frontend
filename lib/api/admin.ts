@@ -479,3 +479,86 @@ export const getWalletResponseDetails = async (
   )
   return data
 }
+
+// Migrations
+export interface MigrationMeta {
+  name: string
+  description: string
+  createdAt: string
+  author: string
+  supportsDryRun: boolean
+  estimatedDuration?: string
+  affectedCollections: string[]
+}
+
+export interface MigrationChange {
+  documentId: string
+  collection: string
+  field: string
+  oldValue: unknown
+  newValue: unknown
+}
+
+export interface MigrationResult {
+  affectedDocuments: number
+  changes?: MigrationChange[]
+  applied: boolean
+  error?: string
+  durationMs?: number
+}
+
+export interface MigrationStatus {
+  filename: string
+  meta: MigrationMeta
+  status: 'pending' | 'applied' | 'failed'
+  appliedAt?: string
+  appliedBy?: string
+  result?: {
+    affectedDocuments: number
+    durationMs: number
+    success: boolean
+    error?: string
+  }
+}
+
+export interface MigrationListResponse {
+  migrations: MigrationStatus[]
+  total: number
+  pending: number
+  applied: number
+}
+
+export interface MigrationRunResponse {
+  success: boolean
+  result: MigrationResult
+  error?: string
+}
+
+export const getMigrations = async (): Promise<MigrationListResponse> => {
+  const data = await apiClient.get<MigrationListResponse>('/admin/migrations')
+  return data
+}
+
+export const getMigration = async (filename: string): Promise<MigrationStatus> => {
+  const data = await apiClient.get<MigrationStatus>(`/admin/migrations/${filename}`)
+  return data
+}
+
+export const runMigration = async (
+  filename: string,
+  dryRun: boolean = false
+): Promise<MigrationRunResponse> => {
+  const data = await apiClient.post<MigrationRunResponse>(
+    `/admin/migrations/${filename}/run`,
+    { dryRun }
+  )
+  return data
+}
+
+export const dryRunMigration = async (filename: string): Promise<MigrationRunResponse> => {
+  const data = await apiClient.post<MigrationRunResponse>(
+    `/admin/migrations/${filename}/dry-run`,
+    {}
+  )
+  return data
+}
