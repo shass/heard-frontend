@@ -3,7 +3,6 @@
 import { useEffect, useRef } from 'react'
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
 import { sdk } from '@farcaster/miniapp-sdk'
-import { useBootstrap } from '@/src/core/components/AppBootstrap'
 
 /**
  * Initializes MiniKit by calling both setMiniAppReady() and sdk.actions.ready()
@@ -11,25 +10,19 @@ import { useBootstrap } from '@/src/core/components/AppBootstrap'
  *
  * NOTE: This hook should only be used in BaseAppLayout or FarcasterLayout.
  * Platform detection is already handled by PlatformLayoutSwitch.
+ * Bootstrap protection is provided by AppBootstrap - this component only renders
+ * after bootstrap is complete, so no additional check is needed here.
  *
  * Calls both OnchainKit and Farcaster SDK for full compatibility
  * Side-effect only hook - does not return any value
  */
 export function useMiniKitReady() {
   const { setMiniAppReady, isMiniAppReady } = useMiniKit()
-  const { isBootstrapped } = useBootstrap()
   const hasCalledReady = useRef(false)
 
   useEffect(() => {
     // Prevent double initialization
     if (hasCalledReady.current) return
-
-    // Wait for bootstrap to complete
-    if (!isBootstrapped) {
-      console.log('[MiniKitReady] Waiting for bootstrap...')
-      return
-    }
-
     hasCalledReady.current = true
 
     // Call both setMiniAppReady() and sdk.actions.ready() for full compatibility
@@ -46,5 +39,5 @@ export function useMiniKitReady() {
     }
 
     initializeSDK()
-  }, [setMiniAppReady, isMiniAppReady, isBootstrapped])
+  }, [setMiniAppReady, isMiniAppReady])
 }

@@ -32,7 +32,7 @@ export async function GET() {
       name: env.APP_NAME || "HEARD",
       subtitle: "Web3 Survey Platform",
       tagline: "Everyone Will Be HEARD",
-      iconUrl: `${env.PUBLIC_URL}/icon-200x200.png`,
+      iconUrl: `${env.PUBLIC_URL}/heard-1024x1024.png`,
       homeUrl: env.PUBLIC_URL,
       imageUrl: `${env.PUBLIC_URL}/hero-1200x630.png`,
       heroImageUrl: `${env.PUBLIC_URL}/hero-1200x630.png`,
