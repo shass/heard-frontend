@@ -19,7 +19,7 @@ export default function BaseAppLayout({ children }: BaseAppLayoutProps) {
     <OnchainKitProvider
       apiKey={process.env.NEXT_PUBLIC_CDP_CLIENT_API_KEY}
       chain={base}
-      miniKit={{ enabled: true }}
+      miniKit={{ enabled: true, autoConnect: true }}
     >
       <QueryClientProvider client={queryClient}>
         <CreateSurveyModalProvider>
