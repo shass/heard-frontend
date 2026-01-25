@@ -1,12 +1,10 @@
 import type { Metadata } from 'next'
 import ErrorBoundary from '@/components/ui/error-boundary'
-import { PlatformDebugBanner } from '@/components/debug/platform-debug-banner'
-import { PlatformDetectorProvider } from '@/src/platforms/_core/PlatformDetectorProvider'
-import { PlatformLayoutSwitch } from '@/src/platforms/_core/components/PlatformLayoutSwitch'
+import { AppProviders } from '@/src/core/components/AppProviders'
+import { PlatformLayoutRenderer } from '@/src/core/components/PlatformLayoutRenderer'
 import { env } from '@/lib/env'
 import './globals.css'
-import React from 'react';
-import { MobileDevTools } from '@/components/debug/mobile-devtools';
+import React from 'react'
 
 export const viewport = {
   width: 'device-width',
@@ -72,15 +70,12 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ErrorBoundary>
-          <PlatformDetectorProvider>
-            <PlatformDebugBanner />
-            <MobileDevTools />
-
-            {/* Platform-specific layout switch */}
-            <PlatformLayoutSwitch>
+          <AppProviders>
+            {/* Platform-specific layout renderer */}
+            <PlatformLayoutRenderer>
               {children}
-            </PlatformLayoutSwitch>
-          </PlatformDetectorProvider>
+            </PlatformLayoutRenderer>
+          </AppProviders>
         </ErrorBoundary>
       </body>
     </html>

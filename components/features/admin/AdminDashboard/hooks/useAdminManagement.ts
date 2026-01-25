@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getUsers, updateUserRole } from '@/lib/api/admin'
 import { useNotifications } from '@/components/ui/notifications'
 import type { User } from '@/lib/types'
-import { isAddress } from 'viem'
 
 export function useAdminManagement() {
   const [newAdminAddress, setNewAdminAddress] = useState('')
@@ -87,11 +86,6 @@ export function useAdminManagement() {
 
     if (!trimmedAddress) {
       notifications.error('Invalid address', 'Please enter a wallet address')
-      return
-    }
-
-    if (!isAddress(trimmedAddress)) {
-      notifications.error('Invalid address', 'Please enter a valid Ethereum wallet address')
       return
     }
 

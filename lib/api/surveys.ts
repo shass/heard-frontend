@@ -75,9 +75,34 @@ export class SurveyApi {
   /**
    * Get survey details by ID
    */
-  async getSurvey(id: string): Promise<Survey> {
-    const response = await apiClient.get<Survey>(`/surveys/${id}`)
-    return response
+  async getSurvey(id: string, options?: { signal?: AbortSignal }): Promise<Survey> {
+    if (!id) {
+      throw new Error('Survey ID is required')
+    }
+
+    try {
+      const response = await apiClient.get<Survey>(`/surveys/${id}`, { signal: options?.signal })
+      return response
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[SurveyApi] Failed to get survey:', error)
+      }
+
+      // Enhance error message
+      if (error instanceof Error) {
+        if (error.message.includes('404')) {
+          throw new Error('Survey not found')
+        }
+        if (error.message.includes('timeout')) {
+          throw new Error('Unable to load survey. The request took too long.')
+        }
+        if (error.message.includes('fetch') || error.message.includes('network')) {
+          throw new Error('Unable to load survey. Please check your internet connection.')
+        }
+      }
+
+      throw error
+    }
   }
 
   /**
@@ -85,26 +110,68 @@ export class SurveyApi {
    */
   async checkEligibility(id: string, params: {
     walletAddress?: string
-  } = {}): Promise<EligibilityResponse> {
-    const queryParams = new URLSearchParams()
+  } = {}, options?: { signal?: AbortSignal }): Promise<EligibilityResponse> {
+    if (!id) {
+      throw new Error('Survey ID is required')
+    }
 
-
-    if (params.walletAddress) {
-      queryParams.append('walletAddress', params.walletAddress)
-    } else {
-      // Don't make request without wallet address - this should not happen
+    if (!params.walletAddress) {
       throw new Error('Wallet address is required for eligibility check')
     }
 
+    const queryParams = new URLSearchParams()
+    queryParams.append('walletAddress', params.walletAddress)
+
     const url = `/surveys/${id}/eligibility?${queryParams.toString()}`
-    return await apiClient.get<EligibilityResponse>(url)
+
+    try {
+      return await apiClient.get<EligibilityResponse>(url, { signal: options?.signal })
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[SurveyApi] Eligibility check failed:', error)
+      }
+
+      // Enhance error message
+      if (error instanceof Error) {
+        if (error.message.includes('timeout')) {
+          throw new Error('Eligibility check timed out. Please try again.')
+        }
+        if (error.message.includes('fetch') || error.message.includes('network')) {
+          throw new Error('Unable to check eligibility. Please check your internet connection.')
+        }
+      }
+
+      throw error
+    }
   }
 
   /**
    * Start survey and get first question
    */
   async startSurvey(id: string, request: StartSurveyRequest = {}): Promise<StartSurveyResponse> {
-    return await apiClient.post<StartSurveyResponse>(`/surveys/${id}/start`, request)
+    const response = await apiClient.post<StartSurveyResponse>(`/surveys/${id}/start`, request)
+
+    // Call lifecycle hook after survey start
+    try {
+      const [survey, { surveyTypeRegistry }, { useAuthStore }] = await Promise.all([
+        this.getSurvey(id),
+        import('@/src/core/registry/SurveyTypeRegistry'),
+        import('@/lib/store')
+      ])
+
+      const { user } = useAuthStore.getState()
+      if (user) {
+        // Ensure user has platform field for lifecycle hooks
+        const userWithPlatform = { ...user, platform: user.platform || 'web' }
+        const surveyType = surveyTypeRegistry.get(survey.surveyType)
+        await surveyType.onSurveyStart?.(userWithPlatform as any, survey)
+      }
+    } catch (error) {
+      console.error('Survey type lifecycle hook failed:', error)
+      // Don't block the main flow
+    }
+
+    return response
   }
 
   /**

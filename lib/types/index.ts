@@ -37,6 +37,8 @@ export interface Survey {
   startDate?: string // ISO 8601 datetime string
   endDate?: string // ISO 8601 datetime string
   resultsPageUrl?: string
+  accessStrategyIds?: string[]
+  accessCombineMode?: 'AND' | 'OR'
   createdAt: string
 }
 
@@ -310,6 +312,8 @@ export interface CreateSurveyRequest {
   startDate?: string // ISO 8601 datetime string
   endDate?: string // ISO 8601 datetime string
   resultsPageUrl?: string
+  accessStrategyIds?: string[]
+  accessCombineMode?: 'AND' | 'OR'
   questions: CreateQuestionRequest[]
   whitelist?: string[]
 }

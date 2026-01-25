@@ -19,7 +19,7 @@ export default function FarcasterLayout({ children }: FarcasterLayoutProps) {
     <OnchainKitProvider
       apiKey={process.env.NEXT_PUBLIC_CDP_CLIENT_API_KEY}
       chain={base}
-      miniKit={{ enabled: true }}
+      miniKit={{ enabled: true, autoConnect: true }}
     >
       <CreateSurveyModalProvider>
         <NavigationProvider>

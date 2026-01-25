@@ -3,13 +3,14 @@
 import React from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Spinner } from '@/components/ui/loading-states'
-import { BarChart3, FileText, Settings, UserSearch } from 'lucide-react'
+import { BarChart3, FileText, Settings, UserSearch, Database } from 'lucide-react'
 import { SurveyManagement } from '../SurveyManagement'
 import { UserLookup } from '../UserLookup'
 import { AdminAuthWrapper } from '@/components/admin/admin-auth-wrapper'
 import { DashboardHeader } from './DashboardHeader'
 import { OverviewTab } from './OverviewTab'
 import { SettingsTab } from './SettingsTab'
+import { MigrationsTab } from './MigrationsTab'
 import { useAdminDashboard } from './hooks/useAdminDashboard'
 
 export function AdminDashboard() {
@@ -55,7 +56,7 @@ export function AdminDashboard() {
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="surveys">
                 <FileText className="w-4 h-4 mr-2" />
                 Surveys
@@ -67,6 +68,10 @@ export function AdminDashboard() {
               <TabsTrigger value="overview">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Overview
+              </TabsTrigger>
+              <TabsTrigger value="migrations">
+                <Database className="w-4 h-4 mr-2" />
+                Migrations
               </TabsTrigger>
               <TabsTrigger value="settings">
                 <Settings className="w-4 h-4 mr-2" />
@@ -87,6 +92,11 @@ export function AdminDashboard() {
             {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-6">
               <OverviewTab stats={stats} />
+            </TabsContent>
+
+            {/* Migrations Tab */}
+            <TabsContent value="migrations">
+              <MigrationsTab />
             </TabsContent>
 
             {/* Settings Tab */}

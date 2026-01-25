@@ -1,32 +1,27 @@
 'use client'
 
-import { usePlatformDetector } from '@/src/platforms'
-import { Platform } from '../../config'
-import type { IUrlStrategy } from '../shared/interfaces/IUrlStrategy'
+import { useMemo } from 'react'
+import { usePlatform } from '@/src/core/hooks/usePlatform'
 
 export function useOpenUrl() {
-  const { platform } = usePlatformDetector()
+  const { platform, isLoading, error } = usePlatform()
 
-  const getStrategy = (): IUrlStrategy => {
-    switch (platform) {
-      case Platform.WEB: {
-        const { useWebUrlStrategy } = require('@/src/platforms/web/strategies/useWebUrlStrategy')
-        return useWebUrlStrategy()
-      }
-      case Platform.BASE_APP: {
-        const { useBaseAppUrlStrategy } = require('@/src/platforms/base-app/strategies/useBaseAppUrlStrategy')
-        return useBaseAppUrlStrategy()
-      }
-      case Platform.FARCASTER: {
-        const { useFarcasterUrlStrategy } = require('@/src/platforms/farcaster/strategies/useFarcasterUrlStrategy')
-        return useFarcasterUrlStrategy()
-      }
-      default: {
-        const { useWebUrlStrategy } = require('@/src/platforms/web/strategies/useWebUrlStrategy')
-        return useWebUrlStrategy()
-      }
+  const openUrl = useMemo(() => {
+    if (isLoading) {
+      throw new Error('[useOpenUrl] Platform is still loading')
     }
-  }
 
-  return getStrategy().openUrl
+    if (error) {
+      throw error
+    }
+
+    if (!platform) {
+      throw new Error('[useOpenUrl] No active platform detected')
+    }
+
+    const strategy = platform.createUrlStrategy()
+    return strategy.openUrl
+  }, [platform, isLoading, error])
+
+  return openUrl
 }

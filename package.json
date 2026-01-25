@@ -12,7 +12,10 @@
     "warmup": "bash scripts/warmup.sh",
     "warmup:prod": "bash scripts/warmup.sh $NEXT_PUBLIC_URL",
     "health": "curl -s http://localhost:3000/api/health | python3 -m json.tool",
-    "health:prod": "curl -s $NEXT_PUBLIC_URL/api/health | python3 -m json.tool"
+    "health:prod": "curl -s $NEXT_PUBLIC_URL/api/health | python3 -m json.tool",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@coinbase/onchainkit": "^1.1.1",

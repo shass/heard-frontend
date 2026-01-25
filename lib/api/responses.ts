@@ -41,7 +41,7 @@ export class ResponseApi {
   async submitAnswer(request: SubmitAnswerRequest): Promise<SubmitAnswerResponse> {
     const { responseId, ...data } = request
     return await apiClient.post<SubmitAnswerResponse>(
-      `/surveys/responses/${responseId}/answer`, 
+      `/surveys/responses/${responseId}/answer`,
       data
     )
   }
@@ -53,6 +53,9 @@ export class ResponseApi {
     const { responseId } = request
     console.log('Submitting survey with responseId:', responseId)
     console.log('Submit URL:', `/surveys/responses/${responseId}/submit`)
+
+    // Note: onSurveyComplete lifecycle hook is called from useSurveyPage
+    // where we have full context (survey, user, responses)
     return await apiClient.post<SubmitSurveyResponse>(
       `/surveys/responses/${responseId}/submit`,
       {}

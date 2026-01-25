@@ -11,14 +11,8 @@ import { Settings } from "lucide-react"
 
 // Dynamically import AuthSection to avoid SSR issues
 const AuthSection = dynamic(
-  () => import('@/src/platforms/_core/components/AuthSectionSwitch').then((mod) => ({
-    default: function WrappedAuthSection(props: any) {
-      return (
-        <React.Suspense fallback={<div className="h-10 w-32 bg-zinc-100 rounded-lg animate-pulse"></div>}>
-          <mod.AuthSectionSwitch {...props} />
-        </React.Suspense>
-      )
-    }
+  () => import('@/src/core/components/PlatformAuthSection').then((mod) => ({
+    default: mod.PlatformAuthSection
   })),
   {
     ssr: false,
