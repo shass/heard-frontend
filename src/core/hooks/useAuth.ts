@@ -202,25 +202,73 @@ export function useAuth(): IAuthStrategy {
   // Check stored token on mount for BaseApp/Farcaster
   useEffect(() => {
     if (platform?.id !== 'base-app' && platform?.id !== 'farcaster') return
-    if (!miniKitContext || hasCheckedTokenRef.current) return
+    if (hasCheckedTokenRef.current) return
 
-    const { isAuthStrategyReady, setAuthStrategyReady } = useAuthStore.getState()
+    // Set flag immediately before any async operations
+    hasCheckedTokenRef.current = true
+
+    const { isAuthStrategyReady, setAuthStrategyReady, setLoading } = useAuthStore.getState()
     if (isAuthStrategyReady) {
-      hasCheckedTokenRef.current = true
       return
     }
 
-    hasCheckedTokenRef.current = true
     setAuthStrategyReady(true)
 
-    // Check for stored token
+    // Cancellation flag to prevent state updates after unmount
+    let cancelled = false
+
+    // Check for stored token and restore session
     if (typeof window !== 'undefined') {
-      const storedToken = localStorage.getItem('auth_token')
-      if (storedToken && strategyRef.current) {
-        strategyRef.current.checkAuthStatus?.()
+      let storedToken: string | null = null
+      try {
+        storedToken = localStorage.getItem('auth_token')
+      } catch (err) {
+        console.error('[useAuth] Failed to read auth_token from localStorage:', err)
+      }
+
+      if (storedToken) {
+        console.log('[useAuth] Found stored token for', platform.id, '- verifying...')
+        setLoading(true)
+
+        // Import authApi and restore session
+        import('@/lib/api/auth').then(({ authApi }) => {
+          authApi.checkAuth().then((userData) => {
+            if (cancelled) return
+
+            if (userData) {
+              console.log('[useAuth] Token valid, restoring session')
+              // Update store directly - this triggers React re-render
+              useAuthStore.getState().setUser(userData)
+            } else {
+              console.log('[useAuth] Token invalid, clearing')
+              try {
+                localStorage.removeItem('auth_token')
+              } catch (err) {
+                console.error('[useAuth] Failed to remove auth_token from localStorage:', err)
+              }
+            }
+          }).catch((err) => {
+            if (cancelled) return
+
+            console.error('[useAuth] Token verification failed:', err)
+            try {
+              localStorage.removeItem('auth_token')
+            } catch (removeErr) {
+              console.error('[useAuth] Failed to remove auth_token from localStorage:', removeErr)
+            }
+          }).finally(() => {
+            if (!cancelled) {
+              useAuthStore.getState().setLoading(false)
+            }
+          })
+        })
       }
     }
-  }, [platform, miniKitContext])
+
+    return () => {
+      cancelled = true
+    }
+  }, [platform])
 
   // Cleanup on unmount
   useEffect(() => {
