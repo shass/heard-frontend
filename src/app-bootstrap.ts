@@ -20,6 +20,7 @@ import { PredictionMarketSurveyType } from '@/src/survey-types/prediction-market
 
 // Access strategy plugins
 import { WhitelistAccessStrategy } from '@/src/access-strategies/whitelist'
+import { BringIdAccessStrategy } from '@/src/access-strategies/bringid'
 
 /**
  * Bootstrap platform system
@@ -81,7 +82,7 @@ export function bootstrapAccessStrategies() {
   try {
     // Register access strategies
     accessStrategyRegistry.register(new WhitelistAccessStrategy())
-    // OAuth and other strategies will be added later
+    accessStrategyRegistry.register(new BringIdAccessStrategy())
 
     if (process.env.NODE_ENV === 'development') {
       console.log(`[Bootstrap] ✅ Registered ${accessStrategyRegistry.getAll().length} access strategies`)
