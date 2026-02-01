@@ -43,7 +43,14 @@ const surveySchema = z.object({
   endDate: z.string().optional(),
   resultsPageUrl: z.union([z.string().url('Invalid URL format'), z.literal('')]).optional(),
   questions: z.array(questionSchema).min(1, 'At least 1 question is required'),
-  isActive: z.boolean().optional()
+  isActive: z.boolean().optional(),
+  // Access Strategy fields
+  accessStrategyIds: z.array(z.string()).optional().default([]),
+  accessCombineMode: z.enum(['AND', 'OR']).optional().default('AND'),
+  accessStrategyConfigs: z.record(z.object({
+    enabled: z.boolean(),
+    config: z.record(z.unknown()).default({})
+  })).optional().default({})
 }).refine((data) => {
   // For prediction surveys, dates are required
   if (data.surveyType === SurveyType.PREDICTION) {
@@ -88,7 +95,11 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
       endDate: survey.endDate ? new Date(survey.endDate).toISOString().slice(0, 16) : '',
       resultsPageUrl: survey.resultsPageUrl || '',
       questions: [],
-      isActive: survey.isActive
+      isActive: survey.isActive,
+      // Access Strategy fields
+      accessStrategyIds: (survey as any).accessStrategyIds || [],
+      accessCombineMode: (survey as any).accessCombineMode || 'AND',
+      accessStrategyConfigs: (survey as any).accessStrategyConfigs || {}
     } : {
       name: '',
       company: '',
@@ -112,7 +123,11 @@ export function useSurveyForm({ survey, onSubmit }: UseSurveyFormProps) {
         ],
         isRequired: true
       }],
-      isActive: true
+      isActive: true,
+      // Access Strategy fields
+      accessStrategyIds: [],
+      accessCombineMode: 'AND',
+      accessStrategyConfigs: {}
     }
   })
 

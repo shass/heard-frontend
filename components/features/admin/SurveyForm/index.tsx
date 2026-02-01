@@ -8,6 +8,7 @@ import { useSurveyForm } from './hooks/useSurveyForm'
 import { BasicInfoSection } from './BasicInfoSection'
 import { RewardsSection } from './RewardsSection'
 import { QuestionsSection } from './QuestionsSection'
+import { AccessStrategyConfig } from '../AccessStrategyConfig'
 import type {
   CreateSurveyRequest,
   UpdateSurveyRequest,
@@ -47,7 +48,21 @@ export function SurveyForm({ survey, onSubmit, isLoading, onCancel }: SurveyForm
       />
 
       <RewardsSection register={register} errors={errors} />
-      
+
+      {/* Access Control */}
+      <AccessStrategyConfig
+        value={{
+          accessStrategyIds: watch('accessStrategyIds') || [],
+          accessCombineMode: watch('accessCombineMode') || 'AND',
+          accessStrategyConfigs: watch('accessStrategyConfigs') || {}
+        }}
+        onChange={(newValue) => {
+          setValue('accessStrategyIds', newValue.accessStrategyIds)
+          setValue('accessCombineMode', newValue.accessCombineMode)
+          setValue('accessStrategyConfigs', newValue.accessStrategyConfigs)
+        }}
+      />
+
       <QuestionsSection
         questions={questions}
         loadingQuestions={loadingQuestions}

@@ -8,6 +8,7 @@ import { mainnet, polygon, bsc, base } from 'wagmi/chains'
 import { http } from 'wagmi'
 import { env } from '@/lib/env'
 import { parseApiError } from '@/lib/error-handler'
+import { BringIDProvider } from '@/providers/BringIDProvider'
 import '@rainbow-me/rainbowkit/styles.css'
 
 // Web3 configuration optimized for mobile
@@ -84,7 +85,9 @@ export function Web3Provider({ children }: Web3ProviderProps) {
           coolMode={false}
           locale="en-US"
         >
-          {children}
+          <BringIDProvider>
+            {children}
+          </BringIDProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
