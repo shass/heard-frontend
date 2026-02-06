@@ -9,6 +9,7 @@ import { IdCard } from 'lucide-react'
 export interface BringIdConfig {
   minScore: number
   requireHumanityProof: boolean
+  minPoints?: number
 }
 
 interface BringIdConfigCardProps {
@@ -39,6 +40,17 @@ export function BringIdConfigCard({
     onConfigChange({
       ...config,
       requireHumanityProof: checked,
+      // Reset minPoints when disabling humanity proof
+      minPoints: checked ? (config.minPoints ?? 0) : undefined,
+    })
+  }
+
+  const handleMinPointsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10)
+    const clampedValue = Math.min(100, Math.max(0, isNaN(value) ? 0 : value))
+    onConfigChange({
+      ...config,
+      minPoints: clampedValue,
     })
   }
 
@@ -81,19 +93,40 @@ export function BringIdConfigCard({
             </p>
           </div>
 
-          <div className="flex items-center space-x-3">
-            <Checkbox
-              id="requireHumanityProof"
-              checked={config.requireHumanityProof}
-              onCheckedChange={(checked) => handleHumanityProofChange(checked === true)}
-              disabled={disabled}
-            />
-            <div>
-              <Label htmlFor="requireHumanityProof" className="cursor-pointer">
-                Require Humanity Proof
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="requireHumanityProof"
+                checked={config.requireHumanityProof}
+                onCheckedChange={(checked) => handleHumanityProofChange(checked === true)}
+                disabled={disabled}
+              />
+              <div>
+                <Label htmlFor="requireHumanityProof" className="cursor-pointer">
+                  Require Humanity Proof
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Require users to complete BringId humanity verification
+                </p>
+              </div>
+            </div>
+
+            <div className="ml-7 space-y-2">
+              <Label htmlFor="minPoints" className={!config.requireHumanityProof ? 'text-muted-foreground' : ''}>
+                Minimum Humanity Points (0-100)
               </Label>
+              <Input
+                id="minPoints"
+                type="number"
+                min={0}
+                max={100}
+                value={config.minPoints ?? 0}
+                onChange={handleMinPointsChange}
+                disabled={disabled || !config.requireHumanityProof}
+                className="w-32"
+              />
               <p className="text-xs text-muted-foreground">
-                Require users to complete BringId humanity verification
+                Users must have at least this many humanity points to access the survey
               </p>
             </div>
           </div>

@@ -1,17 +1,19 @@
 "use client"
 
-import { use } from "react"
+import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSurvey, useSurveyEligibility, useUserReward, useWinnerStatus, useSurveyStrategy } from "@/hooks"
+import { useHumanityVerification } from "@/hooks/use-humanity-verification"
 import { usePlatform } from "@/src/core/hooks/usePlatform"
 import { useAuth, useWallet, useOpenUrl } from "@/src/platforms/_core"
 import { Platform } from "@/src/platforms/config"
 import { RewardSource } from "@/lib/survey/strategies"
 import { useAuthStore } from "@/lib/store"
+import { bringid } from "@/lib/bringid"
 import {
   SurveyHeader,
   SurveyStats,
@@ -61,7 +63,40 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   // Note: checkAuth is handled by auth strategies internally
 
   const { data: survey, isLoading, error } = useSurvey(id)
-  const { data: eligibility } = useSurveyEligibility(id, address ?? undefined)
+
+  // BringId score (on-chain reputation) and points (from humanity verification)
+  const [bringIdScore, setBringIdScore] = useState<number | undefined>(undefined)
+  const [bringIdPoints, setBringIdPoints] = useState<number | undefined>(undefined)
+
+  // Check if survey uses BringId strategy
+  const hasBringIdStrategy = survey?.accessStrategyIds?.includes('bringid') ?? false
+
+  // Fetch BringId score on load if survey has bringid strategy
+  useEffect(() => {
+    if (!hasBringIdStrategy || !address) return
+
+    const fetchScore = async () => {
+      try {
+        const result = await bringid.getAddressScore(address)
+        setBringIdScore(result.score)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[SurveyInfo] Fetched BringId score:', result.score)
+        }
+      } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[SurveyInfo] Failed to fetch BringId score:', error)
+        }
+        // Continue without score - backend will handle this case
+      }
+    }
+
+    fetchScore()
+  }, [hasBringIdStrategy, address])
+
+  const { data: eligibility, refetch: refetchEligibility } = useSurveyEligibility(id, address ?? undefined, survey, bringIdScore, bringIdPoints)
+
+  // BringId verification
+  const { verify: verifyHumanity, isVerifying: isBringIdVerifying } = useHumanityVerification()
   // Reward is fetched only if user is authenticated (connected state is not required)
   const { data: userReward } = useUserReward(id, isAuthenticated)
 
@@ -76,7 +111,16 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   )
 
   const handleStartSurvey = () => {
-    router.push(`/surveys/${id}`)
+    // Pass BringId params to survey page to preserve verification state
+    const params = new URLSearchParams()
+    if (bringIdScore !== undefined) {
+      params.set('bringIdScore', String(bringIdScore))
+    }
+    if (bringIdPoints !== undefined) {
+      params.set('bringIdPoints', String(bringIdPoints))
+    }
+    const queryString = params.toString()
+    router.push(`/surveys/${id}${queryString ? `?${queryString}` : ''}`)
   }
 
   const handleConnectWallet = () => {
@@ -97,7 +141,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
           console.log('[Survey] ✅ User authenticated, staying on info page to show results')
           // UI will automatically update via isAuthenticated state change
         } else if (eligibility?.isEligible !== false) {
-          router.push(`/surveys/${id}`)
+          handleStartSurvey()
         } else {
           console.log('[Survey] ⚠️ User authenticated but not eligible for this survey')
           // UI will update to show "Not Eligible" button
@@ -119,6 +163,19 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
   const handleBackToSurveys = () => {
     router.push("/")
+  }
+
+  const handleVerifyBringId = async () => {
+    if (!address) return
+    try {
+      const result = await verifyHumanity(address)
+      if (result?.verified && result.points !== undefined) {
+        // Save points and trigger eligibility re-check (via queryKey change)
+        setBringIdPoints(result.points)
+      }
+    } catch (error) {
+      console.error('[Survey] BringId verification failed:', error)
+    }
   }
 
   const handleClaimReward = () => {
@@ -184,6 +241,10 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const hasStarted = eligibility?.hasStarted || false
   const isEligible = eligibility?.isEligible ?? true
 
+  // Get access strategies from survey
+  const accessStrategies = (survey as any)?.accessStrategyIds as string[] | undefined
+  console.log('[SurveyInfo] Survey data:', { surveyType: survey?.surveyType, accessStrategies, isEligible })
+
   // Get button state from strategy
   const buttonState = strategy?.getButtonState({
     survey: survey!,
@@ -195,7 +256,11 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
     isAuthLoading,
     handleStartSurvey,
     handleConnectWallet,
-    handleAuthenticate
+    handleAuthenticate,
+    accessStrategies,
+    accessStrategyConfigs: (survey as any)?.accessStrategyConfigs,
+    handleVerifyBringId,
+    isBringIdVerifying
   }) || { text: "Loading...", disabled: true, handler: () => {}, loading: false }
 
   return (

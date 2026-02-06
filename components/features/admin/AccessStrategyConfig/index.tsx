@@ -1,5 +1,16 @@
 'use client'
 
+import { useState } from 'react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -60,13 +71,35 @@ export function AccessStrategyConfig({
   disabled,
 }: AccessStrategyConfigProps) {
   const { accessStrategyIds, accessCombineMode, accessStrategyConfigs } = value
+  const [showPublicWarning, setShowPublicWarning] = useState(false)
 
   // Helper to check if strategy is enabled
   const isStrategyEnabled = (strategyId: string) =>
     accessStrategyIds.includes(strategyId)
 
+  // Check if there are other strategies besides public
+  const hasOtherStrategies = accessStrategyIds.some((id) => id !== 'public')
+
+  // Confirm enabling public access - clears other strategies
+  const confirmPublicAccess = () => {
+    onChange({
+      accessStrategyIds: ['public'],
+      accessCombineMode,
+      accessStrategyConfigs: {
+        public: { enabled: true, config: {} },
+      },
+    })
+    setShowPublicWarning(false)
+  }
+
   // Toggle a simple strategy (public, whitelist)
   const toggleStrategy = (strategyId: string, enabled: boolean) => {
+    // If enabling public and other strategies exist, show warning
+    if (strategyId === 'public' && enabled && hasOtherStrategies) {
+      setShowPublicWarning(true)
+      return
+    }
+
     let newIds: string[]
     let newConfigs = { ...accessStrategyConfigs }
 
@@ -178,7 +211,7 @@ export function AccessStrategyConfig({
                   onCheckedChange={(checked) =>
                     toggleStrategy('whitelist', checked === true)
                   }
-                  disabled={disabled}
+                  disabled={disabled || isStrategyEnabled('public')}
                 />
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-muted-foreground" />
@@ -197,7 +230,7 @@ export function AccessStrategyConfig({
             onEnabledChange={(enabled) => toggleStrategy('bringid', enabled)}
             config={bringIdConfig}
             onConfigChange={handleBringIdConfigChange}
-            disabled={disabled}
+            disabled={disabled || isStrategyEnabled('public')}
           />
         </div>
 
@@ -207,6 +240,24 @@ export function AccessStrategyConfig({
             No access strategies selected. Survey will be accessible to everyone.
           </p>
         )}
+
+        {/* Public Access Warning Dialog */}
+        <AlertDialog open={showPublicWarning} onOpenChange={setShowPublicWarning}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Enable Public Access?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Public access will make this survey available to everyone. Other access strategies (Whitelist, BringId) will be deactivated. The whitelist data will be preserved and can be reactivated later.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmPublicAccess}>
+                Enable Public Access
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   )

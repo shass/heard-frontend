@@ -76,9 +76,11 @@ export class BringIdAccessStrategy implements IAccessStrategy {
       // Import error handling utilities dynamically to avoid circular deps
       const { withRetry, withTimeout } = await import('@/src/core/utils/error-handling')
 
+      // Note: BringId score is now fetched in page.tsx and passed via useSurveyEligibility hook
+      // This strategy only handles the access check logic, not score fetching
+
       // Try API check with retry and timeout
       // Cast to ExtendedEligibilityResponse to handle accessStrategies field
-      // (will be added to backend in Phase 1)
       const eligibility = await withRetry(
         () => withTimeout(
           surveyApi.checkEligibility(survey.id, {
@@ -109,13 +111,15 @@ export class BringIdAccessStrategy implements IAccessStrategy {
       const bringidResult = eligibility.accessStrategies?.bringid
       if (bringidResult && !bringidResult.passed) {
         const minScore = (survey as any).accessStrategyConfigs?.bringid?.config?.minScore || 50
+        const requireHumanityProof = this.config.requireHumanityProof ?? false
         return {
           allowed: false,
           reason: bringidResult.reason || `BringId score below ${minScore}`,
           requiresAction: {
             type: 'install-extension' as any, // Using closest available type
-            instructions: 'Complete BringId verification to increase your score'
-          }
+            instructions: 'Complete BringId verification to increase your score',
+            requiresHumanityVerification: requireHumanityProof,
+          } as any
         }
       }
 

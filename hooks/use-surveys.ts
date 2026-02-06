@@ -95,14 +95,38 @@ export function useSurveyQuestions(id: string) {
 /**
  * Hook to check survey eligibility
  * Only makes request if both id and walletAddress are provided
+ * If survey has bringid strategy, uses provided bringIdScore (on-chain) and bringIdPoints (from verification)
  */
-export function useSurveyEligibility(id: string, walletAddress?: string) {
+export function useSurveyEligibility(
+  id: string,
+  walletAddress?: string,
+  survey?: Survey | null,
+  bringIdScore?: number,
+  bringIdPoints?: number
+) {
   // Normalize wallet address to lowercase to prevent duplicate requests
   const normalizedAddress = walletAddress?.toLowerCase()
 
+  // Check if survey uses BringId strategy
+  const hasBringIdStrategy = survey?.accessStrategyIds?.includes('bringid') ?? false
+
   return useQuery({
-    queryKey: surveyKeys.eligibility(id, normalizedAddress),
-    queryFn: () => surveyApi.checkEligibility(id, { walletAddress: normalizedAddress }),
+    queryKey: [...surveyKeys.eligibility(id, normalizedAddress), bringIdScore, bringIdPoints],
+    queryFn: async () => {
+      // Use bringIdScore and bringIdPoints if survey has BringId strategy
+      const score = hasBringIdStrategy ? bringIdScore : undefined
+      const points = hasBringIdStrategy ? bringIdPoints : undefined
+
+      if (process.env.NODE_ENV === 'development' && hasBringIdStrategy) {
+        console.log('[useSurveyEligibility] BringId score:', score, 'points:', points)
+      }
+
+      return surveyApi.checkEligibility(id, {
+        walletAddress: normalizedAddress,
+        bringIdScore: score,
+        bringIdPoints: points
+      })
+    },
     enabled: !!id && !!normalizedAddress,
     staleTime: 0, // Always fetch fresh data
     gcTime: 30 * 1000, // 30 seconds

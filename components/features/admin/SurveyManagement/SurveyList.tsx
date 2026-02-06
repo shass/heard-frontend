@@ -21,6 +21,7 @@ interface SurveyListProps {
   onDuplicate: (surveyId: string, currentName: string) => void
   onExport: (surveyId: string) => void
   onDelete: (surveyId: string) => void
+  onUpdateAccessConfig: (surveyId: string, strategyId: string, config: Record<string, unknown>) => Promise<void>
   isToggleStatusPending: boolean
   isRefreshStatsPending: boolean
   isDuplicatePending: boolean
@@ -44,6 +45,7 @@ export function SurveyList({
   onDuplicate,
   onExport,
   onDelete,
+  onUpdateAccessConfig,
   isToggleStatusPending,
   isRefreshStatsPending,
   isDuplicatePending,
@@ -85,6 +87,7 @@ export function SurveyList({
           onDuplicate={onDuplicate}
           onExport={onExport}
           onDelete={onDelete}
+          onUpdateAccessConfig={onUpdateAccessConfig}
           isToggleStatusPending={isToggleStatusPending}
           isRefreshStatsPending={isRefreshStatsPending}
           isDuplicatePending={isDuplicatePending}

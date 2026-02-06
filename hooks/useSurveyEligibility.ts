@@ -16,6 +16,7 @@ interface UseSurveyEligibilityResult {
   reason: string | null
   error: Error | null
   retry: () => void
+  accessStrategies: string[] | undefined
 }
 
 /**
@@ -105,6 +106,7 @@ export function useSurveyEligibility(survey: Survey | null | undefined): UseSurv
     isLoading,
     reason,
     error,
-    retry
+    retry,
+    accessStrategies: survey?.accessStrategyIds
   }
 }

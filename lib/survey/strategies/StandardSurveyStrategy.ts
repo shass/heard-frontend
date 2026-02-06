@@ -25,7 +25,10 @@ export class StandardSurveyStrategy implements ISurveyStrategy {
       isAuthLoading,
       handleStartSurvey,
       handleConnectWallet,
-      handleAuthenticate
+      handleAuthenticate,
+      accessStrategies,
+      handleVerifyBringId,
+      isBringIdVerifying
     } = params
 
     // Survey already completed
@@ -50,6 +53,18 @@ export class StandardSurveyStrategy implements ISurveyStrategy {
 
     // User not eligible
     if (!isEligible) {
+      // Check if BringId verification is available
+      const hasBringId = accessStrategies?.includes('bringid')
+      console.log('[StandardStrategy] Not eligible check:', { isEligible, accessStrategies, hasBringId, hasHandler: !!handleVerifyBringId })
+      if (hasBringId && handleVerifyBringId) {
+        return {
+          text: isBringIdVerifying ? "Verifying..." : "Verify with BringId",
+          disabled: isBringIdVerifying || false,
+          handler: handleVerifyBringId,
+          loading: isBringIdVerifying || false
+        }
+      }
+
       return {
         text: "Not Eligible",
         disabled: true,

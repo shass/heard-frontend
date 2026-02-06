@@ -38,6 +38,7 @@ export interface Survey {
   endDate?: string // ISO 8601 datetime string
   resultsPageUrl?: string
   accessStrategyIds?: string[]
+  accessStrategyConfigs?: Record<string, { enabled: boolean; config: Record<string, unknown> }>
   accessCombineMode?: 'AND' | 'OR'
   createdAt: string
 }
@@ -313,6 +314,7 @@ export interface CreateSurveyRequest {
   endDate?: string // ISO 8601 datetime string
   resultsPageUrl?: string
   accessStrategyIds?: string[]
+  accessStrategyConfigs?: Record<string, { enabled: boolean; config: Record<string, unknown> }>
   accessCombineMode?: 'AND' | 'OR'
   questions: CreateQuestionRequest[]
   whitelist?: string[]

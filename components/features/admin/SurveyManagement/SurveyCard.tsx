@@ -10,7 +10,6 @@ import {
   Play,
   Pause,
   Users,
-  List,
   Gift,
   Download,
   Crown,
@@ -21,6 +20,7 @@ import {
 } from 'lucide-react'
 import { formatNumber, getSurveyTimeStatus, formatSurveyDate } from '@/lib/utils'
 import { SurveyType, type AdminSurveyListItem } from '@/lib/types'
+import { AccessStrategyIcons } from './AccessStrategyIcons'
 
 interface SurveyCardProps {
   survey: AdminSurveyListItem
@@ -28,6 +28,7 @@ interface SurveyCardProps {
   onRefreshStats: (surveyId?: string) => void
   onViewResponses: (survey: AdminSurveyListItem) => void
   onManageWhitelist: (survey: AdminSurveyListItem) => void
+  onUpdateAccessConfig: (surveyId: string, strategyId: string, config: Record<string, unknown>) => Promise<void>
   onManageRewardLinks: (survey: AdminSurveyListItem) => void
   onManageSurveyClients: (survey: AdminSurveyListItem) => void
   onManageWinners?: (survey: AdminSurveyListItem) => void
@@ -48,6 +49,7 @@ export function SurveyCard({
   onRefreshStats,
   onViewResponses,
   onManageWhitelist,
+  onUpdateAccessConfig,
   onManageRewardLinks,
   onManageSurveyClients,
   onManageWinners,
@@ -178,6 +180,14 @@ export function SurveyCard({
           </div>
         </div>
 
+        <div className="pt-2">
+          <AccessStrategyIcons
+            survey={survey}
+            onManageWhitelist={onManageWhitelist}
+            onUpdateAccessConfig={onUpdateAccessConfig}
+          />
+        </div>
+
         <div className="flex flex-wrap gap-2 pt-2">
           {/* Status Toggle */}
           <Button
@@ -210,15 +220,6 @@ export function SurveyCard({
               title="View Responses"
             >
               <Users className="w-4 h-4" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onManageWhitelist(survey)}
-              title="Manage Whitelist"
-            >
-              <List className="w-4 h-4" />
             </Button>
 
             {survey.surveyType !== SurveyType.PREDICTION && (

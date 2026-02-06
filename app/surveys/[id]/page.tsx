@@ -1,13 +1,12 @@
 "use client"
 
-import { use } from "react"
-import { useRouter } from "next/navigation"
+import { use, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { SurveyPage } from "@/components/survey-page"
 import { Footer } from "@/components/footer"
-import { useSurvey } from "@/hooks/use-surveys"
-import { useSurveyEligibility } from "@/hooks/useSurveyEligibility"
-import { AccessDeniedUI } from "@/components/features/survey/AccessDeniedUI"
+import { useSurvey, useSurveyEligibility } from "@/hooks/use-surveys"
+import { useAuth } from "@/src/platforms/_core/hooks/useAuth"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -21,14 +20,39 @@ interface SurveyDetailPageProps {
 
 export default function SurveyDetailPage({ params }: SurveyDetailPageProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { id } = use(params)
+  const { user } = useAuth()
+
+  // Read BringId params from URL (passed from info page after verification)
+  const bringIdScoreParam = searchParams.get('bringIdScore')
+  const bringIdPointsParam = searchParams.get('bringIdPoints')
+  const bringIdScore = bringIdScoreParam ? parseInt(bringIdScoreParam, 10) : undefined
+  const bringIdPoints = bringIdPointsParam ? parseInt(bringIdPointsParam, 10) : undefined
 
   const { data: survey, isLoading, error } = useSurvey(id)
-  const { isEligible, isLoading: accessLoading, reason } = useSurveyEligibility(survey)
+
+  // Use the API-based eligibility hook that accepts BringId params
+  const { data: eligibility, isLoading: accessLoading } = useSurveyEligibility(
+    id,
+    user?.walletAddress,
+    survey,
+    bringIdScore,
+    bringIdPoints
+  )
+
+  const isEligible = eligibility?.isEligible ?? null
+
+  // Redirect to info page if not eligible (all validations happen there)
+  useEffect(() => {
+    if (isEligible === false) {
+      router.replace(`/surveys/${id}/info`)
+    }
+  }, [isEligible, router, id])
 
   const handleSubmitSurvey = (submittedResponseId?: string) => {
     // Navigate to reward page with responseId as query parameter
-    const rewardUrl = submittedResponseId 
+    const rewardUrl = submittedResponseId
       ? `/surveys/${id}/reward?responseId=${submittedResponseId}`
       : `/surveys/${id}/reward`
     router.push(rewardUrl)
@@ -87,17 +111,15 @@ export default function SurveyDetailPage({ params }: SurveyDetailPageProps) {
     )
   }
 
-  // Check access control - deny if not eligible
+  // Show loading while redirecting to info page
   if (isEligible === false) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
         <Header />
         <main className="flex-1 py-16">
-          <AccessDeniedUI
-            reason={reason}
-            surveyName={survey.name}
-            onBack={handleBackToSurveys}
-          />
+          <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+            <Skeleton className="h-8 w-3/4" />
+          </div>
         </main>
         <Footer />
       </div>
@@ -109,10 +131,10 @@ export default function SurveyDetailPage({ params }: SurveyDetailPageProps) {
       <Header />
 
       <main className="flex-1">
-        <SurveyPage 
-          survey={survey} 
-          onSubmit={handleSubmitSurvey} 
-          onBack={handleBackToSurveys} 
+        <SurveyPage
+          survey={survey}
+          onSubmit={handleSubmitSurvey}
+          onBack={handleBackToSurveys}
         />
       </main>
 

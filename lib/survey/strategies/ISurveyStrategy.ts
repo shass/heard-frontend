@@ -30,6 +30,15 @@ export interface ButtonState {
   loading: boolean
 }
 
+// Access strategy configuration
+export interface AccessStrategyConfig {
+  enabled: boolean
+  config?: {
+    minScore?: number
+    requireHumanityProof?: boolean
+  }
+}
+
 // Parameters for determining button state
 export interface ButtonStateParams {
   survey: Survey
@@ -42,6 +51,11 @@ export interface ButtonStateParams {
   handleStartSurvey: () => void
   handleConnectWallet: () => void
   handleAuthenticate: () => Promise<void>
+  // BringId support
+  accessStrategies?: string[]
+  accessStrategyConfigs?: Record<string, AccessStrategyConfig>
+  handleVerifyBringId?: () => void
+  isBringIdVerifying?: boolean
 }
 
 // Parameters for reward display logic

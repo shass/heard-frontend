@@ -110,6 +110,8 @@ export class SurveyApi {
    */
   async checkEligibility(id: string, params: {
     walletAddress?: string
+    bringIdScore?: number
+    bringIdPoints?: number
   } = {}, options?: { signal?: AbortSignal }): Promise<EligibilityResponse> {
     if (!id) {
       throw new Error('Survey ID is required')
@@ -121,6 +123,12 @@ export class SurveyApi {
 
     const queryParams = new URLSearchParams()
     queryParams.append('walletAddress', params.walletAddress)
+    if (params.bringIdScore !== undefined) {
+      queryParams.append('bringIdScore', params.bringIdScore.toString())
+    }
+    if (params.bringIdPoints !== undefined) {
+      queryParams.append('bringIdPoints', params.bringIdPoints.toString())
+    }
 
     const url = `/surveys/${id}/eligibility?${queryParams.toString()}`
 

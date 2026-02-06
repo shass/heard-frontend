@@ -12,6 +12,7 @@ import { SurveyActions } from './SurveyActions'
 import { SurveyList } from './SurveyList'
 import { useSurveyManagement } from './hooks/useSurveyManagement'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 export function SurveyManagement() {
   const {
@@ -118,6 +119,29 @@ export function SurveyManagement() {
     setIsEditDialogOpen(true)
   }
 
+  const handleUpdateAccessConfig = async (surveyId: string, strategyId: string, config: Record<string, unknown>) => {
+    try {
+      const survey = surveys.find(s => s.id === surveyId)
+      if (!survey) return
+
+      const currentConfigs = survey.accessStrategyConfigs || {}
+      await updateSurveyMutation.mutateAsync({
+        id: surveyId,
+        accessStrategyConfigs: {
+          ...currentConfigs,
+          [strategyId]: { enabled: true, config }
+        }
+      })
+      toast.success('Strategy config updated', {
+        description: `${strategyId} settings saved successfully`
+      })
+    } catch (error) {
+      toast.error('Failed to update config', {
+        description: error instanceof Error ? error.message : 'Unknown error'
+      })
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header with Actions */}
@@ -161,6 +185,7 @@ export function SurveyManagement() {
         onDuplicate={handleDuplicateSurvey}
         onExport={handleExportSurvey}
         onDelete={handleDeleteSurvey}
+        onUpdateAccessConfig={handleUpdateAccessConfig}
         isToggleStatusPending={toggleStatusMutation.isPending}
         isRefreshStatsPending={refreshStatsMutation.isPending}
         isDuplicatePending={duplicateSurveyMutation.isPending}
