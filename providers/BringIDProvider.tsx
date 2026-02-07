@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback, useEffect, useRef } from 'react'
 import { BringIDModal } from 'bringid/react'
 import { useAccount, useWalletClient } from 'wagmi'
 
@@ -17,12 +18,23 @@ export function BringIDProvider({ children }: BringIDProviderProps) {
   const { address } = useAccount()
   const { data: walletClient } = useWalletClient()
 
+  const walletClientRef = useRef(walletClient)
+  useEffect(() => { walletClientRef.current = walletClient }, [walletClient])
+
+  const generateSignature = useCallback(
+    (message: string) => {
+      if (!walletClientRef.current) return Promise.reject(new Error('No wallet client'))
+      return walletClientRef.current.signMessage({ message })
+    },
+    []
+  )
+
   return (
     <>
       {walletClient && (
         <BringIDModal
           address={address}
-          generateSignature={(message: string) => walletClient.signMessage({ message })}
+          generateSignature={generateSignature}
         />
       )}
       {children}
