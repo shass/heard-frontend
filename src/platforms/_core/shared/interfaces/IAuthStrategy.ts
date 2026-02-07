@@ -1,16 +1,9 @@
-import { AuthState, User, AuthResult } from './IAuthProvider'
+import { AuthResult } from './IAuthProvider'
 
 // Re-export types needed by strategy consumers
-export type { AuthResult, AuthState, User }
+export type { AuthResult }
 
 export interface IAuthStrategy {
-  // State
-  user: User | null
-  authState: AuthState
-  isAuthenticated: boolean
-  isLoading: boolean
-  error: string | null
-
   // Core methods
   authenticate: () => Promise<AuthResult>
   logout: () => Promise<void>
@@ -18,4 +11,7 @@ export interface IAuthStrategy {
 
   // Capabilities
   canAuthenticate: boolean
+
+  // Lifecycle (optional)
+  destroy?: () => void
 }

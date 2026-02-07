@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
 import { useAuth } from "@/src/platforms/_core/hooks/useAuth"
+import { useAuthStore } from "@/lib/store"
 import { useNotifications } from "@/components/ui/notifications"
 import { LogOut, ChevronDown, Wallet } from 'lucide-react'
 import {
@@ -17,8 +18,9 @@ import { useAccount, useDisconnect } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 
 export function WebAuthSection() {
-  const auth = useAuth()
-  const { logout, isAuthenticated, user } = auth
+  const { logout } = useAuth()
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+  const user = useAuthStore(state => state.user)
   const notifications = useNotifications()
   const { openConnectModal } = useConnectModal()
   const { address, isConnected } = useAccount()

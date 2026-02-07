@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { LogIn } from 'lucide-react';
 import { useNotifications } from './ui/notifications';
 import { useAuth } from '@/src/platforms';
+import { useAuthStore } from '@/lib/store';
 import { usePlatform } from '@/src/core/hooks/usePlatform';
 
 interface FarcasterAuthButtonProps {
@@ -25,15 +26,20 @@ function ModernFarcasterAuthButton({
   const notifications = useNotifications();
   const { platform } = usePlatform();
 
+  // Read state from store (strategy is stateless)
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const user = useAuthStore(state => state.user);
+  const isLoading = useAuthStore(state => state.loading);
+
   const handleAuth = async () => {
     try {
-      if (auth.isAuthenticated) {
+      if (isAuthenticated) {
         await auth.logout();
         notifications.success('Signed out successfully');
       } else {
         await auth.authenticate();
         notifications.success('Authentication successful!');
-        onSuccess?.(auth.user);
+        onSuccess?.(user);
       }
     } catch (error) {
       console.error('Auth failed:', error);
@@ -48,10 +54,10 @@ function ModernFarcasterAuthButton({
 
   // Get platform-specific button text
   const getButtonText = () => {
-    if (auth.isLoading) {
+    if (isLoading) {
       return platform?.id === 'base-app' ? 'Processing...' : 'Signing in...';
     }
-    if (auth.isAuthenticated) {
+    if (isAuthenticated) {
       return 'Sign Out';
     }
     return platform?.id === 'base-app' ? 'Sign in with Base' : 'Quick Auth';
@@ -62,7 +68,7 @@ function ModernFarcasterAuthButton({
       variant={variant}
       size={size}
       onClick={handleAuth}
-      disabled={auth.isLoading}
+      disabled={isLoading}
       className={className}
     >
       <LogIn className="h-4 w-4 mr-2" />

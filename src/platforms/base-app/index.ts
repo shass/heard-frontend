@@ -4,6 +4,5 @@ export * from './hooks/useMiniKitContext'
 export * from './hooks/useMiniKitReady'
 
 // Strategies
-export * from './strategies/useBaseAppAuthStrategy'
 export * from './strategies/useBaseAppWalletStrategy'
 export * from './strategies/useBaseAppUrlStrategy'

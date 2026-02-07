@@ -10,17 +10,19 @@ interface AuthStore {
   user: User | null
   isAuthenticated: boolean
   loading: boolean
-  isLoading: boolean // Alias for compatibility
   error: string | null
   initialized: boolean // Flag to prevent duplicate auth checks from WebAuthInitializer
-  isAuthStrategyReady: boolean // Flag to prevent duplicate strategy-level auth checks
 
-  // Actions
+  // Granular setters
   setUser: (user: User | null) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   setInitialized: (initialized: boolean) => void
-  setAuthStrategyReady: (ready: boolean) => void
+
+  // Composite actions
+  startAuth: () => void
+  authSuccess: (user: User) => void
+  authFailure: (error: string) => void
   logout: () => void
 }
 
@@ -30,20 +32,29 @@ export const useAuthStore = create<AuthStore>()(
       user: null,
       isAuthenticated: false,
       loading: true, // Start with loading true to prevent flickering
-      isLoading: true, // Alias for compatibility
       error: null,
       initialized: false,
-      isAuthStrategyReady: false,
 
       setUser: (user) => set({ user, isAuthenticated: !!user, error: null }),
 
-      setLoading: (loading) => set({ loading, isLoading: loading }),
+      setLoading: (loading) => set({ loading }),
 
-      setError: (error) => set({ error, loading: false, isLoading: false }),
+      setError: (error) => set({ error, loading: false }),
 
       setInitialized: (initialized) => set({ initialized }),
 
-      setAuthStrategyReady: (ready) => set({ isAuthStrategyReady: ready }),
+      // Composite actions
+      startAuth: () => set({ loading: true, error: null }),
+
+      authSuccess: (user) => set({
+        user,
+        isAuthenticated: true,
+        loading: false,
+        error: null,
+        initialized: true,
+      }),
+
+      authFailure: (error) => set({ error, loading: false }),
 
       logout: () => {
         // Clear auth state
@@ -51,10 +62,8 @@ export const useAuthStore = create<AuthStore>()(
           user: null,
           isAuthenticated: false,
           loading: false, // Not loading after explicit logout
-          isLoading: false,
           error: null,
           initialized: false, // Reset initialized flag so auth check runs again
-          isAuthStrategyReady: false, // Reset strategy check flag
         })
 
         // Clear token from storage (localStorage for Base App, no-op for Web)

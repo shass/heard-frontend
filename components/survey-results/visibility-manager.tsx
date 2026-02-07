@@ -31,7 +31,7 @@ import {
   Settings,
   Info
 } from 'lucide-react'
-import { useAuth } from '@/src/platforms'
+import { useAuthStore } from '@/lib/store'
 import {
   useSurveyVisibility,
   useUpdateSurveyVisibility,
@@ -44,8 +44,8 @@ interface VisibilityManagerProps {
 }
 
 export function VisibilityManager({ surveyId }: VisibilityManagerProps) {
-  const auth = useAuth()
-  const isAdmin = auth.user?.role === 'admin'
+  const user = useAuthStore(state => state.user)
+  const isAdmin = user?.role === 'admin'
 
   const { data: visibility, isLoading } = useSurveyVisibility(surveyId)
   const updateVisibility = useUpdateSurveyVisibility()

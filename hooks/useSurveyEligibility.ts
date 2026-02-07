@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAccessControl } from '@/src/core/hooks/useAccessControl'
-import { useAuth } from '@/src/platforms/_core/hooks/useAuth'
+import { useAuthStore } from '@/lib/store'
 import { getUserFriendlyMessage } from '@/src/core/utils/error-handling'
 import type { Survey as LibSurvey } from '@/lib/types'
 import type { Survey as CoreSurvey } from '@/src/core/interfaces/ISurveyType'
@@ -24,7 +24,9 @@ interface UseSurveyEligibilityResult {
  * Handles authentication and access strategy checks with retry logic
  */
 export function useSurveyEligibility(survey: Survey | null | undefined): UseSurveyEligibilityResult {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const user = useAuthStore(state => state.user)
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+  const authLoading = useAuthStore(state => state.loading)
   const { checkAccess, isChecking, result, error: accessError } = useAccessControl()
   const [hasChecked, setHasChecked] = useState(false)
   const [localError, setLocalError] = useState<Error | null>(null)
@@ -52,7 +54,7 @@ export function useSurveyEligibility(survey: Survey | null | undefined): UseSurv
     }
 
     // Check access with error handling
-    checkAccess(user, survey, strategyIds)
+    checkAccess(user as any, survey, strategyIds)
       .then(() => {
         setHasChecked(true)
         setLocalError(null)

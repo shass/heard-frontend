@@ -19,24 +19,21 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
   const router = useRouter()
   const { openConnectModal } = useConnectModal()
   const { address, isConnected } = useAccount()
-  const {
-    authenticate,
-    logout,
-    isAuthenticated,
-    isLoading: authLoading
-  } = useAuth()
-  // Read backend user with role from store
+  const { authenticate, logout } = useAuth()
+
+  // All state from store
   const user = useAuthStore(state => state.user)
+  const loading = useAuthStore(state => state.loading)
+  const initialized = useAuthStore(state => state.initialized)
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
   const [isCreatingSession, setIsCreatingSession] = useState(false)
 
   const handleCreateSession = async (event?: React.MouseEvent) => {
-    // Prevent any default behavior
     event?.preventDefault()
     event?.stopPropagation()
 
     if (!isConnected) return
 
-    // Prevent double calls
     if (isCreatingSession) {
       console.log('[AdminAuthWrapper] Already creating session, skipping...')
       return
@@ -55,7 +52,7 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
   }
 
   // Loading state while checking authentication
-  if (authLoading || isCreatingSession) {
+  if (loading || !initialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Spinner size="lg" />
@@ -149,14 +146,14 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
 
     // CRITICAL: Check wallet address matches
     if (user.walletAddress?.toLowerCase() !== address?.toLowerCase()) {
-      console.error('[AdminAuthWrapper] ⚠️ SECURITY: Wallet mismatch! Logging out...')
+      console.error('[AdminAuthWrapper] SECURITY: Wallet mismatch! Logging out...')
       logout()
       return null
     }
 
     // Double-check admin role
     if (user.role !== 'admin') {
-      console.error('[AdminAuthWrapper] ⚠️ SECURITY: Non-admin user attempting access')
+      console.error('[AdminAuthWrapper] SECURITY: Non-admin user attempting access')
       router.push('/')
       return null
     }

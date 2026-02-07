@@ -1,74 +1,76 @@
 'use client'
 
 import { sdk } from '@farcaster/miniapp-sdk'
-import { AuthState, User } from '@/src/platforms'
+import { User } from '@/src/platforms'
 import { IAuthStrategy, AuthResult } from '../../_core/shared/interfaces/IAuthStrategy'
 import { Platform } from '../../config'
 import { useAuthStore } from '@/lib/store'
 import { authApi } from '@/lib/api/auth'
-import { toPlatformUser, toBackendUser } from '../../_core/shared/adapters/userAdapter'
 
 /**
- * Farcaster authentication strategy class
- * Uses Quick Auth for verified authentication
+ * Farcaster authentication strategy class (stateless)
+ * All auth state lives in useAuthStore. Strategy only contains business logic.
+ * Uses Quick Auth for verified authentication.
  */
 export class FarcasterAuthStrategy implements IAuthStrategy {
-  private _user: User | null = null
-  private _authState: AuthState = AuthState.UNAUTHENTICATED
-  private _isLoading: boolean = false
-  private _error: string | null = null
-
   constructor(
     private context: any
-  ) {
-    this.initialize()
-  }
-
-  private initialize() {
-    const storeUser = useAuthStore.getState().user
-    if (storeUser) {
-      this._user = toPlatformUser(storeUser, Platform.FARCASTER)
-      this._authState = AuthState.AUTHENTICATED
-    }
-    useAuthStore.getState().setLoading(false)
-  }
-
-  get user(): User | null {
-    const storeUser = useAuthStore.getState().user
-    return storeUser ? toPlatformUser(storeUser, Platform.FARCASTER) : null
-  }
-
-  get authState(): AuthState {
-    return this._authState
-  }
-
-  get isAuthenticated(): boolean {
-    return this._authState === AuthState.AUTHENTICATED
-  }
-
-  get isLoading(): boolean {
-    return this._authState === AuthState.LOADING || this._isLoading
-  }
-
-  get error(): string | null {
-    return this._error
-  }
+  ) {}
 
   get canAuthenticate(): boolean {
     return !!this.context
   }
 
-  authenticate = async (): Promise<AuthResult> => {
-    if (!this.context) {
-      this._error = 'Farcaster context not available'
-      return { success: false, error: this._error }
+  checkAuthStatus = async (): Promise<void> => {
+    if (typeof window === 'undefined') {
+      useAuthStore.getState().setUser(null)
+      useAuthStore.getState().setLoading(false)
+      return
+    }
+
+    const token = localStorage.getItem('auth_token')
+    if (!token) {
+      useAuthStore.getState().setUser(null)
+      useAuthStore.getState().setLoading(false)
+      return
     }
 
     try {
-      this._error = null
-      this._isLoading = true
-      this._authState = AuthState.LOADING
+      console.log('[FarcasterAuthStrategy] Restoring session from token...')
       useAuthStore.getState().setLoading(true)
+
+      const { apiClient } = await import('@/lib/api/client')
+      apiClient.setAuthToken(token)
+
+      const userData = await authApi.checkAuth()
+
+      if (userData) {
+        const storeUser = {
+          ...userData,
+          platform: Platform.FARCASTER,
+        }
+        useAuthStore.getState().authSuccess(storeUser)
+      } else {
+        apiClient.clearAuthToken()
+        useAuthStore.getState().setUser(null)
+        useAuthStore.getState().setLoading(false)
+      }
+    } catch (err) {
+      console.warn('[FarcasterAuthStrategy] Failed to restore session:', err)
+      const { apiClient } = await import('@/lib/api/client')
+      apiClient.clearAuthToken()
+      useAuthStore.getState().setUser(null)
+      useAuthStore.getState().setLoading(false)
+    }
+  }
+
+  authenticate = async (): Promise<AuthResult> => {
+    if (!this.context) {
+      return { success: false, error: 'Farcaster context not available' }
+    }
+
+    try {
+      useAuthStore.getState().startAuth()
 
       const { apiClient } = await import('@/lib/api/client')
       apiClient.clearAuthToken()
@@ -117,6 +119,14 @@ export class FarcasterAuthStrategy implements IAuthStrategy {
         apiClient.setAuthToken(token)
       }
 
+      // Create store user and update store
+      const storeUser = {
+        ...userData,
+        platform: Platform.FARCASTER,
+      }
+      useAuthStore.getState().authSuccess(storeUser)
+
+      // Return platform User for AuthResult
       const finalUser: User = {
         id: userData.id,
         walletAddress: userData.walletAddress,
@@ -133,48 +143,21 @@ export class FarcasterAuthStrategy implements IAuthStrategy {
         }
       }
 
-      this._user = finalUser
-      this._authState = AuthState.AUTHENTICATED
-      this._isLoading = false
-      useAuthStore.getState().setUser(toBackendUser(finalUser))
-      useAuthStore.getState().setLoading(false)
-
       return { success: true, user: finalUser }
     } catch (err: any) {
       const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
       console.error('[FarcasterAuthStrategy] Authentication error:', err)
-      this._error = errorMessage
-      this._authState = AuthState.ERROR
-      this._isLoading = false
-      useAuthStore.getState().setLoading(false)
+      useAuthStore.getState().authFailure(errorMessage)
       return { success: false, error: errorMessage }
     }
   }
 
-  logout = async () => {
-    try {
-      this._error = null
-      this._user = null
-      this._authState = AuthState.UNAUTHENTICATED
-
-      if (typeof window !== 'undefined') {
-        const { apiClient } = await import('@/lib/api/client')
-        apiClient.clearAuthToken()
-      }
-
-      useAuthStore.getState().logout()
-    } catch (err) {
-      this._error = err instanceof Error ? err.message : 'Logout failed'
+  logout = async (): Promise<void> => {
+    if (typeof window !== 'undefined') {
+      const { apiClient } = await import('@/lib/api/client')
+      apiClient.clearAuthToken()
     }
-  }
 
-  checkAuthStatus = async () => {
-    try {
-      const userData = await authApi.checkAuth()
-      this._authState = userData ? AuthState.AUTHENTICATED : AuthState.UNAUTHENTICATED
-    } catch (err) {
-      this._authState = AuthState.ERROR
-      this._error = err instanceof Error ? err.message : 'Failed to check auth status'
-    }
+    useAuthStore.getState().logout()
   }
 }

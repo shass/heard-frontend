@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
-import { useAuth } from "@/src/platforms/_core/hooks/useAuth"
+import { useAuthStore } from "@/lib/store"
 import { useNotifications } from "@/components/ui/notifications"
 import { ChevronDown } from 'lucide-react'
 import {
@@ -14,7 +14,7 @@ import {
 import { formatAddress } from '@/lib/utils'
 
 export function BaseAppAuthSection() {
-  const auth = useAuth()
+  const user = useAuthStore(state => state.user)
   const notifications = useNotifications()
 
   const handleBalanceChange = (newBalance: number, previousBalance: number) => {
@@ -29,7 +29,7 @@ export function BaseAppAuthSection() {
   }
 
   // In Base App, user is always authenticated via context
-  if (auth.user) {
+  if (user) {
     return (
       <div className="flex items-center space-x-3">
         <DropdownMenu>
@@ -41,9 +41,9 @@ export function BaseAppAuthSection() {
                 </svg>
               </div>
               <span className="text-sm font-medium text-zinc-700">
-                {auth.user.walletAddress
-                  ? formatAddress(auth.user.walletAddress)
-                  : '@' + ((auth.user.metadata as any)?.username || `FID ${auth.user.id}`)}
+                {user.walletAddress
+                  ? formatAddress(user.walletAddress)
+                  : '@' + ((user as any)?.username || `FID ${user.id}`)}
               </span>
               <div className="h-4 w-px bg-zinc-300 mx-2"></div>
               <HeardPointsBalance
@@ -58,7 +58,7 @@ export function BaseAppAuthSection() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem disabled className="text-zinc-500">
-              FID: {auth.user.id}
+              FID: {user.id}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

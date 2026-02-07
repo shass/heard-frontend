@@ -98,6 +98,15 @@ class ApiClient {
       // Clear token on client side (localStorage for Base App, no-op for Web)
       // HttpOnly cookie will be cleared by server
       this.clearAuthToken()
+
+      // Logout from store only if auth was already initialized
+      // (avoids false logout during initial auth check)
+      import('@/lib/store').then(({ useAuthStore }) => {
+        const state = useAuthStore.getState()
+        if (state.initialized) {
+          state.logout()
+        }
+      })
     }
 
     if (!response.ok) {

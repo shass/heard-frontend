@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { HeardPointsBalance } from "@/components/ui/heard-points-balance"
 import { useAuth } from "@/src/platforms/_core/hooks/useAuth"
+import { useAuthStore } from "@/lib/store"
 import { useNotifications } from "@/components/ui/notifications"
 import { LogOut, ChevronDown, Wallet } from 'lucide-react'
 import {
@@ -15,8 +16,12 @@ import { formatAddress } from '@/lib/utils'
 
 export function FarcasterAuthSection() {
   const auth = useAuth()
-  const { authenticate: login, logout, isAuthenticated, user, isLoading } = auth
   const notifications = useNotifications()
+
+  // Read state from store (strategy is stateless)
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+  const user = useAuthStore(state => state.user)
+  const isLoading = useAuthStore(state => state.loading)
 
   // Debug logging
   if (process.env.NODE_ENV === 'development') {
@@ -26,7 +31,7 @@ export function FarcasterAuthSection() {
   const handleLogin = async () => {
     try {
       console.log('[FarcasterAuthSection] Initiating Farcaster Quick Auth')
-      await login()
+      await auth.authenticate()
       notifications.success('Authentication successful', 'You have been authenticated successfully')
     } catch (error: any) {
       console.error('[FarcasterAuthSection] Login error:', error)
@@ -36,7 +41,7 @@ export function FarcasterAuthSection() {
 
   const handleLogout = async () => {
     try {
-      await logout()
+      await auth.logout()
       notifications.success('Logged out', 'You have been successfully logged out')
     } catch (error: any) {
       notifications.error('Logout failed', error.message || 'Please try again')

@@ -5,7 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { winnersApi, type GetWinnersParams } from '@/lib/api/winners'
 import type { WinnersPagedData, AddWinnersRequest } from '@/lib/types'
-import { useAuth } from '@/src/platforms'
+import { useAuthStore } from '@/lib/store'
 import { toast } from 'sonner'
 
 // Query keys for cache management
@@ -23,8 +23,8 @@ export const winnerKeys = {
  * @returns React Query result with winners data
  */
 export function useWinners(surveyId: string, params: GetWinnersParams = {}) {
-  const auth = useAuth()
-  const isAdmin = auth.user?.role === 'admin'
+  const user = useAuthStore(state => state.user)
+  const isAdmin = user?.role === 'admin'
 
   return useQuery<WinnersPagedData>({
     queryKey: winnerKeys.list(surveyId, params),

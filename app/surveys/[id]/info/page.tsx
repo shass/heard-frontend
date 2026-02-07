@@ -46,12 +46,12 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
   const openUrl = useOpenUrl()
   const auth = useAuth()
-  const { authenticate: login, isLoading: isAuthLoading, error: authError } = auth
   const wallet = useWallet()
 
-  // Read auth state from store for reactivity
+  // Read all auth state from store (strategy is stateless)
   const isAuthenticated = useAuthStore(state => state.isAuthenticated)
   const user = useAuthStore(state => state.user)
+  const isAuthLoading = useAuthStore(state => state.loading)
 
   // Wallet connection is handled by platform-specific strategies
   const isConnected = wallet.isConnected
@@ -131,7 +131,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
   const handleAuthenticate = async () => {
     try {
-      const result = await login()
+      const result = await auth.authenticate()
 
       // Check result directly instead of waiting for state updates
       if (result?.success) {

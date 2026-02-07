@@ -10,7 +10,8 @@ import { ShareButton } from '@/components/share-button'
 import { SurveyReward } from '@/components/survey'
 import { Users, TrendingUp, Clock, Eye, EyeOff } from 'lucide-react'
 import { useSurveyResultsWithQuestions, useCanViewResults, useUserReward } from '@/hooks'
-import { useAuth, useWallet, useOpenUrl } from '@/src/platforms/_core'
+import { useWallet, useOpenUrl } from '@/src/platforms/_core'
+import { useAuthStore } from '@/lib/store'
 import { resultsUtils } from '@/lib/api/survey-clients'
 import { QuestionChart } from './question-chart'
 import { VisibilityManager } from './visibility-manager'
@@ -31,8 +32,7 @@ export function SurveyResults({
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
 
-  const auth = useAuth()
-  const { isAuthenticated } = auth
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
   const wallet = useWallet()
   const isConnected = wallet.isConnected
   const openUrl = useOpenUrl()

@@ -11,11 +11,8 @@ import { FarcasterAuthStrategy } from '@/src/platforms/farcaster/strategies/Farc
 import { useAuthStore } from '@/lib/store'
 
 /**
- * Get auth strategy from active platform with Dependency Injection
- * Creates strategy instances with required dependencies from React hooks
- *
- * @returns auth strategy instance
- * @throws if platform not ready
+ * Get auth strategy from active platform with Dependency Injection.
+ * Returns ONLY strategy methods — all state lives in useAuthStore.
  */
 export function useAuth(): IAuthStrategy {
   const { platform, isLoading, error } = usePlatform()
@@ -31,8 +28,6 @@ export function useAuth(): IAuthStrategy {
   const strategyRef = useRef<IAuthStrategy | null>(null)
   const previousAddressRef = useRef<string | undefined>(undefined)
   const hasInitializedRef = useRef(false)
-  const wasConnectedRef = useRef(false)
-  const hasCheckedTokenRef = useRef(false)
 
   // Memoize wagmi dependencies to prevent unnecessary strategy recreations
   const wagmiDeps = useMemo(
@@ -49,83 +44,43 @@ export function useAuth(): IAuthStrategy {
   // Create strategy with dependency injection
   const authStrategy = useMemo(() => {
     if (isLoading) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[useAuth] Platform is loading, auth strategy not available yet')
-      }
       throw new Error('[useAuth] Platform is still loading')
     }
 
     if (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[useAuth] Platform error:', error.message)
-      }
       throw error
     }
 
     if (!platform) {
-      const err = new Error('[useAuth] No active platform detected')
-      if (process.env.NODE_ENV === 'development') {
-        console.error(err.message)
-      }
-      throw err
+      throw new Error('[useAuth] No active platform detected')
     }
 
-    try {
-      let strategy: IAuthStrategy
+    let strategy: IAuthStrategy
 
-      // Create strategy with DI based on platform
-      if (platform.id === 'web') {
-        // Create strategy instance only once
-        if (!strategyRef.current) {
-          strategy = new WebAuthStrategy(
-            wagmiDeps,
-            signFn,
-            true // checkAuthOnInit
-          )
-          strategyRef.current = strategy
-
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[useAuth] Created auth strategy for platform:', platform.name)
-          }
-        } else {
-          strategy = strategyRef.current
-        }
-      } else if (platform.id === 'base-app') {
-        // BaseApp uses MiniKit SDK
-        if (!miniKitContext) {
-          throw new Error('[useAuth] MiniKit context not available for BaseApp')
-        }
-        // Always create new strategy with current context
-        strategy = new BaseAppAuthStrategy(miniKitContext)
+    if (platform.id === 'web') {
+      if (!strategyRef.current) {
+        strategy = new WebAuthStrategy(wagmiDeps, signFn)
         strategyRef.current = strategy
-
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[useAuth] Created auth strategy for platform:', platform.name)
-        }
-      } else if (platform.id === 'farcaster') {
-        // Farcaster uses MiniKit SDK
-        if (!miniKitContext) {
-          throw new Error('[useAuth] MiniKit context not available for Farcaster')
-        }
-        // Always create new strategy with current context
-        strategy = new FarcasterAuthStrategy(miniKitContext)
-        strategyRef.current = strategy
-
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[useAuth] Created auth strategy for platform:', platform.name)
-        }
       } else {
-        throw new Error(`[useAuth] Unknown platform: ${platform.id}`)
+        strategy = strategyRef.current
       }
-
-      return strategy
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to create auth strategy')
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[useAuth] Error creating auth strategy:', error.message)
+    } else if (platform.id === 'base-app') {
+      if (!miniKitContext) {
+        throw new Error('[useAuth] MiniKit context not available for BaseApp')
       }
-      throw error
+      strategy = new BaseAppAuthStrategy(miniKitContext)
+      strategyRef.current = strategy
+    } else if (platform.id === 'farcaster') {
+      if (!miniKitContext) {
+        throw new Error('[useAuth] MiniKit context not available for Farcaster')
+      }
+      strategy = new FarcasterAuthStrategy(miniKitContext)
+      strategyRef.current = strategy
+    } else {
+      throw new Error(`[useAuth] Unknown platform: ${platform.id}`)
     }
+
+    return strategy
   }, [platform, isLoading, error, wagmiDeps, signFn, miniKitContext])
 
   // Update wagmi account when it changes (Web platform only)
@@ -138,28 +93,35 @@ export function useAuth(): IAuthStrategy {
     }
   }, [address, isConnected, platform])
 
-  // Handle wallet address changes - logout if address changes (Web platform only)
+  // Single initialization effect: replaces WebAuthInitializer
   useEffect(() => {
     if (platform?.id !== 'web') return
+    if (hasInitializedRef.current) return
+    if (useAuthStore.getState().initialized) return
 
-    if (!hasInitializedRef.current) {
-      if (address && isConnected) {
-        previousAddressRef.current = address
-        hasInitializedRef.current = true
-        wasConnectedRef.current = true
+    const webStrategy = strategyRef.current as WebAuthStrategy
+    if (!webStrategy?.canAuthenticate) return
+
+    hasInitializedRef.current = true
+
+    webStrategy.checkAuthStatus().finally(() => {
+      const store = useAuthStore.getState()
+      if (!store.initialized) {
+        store.setInitialized(true)
       }
-      return
-    }
+      store.setLoading(false)
+    })
+  }, [platform, address, isConnected])
 
-    if (isConnected && !wasConnectedRef.current) {
-      wasConnectedRef.current = true
-    }
+  // Handle wallet address changes — logout if address changes or wallet disconnects
+  useEffect(() => {
+    if (platform?.id !== 'web') return
 
     const currentUser = useAuthStore.getState().user
     const previousAddress = previousAddressRef.current
 
-    // If we have a user and the address changed, logout
-    if (currentUser && currentUser.walletAddress && address && previousAddress !== address) {
+    // Address changed while user is authenticated
+    if (currentUser && currentUser.walletAddress && address && previousAddress && previousAddress !== address) {
       const currentAddress = currentUser.walletAddress.toLowerCase()
       const newAddress = address.toLowerCase()
 
@@ -171,104 +133,16 @@ export function useAuth(): IAuthStrategy {
       }
     }
 
-    // If wallet disconnected, logout
-    if (currentUser && !isConnected && wasConnectedRef.current) {
+    // Wallet disconnected while user is authenticated
+    if (currentUser && !isConnected && previousAddress) {
       useAuthStore.getState().logout()
       if (strategyRef.current) {
         strategyRef.current.logout().catch(console.error)
       }
-      wasConnectedRef.current = false
     }
 
     previousAddressRef.current = address
   }, [address, isConnected, platform])
-
-  // Check auth status on mount - ONLY if not already initialized globally (Web platform only)
-  useEffect(() => {
-    if (platform?.id !== 'web') return
-
-    const { initialized, isAuthStrategyReady, setAuthStrategyReady } = useAuthStore.getState()
-
-    if (initialized || isAuthStrategyReady) {
-      return
-    }
-
-    const webStrategy = strategyRef.current as WebAuthStrategy
-    if (!webStrategy?.canAuthenticate) return
-
-    setAuthStrategyReady(true)
-  }, [platform])
-
-  // Check stored token on mount for BaseApp/Farcaster
-  useEffect(() => {
-    if (platform?.id !== 'base-app' && platform?.id !== 'farcaster') return
-    if (hasCheckedTokenRef.current) return
-
-    // Set flag immediately before any async operations
-    hasCheckedTokenRef.current = true
-
-    const { isAuthStrategyReady, setAuthStrategyReady, setLoading } = useAuthStore.getState()
-    if (isAuthStrategyReady) {
-      return
-    }
-
-    setAuthStrategyReady(true)
-
-    // Cancellation flag to prevent state updates after unmount
-    let cancelled = false
-
-    // Check for stored token and restore session
-    if (typeof window !== 'undefined') {
-      let storedToken: string | null = null
-      try {
-        storedToken = localStorage.getItem('auth_token')
-      } catch (err) {
-        console.error('[useAuth] Failed to read auth_token from localStorage:', err)
-      }
-
-      if (storedToken) {
-        console.log('[useAuth] Found stored token for', platform.id, '- verifying...')
-        setLoading(true)
-
-        // Import authApi and restore session
-        import('@/lib/api/auth').then(({ authApi }) => {
-          authApi.checkAuth().then((userData) => {
-            if (cancelled) return
-
-            if (userData) {
-              console.log('[useAuth] Token valid, restoring session')
-              // Update store directly - this triggers React re-render
-              useAuthStore.getState().setUser(userData)
-            } else {
-              console.log('[useAuth] Token invalid, clearing')
-              try {
-                localStorage.removeItem('auth_token')
-              } catch (err) {
-                console.error('[useAuth] Failed to remove auth_token from localStorage:', err)
-              }
-            }
-          }).catch((err) => {
-            if (cancelled) return
-
-            console.error('[useAuth] Token verification failed:', err)
-            try {
-              localStorage.removeItem('auth_token')
-            } catch (removeErr) {
-              console.error('[useAuth] Failed to remove auth_token from localStorage:', removeErr)
-            }
-          }).finally(() => {
-            if (!cancelled) {
-              useAuthStore.getState().setLoading(false)
-            }
-          })
-        })
-      }
-    }
-
-    return () => {
-      cancelled = true
-    }
-  }, [platform])
 
   // Cleanup on unmount
   useEffect(() => {

@@ -191,32 +191,4 @@ export class WebAuthProvider implements IAuthProvider {
     }
   }
 
-  // IAuthProvider required getters
-  get isAuthenticated(): boolean {
-    return this.currentState === AuthState.AUTHENTICATED
-  }
-
-  get isLoading(): boolean {
-    return this.currentState === AuthState.LOADING
-  }
-
-  get error(): string | null {
-    return null
-  }
-
-  get user(): User | null {
-    return null // Web provider doesn't cache user, use getCurrentUser() instead
-  }
-
-  get platform(): string {
-    return Platform.WEB
-  }
-
-  get authState(): AuthState {
-    return this.currentState
-  }
-
-  get canAuthenticate(): boolean {
-    return this.wagmiAccount.isConnected && !!this.wagmiAccount.address
-  }
 }

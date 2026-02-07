@@ -15,7 +15,7 @@ import {
   type SurveyResultsResponse,
   type QuestionWithAnswers
 } from '@/lib/api/survey-clients'
-import { useAuth } from '@/src/platforms'
+import { useAuthStore } from '@/lib/store'
 import { toast } from 'sonner'
 
 // Query keys for cache management
@@ -29,8 +29,8 @@ export const surveyClientKeys = {
 
 // Admin hooks for managing survey clients
 export function useSurveyClients(surveyId: string) {
-  const auth = useAuth()
-  const isAdmin = auth.user?.role === 'admin'
+  const user = useAuthStore(state => state.user)
+  const isAdmin = user?.role === 'admin'
 
   return useQuery({
     queryKey: surveyClientKeys.clients(surveyId),
@@ -99,8 +99,8 @@ export function useRemoveSurveyClient() {
 
 // Visibility management hooks
 export function useSurveyVisibility(surveyId: string) {
-  const auth = useAuth()
-  const isAdmin = auth.user?.role === 'admin'
+  const user = useAuthStore(state => state.user)
+  const isAdmin = user?.role === 'admin'
 
   return useQuery({
     queryKey: surveyClientKeys.visibility(surveyId),
@@ -198,28 +198,28 @@ export function useSurveyVisibilityInfo(surveyId: string) {
 
 // Utility hooks
 export function useCanViewResults(surveyId: string, token?: string) {
-  const auth = useAuth()
+  const user = useAuthStore(state => state.user)
   const visibilityQuery = useSurveyVisibilityInfo(surveyId)
-  
+
   const canView = React.useMemo(() => {
     if (!visibilityQuery.data) return false
-    
+
     const { visibilityMode } = visibilityQuery.data
-    
+
     // Public surveys can be viewed by anyone
     if (visibilityMode === 'public') return true
-    
+
     // Token access
     if (token && visibilityMode === 'link') return true
-    
+
     // Private surveys require authentication and client status
     if (visibilityMode === 'private') {
-      return auth.user?.role === 'admin' ||
-             (auth.user?.walletAddress && surveyId) // Will be checked by backend
+      return user?.role === 'admin' ||
+             (user?.walletAddress && surveyId) // Will be checked by backend
     }
 
     return false
-  }, [visibilityQuery.data, token, auth.user, surveyId])
+  }, [visibilityQuery.data, token, user, surveyId])
   
   return {
     canView,

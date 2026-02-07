@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { winnersApi } from '@/lib/api'
-import { useAuth } from '@/src/platforms'
+import { useAuthStore } from '@/lib/store'
 import type { WinnerStatus } from '@/lib/types'
 
 /**
@@ -11,8 +11,8 @@ import type { WinnerStatus } from '@/lib/types'
  * @returns React Query result with winner status data
  */
 export function useWinnerStatus(surveyId: string | undefined) {
-  const auth = useAuth()
-  const isAuthenticated = !!auth.user
+  const user = useAuthStore(state => state.user)
+  const isAuthenticated = !!user
 
   return useQuery<WinnerStatus>({
     queryKey: ['winnerStatus', surveyId],

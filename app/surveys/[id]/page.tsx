@@ -6,7 +6,7 @@ import { Header } from "@/components/header"
 import { SurveyPage } from "@/components/survey-page"
 import { Footer } from "@/components/footer"
 import { useSurvey, useSurveyEligibility } from "@/hooks/use-surveys"
-import { useAuth } from "@/src/platforms/_core/hooks/useAuth"
+import { useAuthStore } from "@/lib/store"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -22,7 +22,7 @@ export default function SurveyDetailPage({ params }: SurveyDetailPageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { id } = use(params)
-  const { user } = useAuth()
+  const user = useAuthStore(state => state.user)
 
   // Read BringId params from URL (passed from info page after verification)
   const bringIdScoreParam = searchParams.get('bringIdScore')

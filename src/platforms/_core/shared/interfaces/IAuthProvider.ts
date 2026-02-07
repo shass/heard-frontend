@@ -5,23 +5,14 @@ export interface IAuthProvider {
   authenticate(): Promise<AuthResult>
   logout(): Promise<void>
   getSession(): Promise<Session | null>
-  
+
   // User info
   getCurrentUser(): Promise<User | null>
   getWalletAddress(): Promise<string | null>
-  
-  // State
-  isAuthenticated: boolean
-  isLoading: boolean
-  error: string | null
-  user: User | null
-  platform?: string
-  authState: AuthState
-  canAuthenticate: boolean
-  
+
   // Auth status
   checkAuthStatus(): Promise<void>
-  
+
   // Events
   onAuthStateChange(callback: (state: AuthState) => void): () => void
 }
