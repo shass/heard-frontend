@@ -28,7 +28,8 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  Lock
 } from 'lucide-react'
 import { useMigrations } from '../hooks/useMigrations'
 import { type MigrationStatus, type MigrationRunResponse } from '@/lib/api/admin'
@@ -198,7 +199,7 @@ function MigrationCard({
                     variant="outline"
                     size="sm"
                     onClick={() => onDryRun(migration)}
-                    disabled={isRunningDryRun}
+                    disabled={isRunningDryRun || migration.blocked === true}
                     aria-label={`Dry run ${migration.meta.name}`}
                   >
                     <Eye className="w-4 h-4 mr-1" aria-hidden="true" />
@@ -210,13 +211,19 @@ function MigrationCard({
                 <Button
                   size="sm"
                   onClick={() => onApply(migration)}
-                  disabled={migration.status === 'applied' || isRunningMigration}
+                  disabled={migration.status === 'applied' || isRunningMigration || migration.blocked === true}
                   aria-label={`Apply ${migration.meta.name}`}
                 >
                   <Play className="w-4 h-4 mr-1" aria-hidden="true" />
                   Apply
                 </Button>
               </div>
+              {migration.blocked && (
+                <div className="flex items-center gap-1 text-xs text-amber-600">
+                  <Lock className="w-3 h-3" aria-hidden="true" />
+                  <span>Apply &quot;{migration.blockedBy}&quot; first</span>
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>

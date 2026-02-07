@@ -519,6 +519,8 @@ export interface MigrationStatus {
     success: boolean
     error?: string
   }
+  blocked?: boolean
+  blockedBy?: string
 }
 
 export interface MigrationListResponse {
