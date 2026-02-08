@@ -1,6 +1,3 @@
-// Auth hooks
-export * from './use-auth-cleanup'
-
 // Survey hooks
 export * from './use-surveys'
 export * from './use-survey-response'
@@ -18,7 +15,5 @@ export * from './use-users'
 // Utility hooks
 export * from './use-mobile'
 export * from './use-navigation-fix'
-export * from './use-error-handler'
-
 // BringId hooks
 export * from './use-humanity-verification'

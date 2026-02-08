@@ -141,13 +141,10 @@ export const useSurveyStore = create<SurveyStore>()(
 
 // App-wide UI store
 interface UIStore {
-  sidebarOpen: boolean
   theme: 'light' | 'dark' | 'system'
   notifications: Notification[]
 
   // Actions
-  toggleSidebar: () => void
-  setSidebarOpen: (open: boolean) => void
   setTheme: (theme: 'light' | 'dark' | 'system') => void
   addNotification: (notification: Omit<Notification, 'id'>) => void
   removeNotification: (id: string) => void
@@ -164,13 +161,8 @@ interface Notification {
 export const useUIStore = create<UIStore>()(
   devtools(
     (set, get) => ({
-      sidebarOpen: false,
       theme: 'system',
       notifications: [],
-
-      toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-
-      setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
 
       setTheme: (theme) => set({ theme }),
 
