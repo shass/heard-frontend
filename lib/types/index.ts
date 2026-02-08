@@ -317,7 +317,6 @@ export interface CreateSurveyRequest {
   accessStrategyConfigs?: Record<string, { enabled: boolean; config: Record<string, unknown> }>
   accessCombineMode?: 'AND' | 'OR'
   questions: CreateQuestionRequest[]
-  whitelist?: string[]
 }
 
 export interface CreateQuestionRequest {

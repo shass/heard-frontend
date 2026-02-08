@@ -89,56 +89,11 @@ export class WhitelistAccessStrategy implements IAccessStrategy {
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.warn('[WhitelistAccessStrategy] API check failed, using fallback:', error)
+        console.warn('[WhitelistAccessStrategy] API check failed:', error)
       }
-
-      // Fallback: check survey.whitelist array if exists
-      const whitelist = (survey as any).whitelist
-      if (Array.isArray(whitelist)) {
-        const isWhitelisted = whitelist.some(
-          (address: string) => address.toLowerCase() === user.walletAddress?.toLowerCase()
-        )
-
-        if (isWhitelisted) {
-          return { allowed: true }
-        }
-
-        return {
-          allowed: false,
-          reason: 'Wallet address not whitelisted'
-        }
-      }
-
-      // Graceful degradation: After retries failed and no fallback data,
-      // return helpful error message
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[WhitelistAccessStrategy] No whitelist data available')
-      }
-
-      const isTimeout = error instanceof Error && error.message.includes('timeout')
-      const isNetworkError = error instanceof Error && (
-        error.message.includes('fetch') ||
-        error.message.includes('network') ||
-        error.name === 'AbortError'
-      )
-
-      if (isTimeout) {
-        return {
-          allowed: false,
-          reason: "The whitelist check is taking too long. Please try again."
-        }
-      }
-
-      if (isNetworkError) {
-        return {
-          allowed: false,
-          reason: "We couldn't verify your whitelist status due to a network issue. Please check your connection and try again."
-        }
-      }
-
       return {
         allowed: false,
-        reason: "We couldn't verify your whitelist status. Please try again in a moment."
+        reason: 'Unable to verify whitelist status'
       }
     }
   }
