@@ -5,8 +5,6 @@
  */
 
 import { BringID } from 'bringid'
+import { env } from '@/lib/env'
 
-// Determine mode from environment
-const mode = process.env.NEXT_PUBLIC_BRINGID_MODE === 'dev' ? 'dev' : 'production'
-
-export const bringid = new BringID({ mode })
+export const bringid = new BringID({ mode: env.BRINGID_MODE })

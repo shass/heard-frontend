@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { BringIDModal } from 'bringid/react'
 import { useAccount, useWalletClient } from 'wagmi'
+import { env } from '@/lib/env'
 
 interface BringIDProviderProps {
   children: React.ReactNode
@@ -33,6 +34,7 @@ export function BringIDProvider({ children }: BringIDProviderProps) {
     <>
       {walletClient && (
         <BringIDModal
+          mode={env.BRINGID_MODE}
           address={address}
           generateSignature={generateSignature}
         />

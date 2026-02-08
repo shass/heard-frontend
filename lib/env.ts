@@ -43,6 +43,12 @@ export const env = {
   FARCASTER_HEADER: process.env.NEXT_PUBLIC_FARCASTER_HEADER!,
   FARCASTER_PAYLOAD: process.env.NEXT_PUBLIC_FARCASTER_PAYLOAD!,
   FARCASTER_SIGNATURE: process.env.NEXT_PUBLIC_FARCASTER_SIGNATURE!,
+
+  // Testnets
+  ENABLE_TESTNETS: process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true',
+
+  // BringID
+  BRINGID_MODE: (process.env.NEXT_PUBLIC_BRINGID_MODE === 'dev' ? 'dev' : 'production') as 'dev' | 'production',
 } as const
 
 export default env

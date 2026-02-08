@@ -4,7 +4,7 @@ import React from 'react';
 import { RainbowKitProvider, getDefaultConfig } from '@rainbow-me/rainbowkit'
 import { WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { mainnet, polygon, bsc, base } from 'wagmi/chains'
+import { mainnet, polygon, bsc, base, sepolia } from 'wagmi/chains'
 import { http } from 'wagmi'
 import { env } from '@/lib/env'
 import { parseApiError } from '@/lib/error-handler'
@@ -15,7 +15,7 @@ import '@rainbow-me/rainbowkit/styles.css'
 export const config = getDefaultConfig({
   appName: env.APP_NAME,
   projectId: env.WALLETCONNECT_PROJECT_ID || 'demo',
-  chains: [mainnet, base, polygon, bsc] as const,
+  chains: [mainnet, base, polygon, bsc, ...(env.ENABLE_TESTNETS ? [sepolia] : [])] as const,
   ssr: true,
   batch: {
     multicall: true,
@@ -25,6 +25,7 @@ export const config = getDefaultConfig({
     [mainnet.id]: http(),
     [polygon.id]: http(),
     [bsc.id]: http(),
+    [sepolia.id]: http(),
   },
 }) as any
 
