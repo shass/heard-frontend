@@ -24,6 +24,7 @@ export class PredictionSurveyStrategy implements ISurveyStrategy {
       isEligible,
       isAuthenticated,
       isAuthLoading,
+      isEligibilityLoading,
       handleStartSurvey,
       handleConnectWallet,
       handleAuthenticate,
@@ -67,11 +68,20 @@ export class PredictionSurveyStrategy implements ISurveyStrategy {
       }
     }
 
+    // Eligibility check in progress
+    if (isEligibilityLoading) {
+      return {
+        text: "Checking eligibility...",
+        disabled: true,
+        handler: () => {},
+        loading: true
+      }
+    }
+
     // User not eligible
     if (!isEligible) {
       // Check if BringId verification is available
       const hasBringId = accessStrategies?.includes('bringid')
-      console.log('[PredictionStrategy] Not eligible check:', { isEligible, accessStrategies, hasBringId, hasHandler: !!handleVerifyBringId })
       if (hasBringId && handleVerifyBringId) {
         return {
           text: isBringIdVerifying ? "Verifying..." : "Verify with BringId",

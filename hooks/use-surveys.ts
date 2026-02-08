@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { surveyApi, type GetSurveysRequest, type StartSurveyRequest } from '@/lib/api/surveys'
 import { useIsAuthenticated } from '@/lib/store'
 import type { Survey, Question, EligibilityResponse } from '@/lib/types'
@@ -130,6 +130,7 @@ export function useSurveyEligibility(
     enabled: !!id && !!normalizedAddress,
     staleTime: 0, // Always fetch fresh data
     gcTime: 30 * 1000, // 30 seconds
+    placeholderData: keepPreviousData,
   })
 }
 

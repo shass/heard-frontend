@@ -32,13 +32,11 @@ export function BringIDProvider({ children }: BringIDProviderProps) {
 
   return (
     <>
-      {walletClient && (
-        <BringIDModal
-          mode={env.BRINGID_MODE}
-          address={address}
-          generateSignature={generateSignature}
-        />
-      )}
+      <BringIDModal
+        mode={env.BRINGID_MODE}
+        address={address}
+        generateSignature={generateSignature}
+      />
       {children}
     </>
   )

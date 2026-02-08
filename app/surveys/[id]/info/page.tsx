@@ -93,7 +93,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
     fetchScore()
   }, [hasBringIdStrategy, address])
 
-  const { data: eligibility, refetch: refetchEligibility } = useSurveyEligibility(id, address ?? undefined, survey, bringIdScore, bringIdPoints)
+  const { data: eligibility, refetch: refetchEligibility, isPending: isEligibilityPending, isFetching: isEligibilityFetching, isPlaceholderData } = useSurveyEligibility(id, address ?? undefined, survey, bringIdScore, bringIdPoints)
 
   // BringId verification
   const { verify: verifyHumanity, isVerifying: isBringIdVerifying } = useHumanityVerification()
@@ -239,29 +239,32 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
 
   const hasCompleted = eligibility?.hasCompleted
   const hasStarted = eligibility?.hasStarted || false
-  const isEligible = eligibility?.isEligible ?? true
+  const isEligible = eligibility?.isEligible ?? false
 
   // Get access strategies from survey
   const accessStrategies = (survey as any)?.accessStrategyIds as string[] | undefined
-  console.log('[SurveyInfo] Survey data:', { surveyType: survey?.surveyType, accessStrategies, isEligible })
 
-  // Get button state from strategy
+  // Determine if eligibility check is in progress
+  const isEligibilityLoading = (isEligibilityPending || (isEligibilityFetching && isPlaceholderData)) && !!address
+
+  // Get button state from strategy (strategy handles loading state internally)
   const buttonState = strategy?.getButtonState({
-    survey: survey!,
-    hasCompleted: hasCompleted || false,
-    hasStarted,
-    isConnected,
-    isEligible,
-    isAuthenticated,
-    isAuthLoading,
-    handleStartSurvey,
-    handleConnectWallet,
-    handleAuthenticate,
-    accessStrategies,
-    accessStrategyConfigs: (survey as any)?.accessStrategyConfigs,
-    handleVerifyBringId,
-    isBringIdVerifying
-  }) || { text: "Loading...", disabled: true, handler: () => {}, loading: false }
+      survey: survey!,
+      hasCompleted: hasCompleted || false,
+      hasStarted,
+      isConnected,
+      isEligible,
+      isAuthenticated,
+      isAuthLoading,
+      isEligibilityLoading,
+      handleStartSurvey,
+      handleConnectWallet,
+      handleAuthenticate,
+      accessStrategies,
+      accessStrategyConfigs: (survey as any)?.accessStrategyConfigs,
+      handleVerifyBringId,
+      isBringIdVerifying
+    }) || { text: "Loading...", disabled: true, handler: () => {}, loading: true }
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -284,7 +287,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
             <PredictionSurveyInfo survey={survey} strategy={strategy} />
 
             {/* Survey Information */}
-            <SurveyInfo survey={survey} eligibility={eligibility} />
+            <SurveyInfo survey={survey} eligibility={eligibility} isEligibilityLoading={isEligibilityLoading} isConnected={isConnected} />
 
             {/* Reward Section */}
             {hasCompleted && userReward && (

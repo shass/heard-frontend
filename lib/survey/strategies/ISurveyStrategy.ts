@@ -48,6 +48,7 @@ export interface ButtonStateParams {
   isEligible: boolean
   isAuthenticated: boolean
   isAuthLoading: boolean
+  isEligibilityLoading: boolean
   handleStartSurvey: () => void
   handleConnectWallet: () => void
   handleAuthenticate: () => Promise<void>
