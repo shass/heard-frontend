@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useEffect } from "react"
+import { use, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { SurveyPage } from "@/components/survey-page"
@@ -43,9 +43,12 @@ export default function SurveyDetailPage({ params }: SurveyDetailPageProps) {
 
   const isEligible = eligibility?.isEligible ?? null
 
+  const hasRedirectedRef = useRef(false)
+
   // Redirect to info page if not eligible (all validations happen there)
   useEffect(() => {
-    if (isEligible === false) {
+    if (isEligible === false && !hasRedirectedRef.current) {
+      hasRedirectedRef.current = true
       router.replace(`/surveys/${id}/info`)
     }
   }, [isEligible, router, id])

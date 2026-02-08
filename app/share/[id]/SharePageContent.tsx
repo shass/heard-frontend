@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
@@ -17,44 +17,37 @@ export function SharePageContent({ survey }: SharePageContentProps) {
   const router = useRouter()
   const [isRedirecting, setIsRedirecting] = useState(false)
   const [userAgent, setUserAgent] = useState('')
+  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
 
   useEffect(() => {
-    // Get user agent on client side
     setUserAgent(navigator.userAgent.toLowerCase())
 
-    // Auto-redirect logic
-    const autoRedirect = () => {
-      // Check if we're in a mobile app context (Base App or any mobile webview)
-      const isMobileApp = /coinbase|wv|android.*version\/|iphone.*version\//i.test(navigator.userAgent)
-
-      if (isMobileApp) {
-        // Redirect to the actual survey page in the app
-        setIsRedirecting(true)
-        setTimeout(() => {
-          router.push(`/surveys/${survey.id}/info`)
-        }, 500)
-      }
-    }
-
-    // Only auto-redirect if opened directly (not from a messenger preview)
+    const isMobileApp = /coinbase|wv|android.*version\/|iphone.*version\//i.test(navigator.userAgent)
     const isDirectOpen = document.referrer === '' || document.referrer.includes(window.location.hostname)
-    if (isDirectOpen) {
-      autoRedirect()
+
+    if (isMobileApp && isDirectOpen) {
+      setIsRedirecting(true)
+      const timer = setTimeout(() => {
+        router.push(`/surveys/${survey.id}/info`)
+      }, 500)
+      return () => clearTimeout(timer)
     }
   }, [survey.id, router])
 
+  useEffect(() => {
+    return () => {
+      if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current)
+    }
+  }, [])
+
   const handleOpenInApp = () => {
-    // Create Base App deeplink
     const surveyUrl = `${env.PUBLIC_URL}/surveys/${survey.id}/info`
     const deeplink = `cbwallet://miniapp?url=${encodeURIComponent(surveyUrl)}`
 
     setIsRedirecting(true)
-
-    // Try to open deeplink
     window.location.href = deeplink
 
-    // Fallback: if deeplink doesn't work, redirect to web version
-    setTimeout(() => {
+    fallbackTimerRef.current = setTimeout(() => {
       router.push(`/surveys/${survey.id}/info`)
     }, 2000)
   }

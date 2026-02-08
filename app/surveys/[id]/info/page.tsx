@@ -77,22 +77,24 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   useEffect(() => {
     if (!hasBringIdStrategy || !address) return
 
+    let cancelled = false
+
     const fetchScore = async () => {
       try {
         const result = await bringid.getAddressScore(address)
-        setBringIdScore(result.score)
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[SurveyInfo] Fetched BringId score:', result.score)
+        if (!cancelled) {
+          setBringIdScore(result.score)
         }
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
           console.warn('[SurveyInfo] Failed to fetch BringId score:', error)
         }
-        // Continue without score - backend will handle this case
       }
     }
 
     fetchScore()
+
+    return () => { cancelled = true }
   }, [hasBringIdStrategy, address])
 
   const { data: eligibility, refetch: refetchEligibility, isFetching: isEligibilityFetching } = useSurveyEligibility(id, address ?? undefined, survey, bringIdScore, bringIdPoints)
@@ -134,32 +136,22 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const handleAuthenticate = async () => {
     try {
       const result = await auth.authenticate()
-
-      // Check result directly instead of waiting for state updates
       if (result?.success) {
-        // If user has completed the survey, stay on info page to show results
-        // Otherwise redirect to survey page
-        if (hasCompleted) {
+        // Refetch eligibility with fresh auth state
+        const { data: freshEligibility } = await refetchEligibility()
+
+        if (freshEligibility?.hasCompleted) {
           console.log('[Survey] ✅ User authenticated, staying on info page to show results')
-          // UI will automatically update via isAuthenticated state change
-        } else if (eligibility?.isEligible !== false) {
+        } else if (freshEligibility?.isEligible !== false) {
           handleStartSurvey()
         } else {
           console.log('[Survey] ⚠️ User authenticated but not eligible for this survey')
-          // UI will update to show "Not Eligible" button
         }
       } else {
         console.log('[Survey] ❌ Authentication failed or cancelled')
       }
-
     } catch (error: any) {
       console.error('[Survey] ❌ Authentication failed:', error)
-      console.error('[Survey] Error details:', {
-        message: error?.message || 'No message',
-        stack: error?.stack || 'No stack',
-        type: error?.constructor?.name || typeof error,
-        fullError: error
-      })
     }
   }
 
