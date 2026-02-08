@@ -6,7 +6,6 @@ import { Spinner } from '@/components/ui/loading-states'
 import { BarChart3, FileText, Settings, UserSearch, Database } from 'lucide-react'
 import { SurveyManagement } from '../SurveyManagement'
 import { UserLookup } from '../UserLookup'
-import { AdminAuthWrapper } from '@/components/admin/admin-auth-wrapper'
 import { DashboardHeader } from './DashboardHeader'
 import { OverviewTab } from './OverviewTab'
 import { SettingsTab } from './SettingsTab'
@@ -22,90 +21,77 @@ export function AdminDashboard() {
     error
   } = useAdminDashboard()
 
-  // Loading and error states are handled by the wrapper during auth check
-  // This loading state is only for dashboard data
   if (loading) {
     return (
-      <AdminAuthWrapper>
-        <div className="min-h-screen flex items-center justify-center">
-          <Spinner size="lg" />
-        </div>
-      </AdminAuthWrapper>
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
     )
   }
 
   if (error) {
     return (
-      <AdminAuthWrapper>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Dashboard</h1>
-            <p className="text-gray-600">{error.message}</p>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Dashboard</h1>
+          <p className="text-gray-600">{error.message}</p>
         </div>
-      </AdminAuthWrapper>
+      </div>
     )
   }
 
   return (
-    <AdminAuthWrapper>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <DashboardHeader />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <DashboardHeader />
 
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="surveys">
-                <FileText className="w-4 h-4 mr-2" />
-                Surveys
-              </TabsTrigger>
-              <TabsTrigger value="user-lookup">
-                <UserSearch className="w-4 h-4 mr-2" />
-                User Lookup
-              </TabsTrigger>
-              <TabsTrigger value="overview">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Overview
-              </TabsTrigger>
-              <TabsTrigger value="migrations">
-                <Database className="w-4 h-4 mr-2" />
-                Migrations
-              </TabsTrigger>
-              <TabsTrigger value="settings">
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </TabsTrigger>
-            </TabsList>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="surveys">
+              <FileText className="w-4 h-4 mr-2" />
+              Surveys
+            </TabsTrigger>
+            <TabsTrigger value="user-lookup">
+              <UserSearch className="w-4 h-4 mr-2" />
+              User Lookup
+            </TabsTrigger>
+            <TabsTrigger value="overview">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="migrations">
+              <Database className="w-4 h-4 mr-2" />
+              Migrations
+            </TabsTrigger>
+            <TabsTrigger value="settings">
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
 
-            {/* Surveys Tab */}
-            <TabsContent value="surveys">
-              <SurveyManagement />
-            </TabsContent>
+          <TabsContent value="surveys">
+            <SurveyManagement />
+          </TabsContent>
 
-            {/* User Lookup Tab */}
-            <TabsContent value="user-lookup">
-              <UserLookup />
-            </TabsContent>
+          <TabsContent value="user-lookup">
+            <UserLookup />
+          </TabsContent>
 
-            {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-6">
-              <OverviewTab stats={stats} />
-            </TabsContent>
+          <TabsContent value="overview" className="space-y-6">
+            <OverviewTab stats={stats} />
+          </TabsContent>
 
-            {/* Migrations Tab */}
-            <TabsContent value="migrations">
-              <MigrationsTab />
-            </TabsContent>
+          <TabsContent value="migrations">
+            <MigrationsTab />
+          </TabsContent>
 
-            {/* Settings Tab */}
-            <TabsContent value="settings">
-              <SettingsTab />
-            </TabsContent>
-          </Tabs>
-        </div>
+          <TabsContent value="settings">
+            <SettingsTab />
+          </TabsContent>
+        </Tabs>
       </div>
-    </AdminAuthWrapper>
+    </div>
   )
 }

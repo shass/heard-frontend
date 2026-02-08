@@ -64,11 +64,12 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve.fallback = { fs: false, net: false, tls: false };
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
 
-    // Bundle size optimizations
+    // Bundle size optimizations — client only
+    if (!isServer) {
     config.optimization = {
       ...config.optimization,
       splitChunks: {
@@ -94,6 +95,7 @@ const nextConfig = {
           },
         },
       },
+    }
     }
 
     return config;
