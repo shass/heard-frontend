@@ -5,12 +5,7 @@ import {
   SurveyNavigation,
   type SaveStatus
 } from "@/components/survey"
-import type { Survey } from "@/lib/types"
-
-interface Question {
-  id: string
-  [key: string]: any
-}
+import type { Survey, Question } from "@/lib/types"
 
 interface SurveyContentProps {
   survey: Survey
@@ -22,8 +17,7 @@ interface SurveyContentProps {
   answers: Record<string, string[]>
   canProceed: boolean
   isLastQuestion: boolean
-  isSubmittingAnswer: boolean
-  isSubmittingSurvey: boolean
+  isSubmitting: boolean
   onBack: () => void
   onAnswerChange: (questionId: string, answer: string, isMultiple?: boolean) => void
   onPrevious: () => void
@@ -40,8 +34,7 @@ export function SurveyContent({
   answers,
   canProceed,
   isLastQuestion,
-  isSubmittingAnswer,
-  isSubmittingSurvey,
+  isSubmitting,
   onBack,
   onAnswerChange,
   onPrevious,
@@ -72,7 +65,7 @@ export function SurveyContent({
         totalQuestions={questionsArray.length}
         canProceed={canProceed}
         isLastQuestion={isLastQuestion}
-        isSubmitting={isSubmittingAnswer || isSubmittingSurvey}
+        isSubmitting={isSubmitting}
         onPrevious={onPrevious}
         onNext={onNext}
       />

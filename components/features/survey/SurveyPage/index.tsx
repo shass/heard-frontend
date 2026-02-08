@@ -22,25 +22,27 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
     saveStatus,
     isStarting,
     isCheckingProgress,
+    submissionPhase,
+    submissionPhaseConfig,
     isAuthenticated,
-    
+
     // Data
     questionsLoading,
     questionsError,
     questionsArray,
     currentQuestion,
     progress,
-    
+
     // Computed values
     canProceed,
     isLastQuestion,
     shouldShowOverlay,
     overlayMessage,
-    
+
     // Mutations
     startSurvey,
     responseState,
-    
+
     // Handlers
     handleAnswerChange,
     handleNext,
@@ -106,8 +108,7 @@ export function SurveyPage({ survey, onSubmit, onBack }: SurveyPageProps) {
         answers={answers}
         canProceed={canProceed}
         isLastQuestion={isLastQuestion}
-        isSubmittingAnswer={responseState.isSubmittingAnswer}
-        isSubmittingSurvey={responseState.isSubmittingSurvey}
+        isSubmitting={submissionPhaseConfig.isBlocking || responseState.isSubmittingAnswer}
         onBack={onBack}
         onAnswerChange={handleAnswerChange}
         onPrevious={handlePrevious}

@@ -8,6 +8,7 @@ import { useNotifications } from "@/components/ui/notifications"
 import { surveyApi } from "@/lib/api/surveys"
 import type { SaveStatus } from "@/components/survey"
 import type { Survey } from "@/lib/types"
+import { type SurveySubmissionPhase, getSubmissionPhaseConfig } from "@/lib/survey/survey-submission-state-machine"
 
 interface UseSurveyPageProps {
   survey: Survey
@@ -19,8 +20,7 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
   const [answers, setAnswers] = useState<Record<string, string[]>>({})
   const [responseId, setResponseId] = useState<string | null>(null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
-  const [isSubmittingFinalSurvey, setIsSubmittingFinalSurvey] = useState(false)
-  const [isRedirecting, setIsRedirecting] = useState(false)
+  const [submissionPhase, setSubmissionPhase] = useState<SurveySubmissionPhase>('idle')
   const [initStatus, setInitStatus] = useState<'idle' | 'checking' | 'starting' | 'ready' | 'completed'>('idle')
   const hasInitialized = useRef(false)
 
@@ -86,8 +86,7 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
       setAnswers({})
       setResponseId(null)
       setSaveStatus('idle')
-      setIsSubmittingFinalSurvey(false)
-      setIsRedirecting(false)
+      setSubmissionPhase('idle')
       setCurrentQuestionIndex(0)
       setInitStatus('idle')
       hasInitialized.current = false // Reset initialization flag
@@ -183,7 +182,7 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
     // Check if this is the last question and set blocking state immediately
     const isLastQuestion = currentQuestionIndex === questionsArray.length - 1
     if (isLastQuestion) {
-      setIsSubmittingFinalSurvey(true)
+      setSubmissionPhase('submitting_final')
     }
 
     // Validate current answer
@@ -193,13 +192,13 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
 
     if (!requiredValidation.isValid) {
       notifications.error('Answer required', requiredValidation.error!)
-      if (isLastQuestion) setIsSubmittingFinalSurvey(false) // Reset if validation failed
+      if (isLastQuestion) setSubmissionPhase('idle') // Reset if validation failed
       return
     }
 
     if (!singleChoiceValidation.isValid) {
       notifications.error('Invalid selection', singleChoiceValidation.error!)
-      if (isLastQuestion) setIsSubmittingFinalSurvey(false) // Reset if validation failed
+      if (isLastQuestion) setSubmissionPhase('idle') // Reset if validation failed
       return
     }
 
@@ -265,20 +264,20 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
             // Don't block the main flow
           }
 
-          setIsRedirecting(true) // Keep UI blocked during redirect
+          setSubmissionPhase('redirecting') // Keep UI blocked during redirect
           onSubmit(responseId)
         } finally {
-          // Don't clear the loading state here - let it persist until redirect completes
-          // setIsSubmittingFinalSurvey(false) - removed
+          // Don't clear submissionPhase here - let it persist until redirect completes
         }
       }
     } catch (error: any) {
       setSaveStatus('error')
       setTimeout(() => setSaveStatus('idle'), 3000)
       notifications.error('Failed to save answer', error.message)
-      // Reset final survey state if there was an error
+      // Reset submission phase if there was an error
       if (isLastQuestion) {
-        setIsSubmittingFinalSurvey(false)
+        setSubmissionPhase('error')
+        setTimeout(() => setSubmissionPhase('idle'), 3000)
       }
     }
   }
@@ -292,9 +291,8 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
   const canProceed = !!currentQuestion && (answers[currentQuestion.id] || []).length > 0
   const isLastQuestion = currentQuestionIndex === questionsArray.length - 1
 
-  // Check if we should show overlay instead of replacing content
-  const shouldShowOverlay = isSubmittingFinalSurvey || responseState.isSubmittingSurvey || isRedirecting
-  const overlayMessage = isRedirecting ? "Redirecting to results..." : "Submitting survey..."
+  // Derive overlay config from submission phase
+  const submissionPhaseConfig = getSubmissionPhaseConfig(submissionPhase)
 
   return {
     // State
@@ -304,8 +302,8 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
     saveStatus,
     isStarting: initStatus === 'starting',
     isCheckingProgress: initStatus === 'checking',
-    isSubmittingFinalSurvey,
-    isRedirecting,
+    submissionPhase,
+    submissionPhaseConfig,
     isAuthenticated,
 
     // Data
@@ -320,8 +318,8 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
     // Computed values
     canProceed,
     isLastQuestion,
-    shouldShowOverlay,
-    overlayMessage,
+    shouldShowOverlay: submissionPhaseConfig.showOverlay,
+    overlayMessage: submissionPhaseConfig.overlayMessage ?? '',
 
     // Mutations
     startSurvey,
