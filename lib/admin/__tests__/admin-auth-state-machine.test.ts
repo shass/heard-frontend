@@ -6,6 +6,7 @@ const defaultInput: AdminAuthInput = {
   isConnected: true,
   isAuthenticated: true,
   isCreatingSession: false,
+  authAttemptFailed: false,
   user: { role: 'admin', walletAddress: '0xABC123' },
   connectedAddress: '0xABC123',
 }
@@ -43,6 +44,12 @@ describe('resolveAdminAuthPhase', () => {
     ).toBe('authenticating')
   })
 
+  it('returns auth_failed when auth attempt failed', () => {
+    expect(
+      resolveAdminAuthPhase(input({ isAuthenticated: false, authAttemptFailed: true })),
+    ).toBe('auth_failed')
+  })
+
   it('returns wallet_mismatch when wallets differ', () => {
     expect(
       resolveAdminAuthPhase(input({ connectedAddress: '0xDIFFERENT' })),
@@ -78,16 +85,45 @@ describe('resolveAdminAuthPhase', () => {
     ).toBe('connect_wallet')
   })
 
-  it('connect_wallet takes priority over authenticate', () => {
+  it('connect_wallet takes priority over loading when wallet not connected', () => {
     expect(
-      resolveAdminAuthPhase(input({ isConnected: false, isAuthenticated: false })),
+      resolveAdminAuthPhase(
+        input({ loading: true, isConnected: false, isAuthenticated: false, user: null }),
+      ),
     ).toBe('connect_wallet')
   })
 
-  it('authenticating takes priority over authenticate', () => {
+  it('authenticating takes priority over store loading', () => {
+    // authenticate() calls startAuth() which sets loading=true
+    // isCreatingSession must win over loading to prevent flicker
     expect(
-      resolveAdminAuthPhase(input({ isAuthenticated: false, isCreatingSession: true })),
+      resolveAdminAuthPhase(
+        input({ loading: true, isAuthenticated: false, isCreatingSession: true }),
+      ),
     ).toBe('authenticating')
+  })
+
+  it('authenticating takes priority over auth_failed', () => {
+    // Active session creation overrides previous failure
+    expect(
+      resolveAdminAuthPhase(
+        input({ isAuthenticated: false, isCreatingSession: true, authAttemptFailed: true }),
+      ),
+    ).toBe('authenticating')
+  })
+
+  it('loading takes priority when wallet IS connected', () => {
+    expect(
+      resolveAdminAuthPhase(
+        input({ loading: true, isConnected: true, isAuthenticated: false, user: null }),
+      ),
+    ).toBe('initializing')
+  })
+
+  it('auth_failed takes priority over authenticate', () => {
+    expect(
+      resolveAdminAuthPhase(input({ isAuthenticated: false, authAttemptFailed: true })),
+    ).toBe('auth_failed')
   })
 
   it('wallet_mismatch takes priority over access_denied', () => {
@@ -99,31 +135,5 @@ describe('resolveAdminAuthPhase', () => {
         }),
       ),
     ).toBe('wallet_mismatch')
-  })
-
-  it('connect_wallet takes priority over loading when wallet not connected', () => {
-    expect(
-      resolveAdminAuthPhase(
-        input({
-          loading: true,
-          isConnected: false,
-          isAuthenticated: false,
-          user: null,
-        }),
-      ),
-    ).toBe('connect_wallet')
-  })
-
-  it('loading takes priority when wallet IS connected', () => {
-    expect(
-      resolveAdminAuthPhase(
-        input({
-          loading: true,
-          isConnected: true,
-          isAuthenticated: false,
-          user: null,
-        }),
-      ),
-    ).toBe('initializing')
   })
 })

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAccount } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
@@ -35,11 +35,30 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
     isConnected,
     isAuthenticated,
     isCreatingSession,
+    authAttemptFailed,
     user: user ? { role: user.role, walletAddress: user.walletAddress } : null,
     connectedAddress: address,
   })
 
-  // Side effects based on phase — must be in useEffect, not render
+  const handleCreateSession = useCallback(async () => {
+    if (!isConnected || isCreatingSession) return
+
+    setIsCreatingSession(true)
+    setAuthAttemptFailed(false)
+    try {
+      const result = await authenticate()
+      if (!result?.success) {
+        setAuthAttemptFailed(true)
+      }
+    } catch (error) {
+      console.error('[AdminAuthWrapper] Failed to create session:', error)
+      setAuthAttemptFailed(true)
+    } finally {
+      setIsCreatingSession(false)
+    }
+  }, [isConnected, isCreatingSession, authenticate])
+
+  // Side effects based on phase
   useEffect(() => {
     if (phase === 'wallet_mismatch') {
       console.error('[AdminAuthWrapper] SECURITY: Wallet mismatch! Logging out...')
@@ -50,34 +69,10 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
       router.push('/')
     }
     // Auto-authenticate on admin page: no reason to wait for manual click
-    if (phase === 'authenticate' && !authAttemptFailed) {
+    if (phase === 'authenticate') {
       handleCreateSession()
     }
-  }, [phase, logout, router])
-
-  const handleCreateSession = async (event?: React.MouseEvent) => {
-    event?.preventDefault()
-    event?.stopPropagation()
-
-    if (!isConnected) return
-
-    if (isCreatingSession) {
-      console.log('[AdminAuthWrapper] Already creating session, skipping...')
-      return
-    }
-
-    setIsCreatingSession(true)
-    try {
-      console.log('[AdminAuthWrapper] Creating session...')
-      await authenticate()
-      console.log('[AdminAuthWrapper] Session created successfully')
-    } catch (error) {
-      console.error('[AdminAuthWrapper] Failed to create session:', error)
-      setAuthAttemptFailed(true)
-    } finally {
-      setIsCreatingSession(false)
-    }
-  }
+  }, [phase, logout, router, handleCreateSession])
 
   switch (phase) {
     case 'initializing':
@@ -130,32 +125,53 @@ export function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
               <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Shield className="w-10 h-10 text-blue-600" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                {authAttemptFailed ? 'Authentication Failed' : 'Authenticating...'}
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Authenticating...</h1>
               <p className="text-gray-600 mb-2">
-                {authAttemptFailed
-                  ? 'Sign the message in your wallet to verify admin access'
-                  : 'Please sign the message in your wallet to verify admin access'}
+                Please sign the message in your wallet to verify admin access
               </p>
               <p className="text-sm text-gray-500">
                 Connected as: {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Unknown'}
               </p>
             </div>
 
-            {authAttemptFailed ? (
-              <Button
-                type="button"
-                onClick={() => { setAuthAttemptFailed(false); handleCreateSession() }}
-                size="lg"
-                className="bg-zinc-900 hover:bg-zinc-800 text-white px-8"
-              >
-                <Shield className="w-5 h-5 mr-2" />
-                Retry
-              </Button>
-            ) : (
-              <Spinner size="lg" />
-            )}
+            <Spinner size="lg" />
+
+            <div className="mt-6">
+              <Link href="/" className="text-sm text-gray-500 hover:text-gray-700 flex items-center justify-center">
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Back to Home
+              </Link>
+            </div>
+          </div>
+        </div>
+      )
+
+    case 'auth_failed':
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center max-w-md">
+            <div className="mb-6">
+              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-10 h-10 text-blue-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Authentication Failed</h1>
+              <p className="text-gray-600 mb-2">
+                Sign the message in your wallet to verify admin access
+              </p>
+              <p className="text-sm text-gray-500">
+                Connected as: {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Unknown'}
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              onClick={handleCreateSession}
+              size="lg"
+              className="bg-zinc-900 hover:bg-zinc-800 text-white px-8"
+            >
+              <Shield className="w-5 h-5 mr-2" />
+              Retry
+            </Button>
 
             <div className="mt-6">
               <Link href="/" className="text-sm text-gray-500 hover:text-gray-700 flex items-center justify-center">
