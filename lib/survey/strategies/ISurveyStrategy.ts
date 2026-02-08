@@ -22,14 +22,6 @@ export interface RewardDisplay {
   displayMode: 'simple' | 'detailed'
 }
 
-// Button state for survey action button
-export interface ButtonState {
-  text: string
-  disabled: boolean
-  handler: () => void
-  loading: boolean
-}
-
 // Access strategy configuration
 export interface AccessStrategyConfig {
   enabled: boolean
@@ -37,26 +29,6 @@ export interface AccessStrategyConfig {
     minScore?: number
     requireHumanityProof?: boolean
   }
-}
-
-// Parameters for determining button state
-export interface ButtonStateParams {
-  survey: Survey
-  hasCompleted: boolean
-  hasStarted: boolean
-  isConnected: boolean
-  isEligible: boolean
-  isAuthenticated: boolean
-  isAuthLoading: boolean
-  isEligibilityLoading: boolean
-  handleStartSurvey: () => void
-  handleConnectWallet: () => void
-  handleAuthenticate: () => Promise<void>
-  // BringId support
-  accessStrategies?: string[]
-  accessStrategyConfigs?: Record<string, AccessStrategyConfig>
-  handleVerifyBringId?: () => void
-  isBringIdVerifying?: boolean
 }
 
 // Parameters for reward display logic
@@ -79,11 +51,6 @@ export interface SurveyInfoConfig {
  * Each survey type implements this interface to provide type-specific behavior
  */
 export interface ISurveyStrategy {
-  /**
-   * Determine the button state based on survey and user context
-   */
-  getButtonState(params: ButtonStateParams): ButtonState
-
   /**
    * Check if survey is currently available for participation
    */

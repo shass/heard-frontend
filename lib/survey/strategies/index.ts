@@ -1,8 +1,6 @@
 // Strategy interfaces and types
 export type {
   ISurveyStrategy,
-  ButtonState,
-  ButtonStateParams,
   RewardDisplayParams,
   SurveyInfoConfig,
   RewardDisplay

@@ -2,13 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Loader2 } from "lucide-react"
-
-interface ButtonState {
-  text: string
-  disabled: boolean
-  handler: () => void
-  loading?: boolean
-}
+import type { ButtonState } from "@/lib/survey/button-state-machine"
 
 interface SurveyActionButtonProps {
   buttonState: ButtonState

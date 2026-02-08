@@ -12,6 +12,8 @@ import { usePlatform } from "@/src/core/hooks/usePlatform"
 import { useAuth, useWallet, useOpenUrl } from "@/src/platforms/_core"
 import { Platform } from "@/src/platforms/config"
 import { RewardSource } from "@/lib/survey/strategies"
+import { resolveSurveyButtonPhase, getButtonConfig } from '@/lib/survey/button-state-machine'
+import type { SurveyButtonHandlers } from '@/lib/survey/button-state-machine'
 import { useAuthStore } from "@/lib/store"
 import { bringid } from "@/lib/bringid"
 import {
@@ -238,33 +240,36 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   }
 
   const hasCompleted = eligibility?.hasCompleted
-  const hasStarted = eligibility?.hasStarted || false
-  const isEligible = eligibility?.isEligible ?? false
 
-  // Get access strategies from survey
-  const accessStrategies = (survey as any)?.accessStrategyIds as string[] | undefined
+  // Handlers for button actions
+  const buttonHandlers: SurveyButtonHandlers = {
+    onStart: handleStartSurvey,
+    onConnect: handleConnectWallet,
+    onAuthenticate: handleAuthenticate,
+    onVerifyBringId: handleVerifyBringId,
+  }
 
-  // Determine if eligibility check is in progress (covers both initial load and background refetch)
-  const isEligibilityLoading = isEligibilityFetching && !!address
+  // Resolve button phase via state machine
+  const buttonPhase = resolveSurveyButtonPhase({
+    surveyLoaded: !!survey,
+    surveyType: survey!.surveyType,
+    startDate: survey!.startDate,
+    endDate: survey!.endDate,
+    accessStrategies: survey?.accessStrategyIds,
+    eligibility: eligibility ? {
+      isEligible: eligibility.isEligible,
+      hasStarted: eligibility.hasStarted,
+      hasCompleted: eligibility.hasCompleted,
+    } : undefined,
+    isEligibilityFetching,
+    isConnected,
+    hasAddress: !!address,
+    isAuthenticated,
+    isAuthLoading,
+    isBringIdVerifying,
+  })
 
-  // Get button state from strategy (strategy handles loading state internally)
-  const buttonState = strategy?.getButtonState({
-      survey: survey!,
-      hasCompleted: hasCompleted || false,
-      hasStarted,
-      isConnected,
-      isEligible,
-      isAuthenticated,
-      isAuthLoading,
-      isEligibilityLoading,
-      handleStartSurvey,
-      handleConnectWallet,
-      handleAuthenticate,
-      accessStrategies,
-      accessStrategyConfigs: (survey as any)?.accessStrategyConfigs,
-      handleVerifyBringId,
-      isBringIdVerifying
-    }) || { text: "Loading...", disabled: true, handler: () => {}, loading: true }
+  const buttonState = getButtonConfig(buttonPhase, buttonHandlers)
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -287,7 +292,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
             <PredictionSurveyInfo survey={survey} strategy={strategy} />
 
             {/* Survey Information */}
-            <SurveyInfo survey={survey} eligibility={eligibility} isEligibilityLoading={isEligibilityLoading} isConnected={isConnected} />
+            <SurveyInfo survey={survey} eligibility={eligibility} isEligibilityLoading={isEligibilityFetching && !!address} isConnected={isConnected} />
 
             {/* Reward Section */}
             {hasCompleted && userReward && (
