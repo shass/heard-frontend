@@ -93,7 +93,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
     fetchScore()
   }, [hasBringIdStrategy, address])
 
-  const { data: eligibility, refetch: refetchEligibility, isPending: isEligibilityPending, isFetching: isEligibilityFetching, isPlaceholderData } = useSurveyEligibility(id, address ?? undefined, survey, bringIdScore, bringIdPoints)
+  const { data: eligibility, refetch: refetchEligibility, isFetching: isEligibilityFetching } = useSurveyEligibility(id, address ?? undefined, survey, bringIdScore, bringIdPoints)
 
   // BringId verification
   const { verify: verifyHumanity, isVerifying: isBringIdVerifying } = useHumanityVerification()
@@ -244,8 +244,8 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   // Get access strategies from survey
   const accessStrategies = (survey as any)?.accessStrategyIds as string[] | undefined
 
-  // Determine if eligibility check is in progress
-  const isEligibilityLoading = (isEligibilityPending || (isEligibilityFetching && isPlaceholderData)) && !!address
+  // Determine if eligibility check is in progress (covers both initial load and background refetch)
+  const isEligibilityLoading = isEligibilityFetching && !!address
 
   // Get button state from strategy (strategy handles loading state internally)
   const buttonState = strategy?.getButtonState({
