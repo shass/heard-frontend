@@ -309,7 +309,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
             )}
 
             {/* Action Button */}
-            <SurveyActionButton buttonState={buttonState} />
+            <SurveyActionButton buttonState={buttonState} phase={buttonPhase} />
           </div>
         </div>
       </main>

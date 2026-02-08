@@ -2,14 +2,15 @@
 
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Loader2 } from "lucide-react"
-import type { ButtonState } from "@/lib/survey/button-state-machine"
+import type { ButtonState, SurveyButtonPhase } from "@/lib/survey/button-state-machine"
 
 interface SurveyActionButtonProps {
   buttonState: ButtonState
+  phase: SurveyButtonPhase
 }
 
-export function SurveyActionButton({ buttonState }: SurveyActionButtonProps) {
-  const showArrow = (buttonState.text === "Start Survey" || buttonState.text === "Continue") && !buttonState.loading
+export function SurveyActionButton({ buttonState, phase }: SurveyActionButtonProps) {
+  const showArrow = (phase === 'start' || phase === 'continue') && !buttonState.loading
 
   return (
     <div className="flex justify-center pt-4">
