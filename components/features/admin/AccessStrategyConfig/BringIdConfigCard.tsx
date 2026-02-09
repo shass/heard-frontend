@@ -4,12 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Separator } from '@/components/ui/separator'
 import { IdCard } from 'lucide-react'
 
 export interface BringIdConfig {
   minScore: number
   requireHumanityProof: boolean
   minPoints?: number
+  combineMode?: 'AND' | 'OR'
 }
 
 interface BringIdConfigCardProps {
@@ -33,6 +36,8 @@ export function BringIdConfigCard({
     onConfigChange({
       ...config,
       minScore: clampedValue,
+      // Reset combineMode when score becomes irrelevant (0)
+      combineMode: clampedValue > 0 ? config.combineMode : undefined,
     })
   }
 
@@ -40,8 +45,9 @@ export function BringIdConfigCard({
     onConfigChange({
       ...config,
       requireHumanityProof: checked,
-      // Reset minPoints when disabling humanity proof
+      // Reset minPoints and combineMode when disabling humanity proof
       minPoints: checked ? (config.minPoints ?? 0) : undefined,
+      combineMode: checked ? config.combineMode : undefined,
     })
   }
 
@@ -53,6 +59,15 @@ export function BringIdConfigCard({
       minPoints: clampedValue,
     })
   }
+
+  const handleCombineModeChange = (value: 'AND' | 'OR') => {
+    onConfigChange({
+      ...config,
+      combineMode: value,
+    })
+  }
+
+  const showCombineMode = config.minScore > 0 && config.requireHumanityProof
 
   return (
     <Card className={!enabled ? 'opacity-60' : undefined}>
@@ -110,6 +125,41 @@ export function BringIdConfigCard({
                 </p>
               </div>
             </div>
+
+            {showCombineMode && (
+              <div className="ml-4">
+                <Separator className="my-3" />
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Score & Points Combine Mode</Label>
+                  <RadioGroup
+                    value={config.combineMode ?? 'AND'}
+                    onValueChange={(val) => handleCombineModeChange(val as 'AND' | 'OR')}
+                    disabled={disabled}
+                    className="flex flex-col space-y-2"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <RadioGroupItem value="AND" id="bringid-combine-and" />
+                      <Label htmlFor="bringid-combine-and" className="font-normal cursor-pointer">
+                        <span className="font-medium">AND</span>
+                        <span className="text-muted-foreground ml-2">
+                          - Both score and humanity points must meet minimum
+                        </span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <RadioGroupItem value="OR" id="bringid-combine-or" />
+                      <Label htmlFor="bringid-combine-or" className="font-normal cursor-pointer">
+                        <span className="font-medium">OR</span>
+                        <span className="text-muted-foreground ml-2">
+                          - Either score or humanity points can grant access
+                        </span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <Separator className="my-3" />
+              </div>
+            )}
 
             <div className="ml-7 space-y-2">
               <Label htmlFor="minPoints" className={!config.requireHumanityProof ? 'text-muted-foreground' : ''}>
