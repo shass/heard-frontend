@@ -4,7 +4,6 @@ import { SurveyType } from '@/lib/types'
 const defaultInput: SurveyButtonInput = {
   surveyLoaded: true,
   surveyType: SurveyType.STANDARD,
-  accessStrategies: [],
   eligibility: { isEligible: true, hasStarted: false, hasCompleted: false },
   isEligibilityFetching: false,
   isConnected: true,
@@ -68,23 +67,86 @@ describe('resolveSurveyButtonPhase', () => {
     ).toBe('not_eligible')
   })
 
-  it('returns verify_bringid when ineligible with BringId strategy', () => {
+  it('returns verify_bringid when ineligible with BringId requiring humanity verification', () => {
     expect(
       resolveSurveyButtonPhase(
         input({
-          eligibility: { isEligible: false, hasStarted: false, hasCompleted: false },
-          accessStrategies: ['bringid'],
+          eligibility: {
+            isEligible: false,
+            hasStarted: false,
+            hasCompleted: false,
+            accessStrategies: {
+              bringid: { passed: false, requiresHumanityVerification: true },
+            },
+          },
         }),
       ),
     ).toBe('verify_bringid')
+  })
+
+  it('returns not_eligible when ineligible with BringId that passed', () => {
+    expect(
+      resolveSurveyButtonPhase(
+        input({
+          eligibility: {
+            isEligible: false,
+            hasStarted: false,
+            hasCompleted: false,
+            accessStrategies: {
+              bringid: { passed: true },
+            },
+          },
+        }),
+      ),
+    ).toBe('not_eligible')
+  })
+
+  it('returns not_eligible when ineligible with BringId that does not require verification', () => {
+    expect(
+      resolveSurveyButtonPhase(
+        input({
+          eligibility: {
+            isEligible: false,
+            hasStarted: false,
+            hasCompleted: false,
+            accessStrategies: {
+              bringid: { passed: false },
+            },
+          },
+        }),
+      ),
+    ).toBe('not_eligible')
+  })
+
+  it('returns not_eligible when accessStrategies contains only non-bringid entries', () => {
+    expect(
+      resolveSurveyButtonPhase(
+        input({
+          eligibility: {
+            isEligible: false,
+            hasStarted: false,
+            hasCompleted: false,
+            accessStrategies: {
+              whitelist: { passed: false },
+            },
+          },
+        }),
+      ),
+    ).toBe('not_eligible')
   })
 
   it('returns verifying_bringid when BringId verification in progress', () => {
     expect(
       resolveSurveyButtonPhase(
         input({
-          eligibility: { isEligible: false, hasStarted: false, hasCompleted: false },
-          accessStrategies: ['bringid'],
+          eligibility: {
+            isEligible: false,
+            hasStarted: false,
+            hasCompleted: false,
+            accessStrategies: {
+              bringid: { passed: false, requiresHumanityVerification: true },
+            },
+          },
           isBringIdVerifying: true,
         }),
       ),

@@ -247,11 +247,11 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
     surveyType: survey!.surveyType,
     startDate: survey!.startDate,
     endDate: survey!.endDate,
-    accessStrategies: survey?.accessStrategyIds,
     eligibility: eligibility ? {
       isEligible: eligibility.isEligible,
       hasStarted: eligibility.hasStarted,
       hasCompleted: eligibility.hasCompleted,
+      accessStrategies: eligibility.accessStrategies,
     } : undefined,
     isEligibilityFetching,
     isConnected,

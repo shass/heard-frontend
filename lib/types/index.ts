@@ -155,6 +155,13 @@ export interface EligibilityResponse {
   hasStarted: boolean
   hasCompleted: boolean
   reason?: string
+  accessStrategies?: Record<string, {
+    passed: boolean
+    reason?: string
+    score?: number
+    points?: number
+    requiresHumanityVerification?: boolean
+  }>
 }
 
 // Reward types

@@ -25,9 +25,16 @@ export interface SurveyButtonInput {
   surveyType: SurveyType
   startDate?: string | Date
   endDate?: string | Date
-  accessStrategies?: string[]
 
-  eligibility: { isEligible: boolean; hasStarted: boolean; hasCompleted: boolean } | undefined
+  eligibility: {
+    isEligible: boolean
+    hasStarted: boolean
+    hasCompleted: boolean
+    accessStrategies?: Record<string, {
+      passed: boolean
+      requiresHumanityVerification?: boolean
+    }>
+  } | undefined
   isEligibilityFetching: boolean
 
   isConnected: boolean
@@ -86,8 +93,9 @@ export function resolveSurveyButtonPhase(input: SurveyButtonInput): SurveyButton
 
   // 5. Eligibility resolved: not eligible
   if (input.eligibility && !input.eligibility.isEligible) {
-    const hasBringId = input.accessStrategies?.includes('bringid')
-    if (hasBringId) {
+    // Check if any strategy requires humanity verification (actionable by user)
+    const bringIdResult = input.eligibility.accessStrategies?.bringid
+    if (bringIdResult && !bringIdResult.passed && bringIdResult.requiresHumanityVerification) {
       return input.isBringIdVerifying ? 'verifying_bringid' : 'verify_bringid'
     }
     return 'not_eligible'
