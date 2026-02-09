@@ -14,9 +14,10 @@ interface SurveyInfoProps {
   }
   isEligibilityLoading?: boolean
   isConnected?: boolean
+  requiresVerification?: boolean
 }
 
-export function SurveyInfo({ survey, eligibility, isEligibilityLoading, isConnected }: SurveyInfoProps) {
+export function SurveyInfo({ survey, eligibility, isEligibilityLoading, isConnected, requiresVerification }: SurveyInfoProps) {
   const hasCompleted = eligibility?.hasCompleted
 
   return (
@@ -68,7 +69,7 @@ export function SurveyInfo({ survey, eligibility, isEligibilityLoading, isConnec
                 </AlertDescription>
               </Alert>
             ) : (
-              <Alert variant="destructive">
+              <Alert variant={requiresVerification ? "default" : "destructive"}>
                 <AlertDescription>
                   {eligibility.reason || "You are not eligible for this survey."}
                 </AlertDescription>
