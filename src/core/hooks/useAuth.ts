@@ -43,45 +43,35 @@ export function useAuth(): IAuthStrategy {
 
   // Create strategy with dependency injection
   const authStrategy = useMemo(() => {
-    if (isLoading) {
-      throw new Error('[useAuth] Platform is still loading')
-    }
-
-    if (error) {
-      throw error
-    }
-
-    if (!platform) {
-      throw new Error('[useAuth] No active platform detected')
-    }
-
-    let strategy: IAuthStrategy
+    if (isLoading || error || !platform) return null
 
     if (platform.id === 'web') {
       if (!strategyRef.current) {
-        strategy = new WebAuthStrategy(wagmiDeps, signFn)
-        strategyRef.current = strategy
-      } else {
-        strategy = strategyRef.current
+        strategyRef.current = new WebAuthStrategy(wagmiDeps, signFn)
       }
     } else if (platform.id === 'base-app') {
-      if (!miniKitContext) {
-        throw new Error('[useAuth] MiniKit context not available for BaseApp')
+      if (!strategyRef.current && miniKitContext) {
+        strategyRef.current = new BaseAppAuthStrategy(miniKitContext)
       }
-      strategy = new BaseAppAuthStrategy(miniKitContext)
-      strategyRef.current = strategy
     } else if (platform.id === 'farcaster') {
-      if (!miniKitContext) {
-        throw new Error('[useAuth] MiniKit context not available for Farcaster')
+      if (!strategyRef.current && miniKitContext) {
+        strategyRef.current = new FarcasterAuthStrategy(miniKitContext)
       }
-      strategy = new FarcasterAuthStrategy(miniKitContext)
-      strategyRef.current = strategy
-    } else {
-      throw new Error(`[useAuth] Unknown platform: ${platform.id}`)
     }
 
-    return strategy
+    return strategyRef.current
   }, [platform, isLoading, error, wagmiDeps, signFn, miniKitContext])
+
+  // Sync MiniKit context to cached strategy (mirrors wagmi sync pattern below)
+  useEffect(() => {
+    if (!miniKitContext || !strategyRef.current) return
+    if (platform?.id !== 'base-app' && platform?.id !== 'farcaster') return
+
+    const strategy = strategyRef.current as BaseAppAuthStrategy | FarcasterAuthStrategy
+    if (strategy.updateContext) {
+      strategy.updateContext(miniKitContext)
+    }
+  }, [miniKitContext, platform])
 
   // Auth initialization — all platforms
   useEffect(() => {
@@ -157,5 +147,5 @@ export function useAuth(): IAuthStrategy {
     }
   }, [])
 
-  return authStrategy
+  return authStrategy!
 }

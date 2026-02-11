@@ -17,6 +17,11 @@ export class BaseAppAuthStrategy implements IAuthStrategy {
     private context: any
   ) {}
 
+  /** Update MiniKit context when it changes (mirrors WebAuthStrategy.updateWagmiAccount) */
+  updateContext(context: any) {
+    this.context = context
+  }
+
   get canAuthenticate(): boolean {
     return !!this.context
   }
