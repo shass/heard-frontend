@@ -113,6 +113,24 @@ export function useAuth(): IAuthStrategy {
     })
   }, [platform, address, isConnected])
 
+  // Initialization for non-web platforms (BaseApp, Farcaster)
+  useEffect(() => {
+    if (!platform || platform.id === 'web') return
+    if (hasInitializedRef.current) return
+    if (useAuthStore.getState().initialized) return
+    if (!strategyRef.current) return
+
+    hasInitializedRef.current = true
+
+    strategyRef.current.checkAuthStatus().finally(() => {
+      const store = useAuthStore.getState()
+      if (!store.initialized) {
+        store.setInitialized(true)
+      }
+      store.setLoading(false)
+    })
+  }, [platform, miniKitContext])
+
   // Handle wallet address changes — logout if address changes or wallet disconnects
   useEffect(() => {
     if (platform?.id !== 'web') return
