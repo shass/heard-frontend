@@ -90,7 +90,7 @@ export class BaseAppAuthStrategy implements IAuthStrategy {
       // Get wallet address
       let walletAddress: string | undefined
       try {
-        const provider = sdk.wallet.ethProvider
+        const provider = await sdk.wallet.getEthereumProvider()
         if (provider) {
           const accounts = await provider.request({ method: 'eth_accounts' })
           walletAddress = accounts[0]?.toLowerCase()

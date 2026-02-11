@@ -15,7 +15,7 @@ export class BaseAppWalletStrategy implements IWalletStrategy {
 
   private async initialize() {
     try {
-      const provider = sdk.wallet.ethProvider
+      const provider = await sdk.wallet.getEthereumProvider()
       if (provider) {
         const accounts = await provider.request({ method: 'eth_accounts' })
         this._address = accounts[0]
@@ -71,7 +71,7 @@ export class BaseAppWalletStrategy implements IWalletStrategy {
 
   signMessage = async (message: string): Promise<string> => {
     try {
-      const provider = sdk.wallet.ethProvider
+      const provider = await sdk.wallet.getEthereumProvider()
       if (!provider || !this._address) {
         throw new Error('Wallet not available')
       }
@@ -94,7 +94,7 @@ export class BaseAppWalletStrategy implements IWalletStrategy {
       this._isLoading = true
       this._error = null
 
-      const provider = sdk.wallet.ethProvider
+      const provider = await sdk.wallet.getEthereumProvider()
       if (!provider || !this._address) {
         throw new Error('Wallet not available')
       }
