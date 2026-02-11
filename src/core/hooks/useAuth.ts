@@ -53,6 +53,8 @@ export function useAuth(): IAuthStrategy {
     if (platform.id === 'web') {
       if (!strategyRef.current) {
         strategyRef.current = new WebAuthStrategy(wagmiDeps, signFn)
+      } else {
+        (strategyRef.current as WebAuthStrategy).updateWagmiAccount(wagmiDeps)
       }
     } else if (platform.id === 'base-app') {
       if (!strategyRef.current && miniKitContext) {
