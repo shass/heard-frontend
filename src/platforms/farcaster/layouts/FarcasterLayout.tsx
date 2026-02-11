@@ -7,6 +7,7 @@ import { CreateSurveyModalProvider } from '@/components/providers/create-survey-
 import { NavigationProvider } from '@/components/providers/navigation-provider'
 import { NotificationContainer } from '@/components/ui/notifications'
 import { MiniKitReady } from '@/src/platforms/base-app/components/MiniKitReady'
+import { MiniKitBridge } from '@/src/platforms/_core/shared/providers/MiniKitBridgeProvider'
 
 interface FarcasterLayoutProps {
   children: ReactNode
@@ -21,13 +22,15 @@ export default function FarcasterLayout({ children }: FarcasterLayoutProps) {
       chain={base}
       miniKit={{ enabled: true, autoConnect: true }}
     >
-      <CreateSurveyModalProvider>
-        <NavigationProvider>
-          <MiniKitReady />
-          {children}
-          <NotificationContainer />
-        </NavigationProvider>
-      </CreateSurveyModalProvider>
+      <MiniKitBridge>
+        <CreateSurveyModalProvider>
+          <NavigationProvider>
+            <MiniKitReady />
+            {children}
+            <NotificationContainer />
+          </NavigationProvider>
+        </CreateSurveyModalProvider>
+      </MiniKitBridge>
     </OnchainKitProvider>
   )
 }

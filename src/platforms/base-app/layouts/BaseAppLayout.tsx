@@ -9,6 +9,7 @@ import { CreateSurveyModalProvider } from '@/components/providers/create-survey-
 import { NavigationProvider } from '@/components/providers/navigation-provider'
 import { NotificationContainer } from '@/components/ui/notifications'
 import { MiniKitReady } from '@/src/platforms/base-app/components/MiniKitReady'
+import { MiniKitBridge } from '@/src/platforms/_core/shared/providers/MiniKitBridgeProvider'
 
 interface BaseAppLayoutProps {
   children: ReactNode
@@ -21,15 +22,17 @@ export default function BaseAppLayout({ children }: BaseAppLayoutProps) {
       chain={base}
       miniKit={{ enabled: true, autoConnect: true }}
     >
-      <QueryClientProvider client={queryClient}>
-        <CreateSurveyModalProvider>
-          <NavigationProvider>
-            <MiniKitReady />
-            {children}
-            <NotificationContainer />
-          </NavigationProvider>
-        </CreateSurveyModalProvider>
-      </QueryClientProvider>
+      <MiniKitBridge>
+        <QueryClientProvider client={queryClient}>
+          <CreateSurveyModalProvider>
+            <NavigationProvider>
+              <MiniKitReady />
+              {children}
+              <NotificationContainer />
+            </NavigationProvider>
+          </CreateSurveyModalProvider>
+        </QueryClientProvider>
+      </MiniKitBridge>
     </OnchainKitProvider>
   )
 }
