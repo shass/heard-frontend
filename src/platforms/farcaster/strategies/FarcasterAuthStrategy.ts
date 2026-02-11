@@ -30,8 +30,8 @@ export class FarcasterAuthStrategy implements IAuthStrategy {
 
     const token = localStorage.getItem('auth_token')
     if (!token) {
-      useAuthStore.getState().setUser(null)
-      useAuthStore.getState().setLoading(false)
+      // No saved session — auto-authenticate (wallet always available via MiniKit)
+      await this.authenticate()
       return
     }
 
@@ -52,15 +52,15 @@ export class FarcasterAuthStrategy implements IAuthStrategy {
         useAuthStore.getState().authSuccess(storeUser)
       } else {
         apiClient.clearAuthToken()
-        useAuthStore.getState().setUser(null)
-        useAuthStore.getState().setLoading(false)
+        // Token invalid — auto-authenticate
+        await this.authenticate()
       }
     } catch (err) {
       console.warn('[FarcasterAuthStrategy] Failed to restore session:', err)
       const { apiClient } = await import('@/lib/api/client')
       apiClient.clearAuthToken()
-      useAuthStore.getState().setUser(null)
-      useAuthStore.getState().setLoading(false)
+      // Session restoration failed — auto-authenticate
+      await this.authenticate()
     }
   }
 
