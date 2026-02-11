@@ -83,42 +83,18 @@ export function useAuth(): IAuthStrategy {
     return strategy
   }, [platform, isLoading, error, wagmiDeps, signFn, miniKitContext])
 
-  // Update wagmi account when it changes (Web platform only)
+  // Auth initialization — all platforms
   useEffect(() => {
-    if (platform?.id === 'web' && strategyRef.current) {
-      const webStrategy = strategyRef.current as WebAuthStrategy
-      if (webStrategy.updateWagmiAccount) {
-        webStrategy.updateWagmiAccount({ address, isConnected })
-      }
-    }
-  }, [address, isConnected, platform])
-
-  // Single initialization effect: replaces WebAuthInitializer
-  useEffect(() => {
-    if (platform?.id !== 'web') return
-    if (hasInitializedRef.current) return
-    if (useAuthStore.getState().initialized) return
-
-    const webStrategy = strategyRef.current as WebAuthStrategy
-    if (!webStrategy?.canAuthenticate) return
-
-    hasInitializedRef.current = true
-
-    webStrategy.checkAuthStatus().finally(() => {
-      const store = useAuthStore.getState()
-      if (!store.initialized) {
-        store.setInitialized(true)
-      }
-      store.setLoading(false)
-    })
-  }, [platform, address, isConnected])
-
-  // Initialization for non-web platforms (BaseApp, Farcaster)
-  useEffect(() => {
-    if (!platform || platform.id === 'web') return
+    if (!platform) return
     if (hasInitializedRef.current) return
     if (useAuthStore.getState().initialized) return
     if (!strategyRef.current) return
+
+    // Web: wait for wagmi to report wallet as connectable
+    if (platform.id === 'web') {
+      const webStrategy = strategyRef.current as WebAuthStrategy
+      if (!webStrategy.canAuthenticate) return
+    }
 
     hasInitializedRef.current = true
 
@@ -129,16 +105,24 @@ export function useAuth(): IAuthStrategy {
       }
       store.setLoading(false)
     })
-  }, [platform, miniKitContext])
+  }, [platform, address, isConnected, miniKitContext])
 
-  // Handle wallet address changes — logout if address changes or wallet disconnects
+  // Handle wagmi state changes: sync account + detect address change/disconnect (Web only)
   useEffect(() => {
     if (platform?.id !== 'web') return
 
+    // Sync wagmi account to strategy
+    if (strategyRef.current) {
+      const webStrategy = strategyRef.current as WebAuthStrategy
+      if (webStrategy.updateWagmiAccount) {
+        webStrategy.updateWagmiAccount({ address, isConnected })
+      }
+    }
+
+    // Detect address change or wallet disconnect
     const currentUser = useAuthStore.getState().user
     const previousAddress = previousAddressRef.current
 
-    // Address changed while user is authenticated
     if (currentUser && currentUser.walletAddress && address && previousAddress && previousAddress !== address) {
       const currentAddress = currentUser.walletAddress.toLowerCase()
       const newAddress = address.toLowerCase()
@@ -151,7 +135,6 @@ export function useAuth(): IAuthStrategy {
       }
     }
 
-    // Wallet disconnected while user is authenticated
     if (currentUser && !isConnected && previousAddress) {
       useAuthStore.getState().logout()
       if (strategyRef.current) {
