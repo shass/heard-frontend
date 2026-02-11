@@ -43,7 +43,12 @@ export function useAuth(): IAuthStrategy {
 
   // Create strategy with dependency injection
   const authStrategy = useMemo(() => {
-    if (isLoading || error || !platform) return null
+    if (isLoading || !platform) return null
+
+    if (error) {
+      console.error('[useAuth] Platform detection failed:', error)
+      return null
+    }
 
     if (platform.id === 'web') {
       if (!strategyRef.current) {
@@ -57,6 +62,8 @@ export function useAuth(): IAuthStrategy {
       if (!strategyRef.current && miniKitContext) {
         strategyRef.current = new FarcasterAuthStrategy(miniKitContext)
       }
+    } else {
+      console.error(`[useAuth] Unknown platform: ${platform.id}`)
     }
 
     return strategyRef.current
