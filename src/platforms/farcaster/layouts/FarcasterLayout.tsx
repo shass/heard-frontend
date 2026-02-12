@@ -8,7 +8,7 @@ import { NavigationProvider } from '@/components/providers/navigation-provider'
 import { NotificationContainer } from '@/components/ui/notifications'
 import { MiniKitReady } from '@/src/platforms/base-app/components/MiniKitReady'
 import { MiniKitBridge } from '@/src/platforms/_core/shared/providers/MiniKitBridgeProvider'
-import { MiniAppBringIDProvider } from '@/src/platforms/_core/shared/providers/MiniAppBringIDProvider'
+import { BringIDProvider } from '@/providers/BringIDProvider'
 
 interface FarcasterLayoutProps {
   children: ReactNode
@@ -26,11 +26,11 @@ export default function FarcasterLayout({ children }: FarcasterLayoutProps) {
       <MiniKitBridge>
         <CreateSurveyModalProvider>
           <NavigationProvider>
-            <MiniAppBringIDProvider>
+            <BringIDProvider>
               <MiniKitReady />
               {children}
               <NotificationContainer />
-            </MiniAppBringIDProvider>
+            </BringIDProvider>
           </NavigationProvider>
         </CreateSurveyModalProvider>
       </MiniKitBridge>
