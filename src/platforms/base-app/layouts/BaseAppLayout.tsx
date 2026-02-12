@@ -10,6 +10,7 @@ import { NavigationProvider } from '@/components/providers/navigation-provider'
 import { NotificationContainer } from '@/components/ui/notifications'
 import { MiniKitReady } from '@/src/platforms/base-app/components/MiniKitReady'
 import { MiniKitBridge } from '@/src/platforms/_core/shared/providers/MiniKitBridgeProvider'
+import { MiniAppBringIDProvider } from '@/src/platforms/_core/shared/providers/MiniAppBringIDProvider'
 
 interface BaseAppLayoutProps {
   children: ReactNode
@@ -26,9 +27,11 @@ export default function BaseAppLayout({ children }: BaseAppLayoutProps) {
         <QueryClientProvider client={queryClient}>
           <CreateSurveyModalProvider>
             <NavigationProvider>
-              <MiniKitReady />
-              {children}
-              <NotificationContainer />
+              <MiniAppBringIDProvider>
+                <MiniKitReady />
+                {children}
+                <NotificationContainer />
+              </MiniAppBringIDProvider>
             </NavigationProvider>
           </CreateSurveyModalProvider>
         </QueryClientProvider>
