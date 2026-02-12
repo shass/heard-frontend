@@ -54,6 +54,8 @@ export function useAuth(): IAuthStrategy {
       if (!strategyRef.current) {
         strategyRef.current = new WebAuthStrategy(wagmiDeps, signFn)
       } else {
+        // Sync wagmi deps to cached strategy during render (before effects run).
+        // This ensures canAuthenticate is current when the init effect checks it.
         (strategyRef.current as WebAuthStrategy).updateWagmiAccount(wagmiDeps)
       }
     } else if (platform.id === 'base-app') {
