@@ -15,8 +15,6 @@ interface FarcasterLayoutProps {
 }
 
 export default function FarcasterLayout({ children }: FarcasterLayoutProps) {
-  console.log('[FarcasterLayout] Rendering Farcaster layout')
-
   return (
     <OnchainKitProvider
       apiKey={process.env.NEXT_PUBLIC_CDP_CLIENT_API_KEY}

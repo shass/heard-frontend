@@ -1,5 +1,6 @@
 import { apiClient } from './client'
 import {
+  ApiError,
   SurveyType,
   type AdminDashboardStats,
   type AdminSurveyListItem,
@@ -32,22 +33,20 @@ export const getAdminDashboardStats = async (): Promise<AdminDashboardStats> => 
     }
 
     return data
-  } catch (error: any) {
-    console.error('🚨 Admin dashboard API error:', error)
-    console.error('🚨 Error response:', error?.response?.data)
+  } catch (error: unknown) {
+    console.error('[Admin] Dashboard API error:', error)
 
-    // Check if it's an authentication error
-    if (error?.response?.status === 401) {
-      throw new Error('Authentication required. Please login as admin.')
+    if (error instanceof ApiError) {
+      if (error.statusCode === 401) {
+        throw new Error('Authentication required. Please login as admin.')
+      }
+      if (error.statusCode === 403) {
+        throw new Error('Admin access required. You do not have permission to view this page.')
+      }
+      throw new Error(error.message || 'Failed to load dashboard data')
     }
 
-    // Check if it's an authorization error (not admin)
-    if (error?.response?.status === 403) {
-      throw new Error('Admin access required. You do not have permission to view this page.')
-    }
-
-    // For other errors, provide more context
-    throw new Error(error?.response?.data?.error?.message || error?.message || 'Failed to load dashboard data')
+    throw new Error(error instanceof Error ? error.message : 'Failed to load dashboard data')
   }
 }
 

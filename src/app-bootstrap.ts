@@ -6,6 +6,8 @@
  */
 
 import { platformRegistry } from '@/src/core/registry/PlatformRegistry'
+import { apiClient } from '@/lib/api/client'
+import { useAuthStore } from '@/lib/store'
 import { surveyTypeRegistry } from '@/src/core/registry/SurveyTypeRegistry'
 import { accessStrategyRegistry } from '@/src/core/registry/AccessStrategyRegistry'
 
@@ -154,6 +156,17 @@ export async function bootstrapApplication() {
         throw new Error('Platform detection failed and no fallback available')
       }
     }
+
+    // Wire up platform-specific token storage to ApiClient
+    apiClient.setTokenStorage(platformRegistry.getActive().createTokenStorage())
+
+    // Wire up synchronous 401 handler to avoid race condition with async logout
+    apiClient.setOnUnauthorized(() => {
+      const state = useAuthStore.getState()
+      if (state.initialized) {
+        state.logout()
+      }
+    })
 
     const duration = Date.now() - start
 

@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useSurveyQuestions, useStartSurvey } from "@/hooks/use-surveys"
+import { useQueryClient } from "@tanstack/react-query"
+import { useSurveyQuestions, useStartSurvey, surveyKeys } from "@/hooks/use-surveys"
 import { useSurveyResponseState, useAnswerValidation } from "@/hooks/use-survey-response"
 import { useIsAuthenticated } from "@/lib/store"
 import { useNotifications } from "@/components/ui/notifications"
@@ -26,6 +27,7 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
 
   const isAuthenticated = useIsAuthenticated()
   const notifications = useNotifications()
+  const queryClient = useQueryClient()
 
   // Load survey questions
   const {
@@ -238,7 +240,34 @@ export function useSurveyPage({ survey, onSubmit }: UseSurveyPageProps) {
         // Submit completed survey - blocking state already set at the beginning
         console.log('Submitting completed survey with responseId:', responseId)
         try {
-          await responseState.submitSurvey({ responseId })
+          // Pre-submission freshness check: verify the survey is still active
+          try {
+            const freshSurvey = await queryClient.fetchQuery({
+              queryKey: surveyKeys.detail(survey.id),
+              queryFn: () => surveyApi.getSurvey(survey.id),
+              staleTime: 0, // Always fetch fresh data
+            })
+
+            const hasEnded = !freshSurvey.isActive
+              || (freshSurvey.endDate && new Date(freshSurvey.endDate) < new Date())
+
+            if (hasEnded) {
+              notifications.error(
+                'Survey has ended',
+                'This survey is no longer accepting responses. Your answers could not be submitted.'
+              )
+              setSubmissionPhase('error')
+              setTimeout(() => setSubmissionPhase('idle'), 3000)
+              return
+            }
+          } catch {
+            notifications.error('Unable to verify survey status', 'Please check your connection and try again.')
+            setSubmissionPhase('error')
+            setTimeout(() => setSubmissionPhase('idle'), 3000)
+            return
+          }
+
+          await responseState.submitSurvey({ responseId, surveyId: survey.id })
           console.log('Survey submitted successfully')
 
           // Call lifecycle hook after survey completion

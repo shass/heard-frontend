@@ -82,8 +82,10 @@ export function useRewardPage(survey: Survey, responseId?: string) {
 
   const handleCopyClaimLink = () => {
     if (claimLink) {
-      navigator.clipboard.writeText(claimLink)
-      notifications.success('Link copied', 'Claim link copied to clipboard')
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(claimLink)
+        notifications.success('Link copied', 'Claim link copied to clipboard')
+      }
       setLinkCopied(true)
       setTimeout(() => setLinkCopied(false), 1500)
     }

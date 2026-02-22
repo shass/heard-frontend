@@ -7,7 +7,7 @@
  * Ensures AppBootstrap completes before PlatformProvider starts
  */
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { AppBootstrap } from './AppBootstrap'
 import { PlatformProvider } from '@/src/core/hooks/usePlatform'
 
@@ -17,9 +17,10 @@ interface AppProvidersProps {
 
 export function AppProviders({ children }: AppProvidersProps) {
   const [isBootstrapped, setBootstrapped] = useState(false)
+  const handleReady = useCallback(() => setBootstrapped(true), [])
 
   return (
-    <AppBootstrap onReady={() => setBootstrapped(true)}>
+    <AppBootstrap onReady={handleReady}>
       {isBootstrapped ? (
         <PlatformProvider>{children}</PlatformProvider>
       ) : null}

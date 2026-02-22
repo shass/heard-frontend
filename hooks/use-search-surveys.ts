@@ -18,28 +18,19 @@ export function useSearchSurveys(options: UseSearchSurveysOptions = {}) {
   const { enabled = true, throttleMs = 200 } = options
   const [searchParams, setSearchParams] = useState<SearchParams>({})
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const abortControllerRef = useRef<AbortController | null>(null)
 
   // Check if there's an active search/filter
   const hasActiveSearch = Boolean(searchParams.search || searchParams.company)
 
-  // React Query for actual API calls
+  // React Query for actual API calls (cancellation handled by React Query via signal)
   const queryResult = useQuery({
     queryKey: ['surveys', 'search', searchParams],
     queryFn: async ({ signal }) => {
-      // Cancel previous request if it exists
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
-      }
-
-      // Create new AbortController for this request
-      abortControllerRef.current = new AbortController()
-
       return surveyApi.getSurveys({
         ...searchParams,
         limit: searchParams.limit || 50,
         offset: searchParams.offset || 0
-      }, { signal: signal || abortControllerRef.current.signal })
+      }, { signal })
     },
     // Only enable when there's an actual search/filter
     enabled: enabled && hasActiveSearch,

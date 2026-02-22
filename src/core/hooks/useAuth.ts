@@ -4,6 +4,7 @@ import { useMemo, useEffect, useRef, useCallback } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { useSafeMiniKit } from './useSafeMiniKit'
 import { IAuthStrategy } from '@/src/platforms/_core/shared/interfaces/IAuthStrategy'
+import { noOpAuthStrategy } from '@/src/platforms/_core/shared/strategies/NoOpAuthStrategy'
 import { usePlatform } from './usePlatform'
 import { WebAuthStrategy } from '@/src/platforms/web/strategies/WebAuthStrategy'
 import { BaseAppAuthStrategy } from '@/src/platforms/base-app/strategies/BaseAppAuthStrategy'
@@ -53,10 +54,6 @@ export function useAuth(): IAuthStrategy {
     if (platform.id === 'web') {
       if (!strategyRef.current) {
         strategyRef.current = new WebAuthStrategy(wagmiDeps, signFn)
-      } else {
-        // Sync wagmi deps to cached strategy during render (before effects run).
-        // This ensures canAuthenticate is current when the init effect checks it.
-        (strategyRef.current as WebAuthStrategy).updateWagmiAccount(wagmiDeps)
       }
     } else if (platform.id === 'base-app') {
       if (!strategyRef.current && miniKitContext) {
@@ -84,6 +81,56 @@ export function useAuth(): IAuthStrategy {
     }
   }, [miniKitContext, platform])
 
+  // Reset hasInitializedRef when store resets (e.g. after logout)
+  const storeInitialized = useAuthStore((s) => s.initialized)
+  useEffect(() => {
+    if (!storeInitialized) {
+      hasInitializedRef.current = false
+    }
+  }, [storeInitialized])
+
+  // Handle wagmi state changes: sync account + detect address change/disconnect (Web only)
+  // IMPORTANT: This effect must be declared before the init effect so that
+  // updateWagmiAccount runs first and canAuthenticate is current when init checks it.
+  useEffect(() => {
+    if (platform?.id !== 'web') return
+
+    // Sync wagmi account to strategy
+    if (strategyRef.current) {
+      const webStrategy = strategyRef.current as WebAuthStrategy
+      if (webStrategy.updateWagmiAccount) {
+        webStrategy.updateWagmiAccount({ address, isConnected })
+      }
+    }
+
+    // Detect address change or wallet disconnect
+    const currentUser = useAuthStore.getState().user
+    const previousAddress = previousAddressRef.current
+
+    if (currentUser && currentUser.walletAddress && address && previousAddress && previousAddress !== address) {
+      const currentAddress = currentUser.walletAddress.toLowerCase()
+      const newAddress = address.toLowerCase()
+
+      if (currentAddress !== newAddress) {
+        if (strategyRef.current) {
+          strategyRef.current.logout().catch(console.error)
+        } else {
+          useAuthStore.getState().logout()
+        }
+      }
+    }
+
+    if (currentUser && !isConnected && previousAddress) {
+      if (strategyRef.current) {
+        strategyRef.current.logout().catch(console.error)
+      } else {
+        useAuthStore.getState().logout()
+      }
+    }
+
+    previousAddressRef.current = address
+  }, [address, isConnected, platform])
+
   // Auth initialization — all platforms
   useEffect(() => {
     if (!platform) return
@@ -108,44 +155,6 @@ export function useAuth(): IAuthStrategy {
     })
   }, [platform, address, isConnected, miniKitContext])
 
-  // Handle wagmi state changes: sync account + detect address change/disconnect (Web only)
-  useEffect(() => {
-    if (platform?.id !== 'web') return
-
-    // Sync wagmi account to strategy
-    if (strategyRef.current) {
-      const webStrategy = strategyRef.current as WebAuthStrategy
-      if (webStrategy.updateWagmiAccount) {
-        webStrategy.updateWagmiAccount({ address, isConnected })
-      }
-    }
-
-    // Detect address change or wallet disconnect
-    const currentUser = useAuthStore.getState().user
-    const previousAddress = previousAddressRef.current
-
-    if (currentUser && currentUser.walletAddress && address && previousAddress && previousAddress !== address) {
-      const currentAddress = currentUser.walletAddress.toLowerCase()
-      const newAddress = address.toLowerCase()
-
-      if (currentAddress !== newAddress) {
-        useAuthStore.getState().logout()
-        if (strategyRef.current) {
-          strategyRef.current.logout().catch(console.error)
-        }
-      }
-    }
-
-    if (currentUser && !isConnected && previousAddress) {
-      useAuthStore.getState().logout()
-      if (strategyRef.current) {
-        strategyRef.current.logout().catch(console.error)
-      }
-    }
-
-    previousAddressRef.current = address
-  }, [address, isConnected, platform])
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -158,5 +167,5 @@ export function useAuth(): IAuthStrategy {
     }
   }, [])
 
-  return authStrategy!
+  return authStrategy ?? noOpAuthStrategy
 }

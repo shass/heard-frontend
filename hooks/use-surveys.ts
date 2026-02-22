@@ -157,9 +157,13 @@ export function useStartSurvey(callbacks?: {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: ({ id, request }: { id: string; request?: StartSurveyRequest }) => 
+    mutationFn: ({ id, request }: { id: string; request?: StartSurveyRequest }) =>
       surveyApi.startSurvey(id, request),
-    onSuccess: callbacks?.onSuccess,
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: surveyKeys.detail(variables.id) })
+      queryClient.invalidateQueries({ queryKey: surveyKeys.eligibility(variables.id) })
+      callbacks?.onSuccess?.(data)
+    },
     onError: callbacks?.onError
   })
 }
@@ -221,7 +225,7 @@ export function useBatchSurveyEligibility(
   const isAuthenticated = useIsAuthenticated()
   
   return useQuery({
-    queryKey: [...surveyKeys.all, 'batch-eligibility', surveyIds, walletAddress],
+    queryKey: [...surveyKeys.all, 'batch-eligibility', JSON.stringify([...surveyIds].sort()), walletAddress],
     queryFn: async () => {
       if (!walletAddress || surveyIds.length === 0) return {}
       

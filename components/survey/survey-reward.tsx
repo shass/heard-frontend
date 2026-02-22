@@ -8,7 +8,7 @@ import type { Survey, WinnerStatus, LinkdropReward } from "@/lib/types"
 import type { ISurveyStrategy } from "@/lib/survey/strategies"
 
 interface SurveyRewardProps {
-  userReward: LinkdropReward
+  userReward?: LinkdropReward
   survey?: Survey
   strategy?: ISurveyStrategy | null
   winnerStatus?: WinnerStatus
@@ -74,17 +74,17 @@ export function SurveyReward({
                   <CheckCircle2 className="w-5 h-5 text-green-600" />
                   <span className="font-medium text-green-800">Survey Completed!</span>
                 </div>
-                {(userReward.heardPointsAwarded > 0 || survey?.heardPointsReward) && (
+                {((userReward?.heardPointsAwarded ?? 0) > 0 || survey?.heardPointsReward) && (
                   <p className="text-sm text-green-700">
-                    HeardPoints Earned: {formatNumber(userReward.heardPointsAwarded || survey?.heardPointsReward || 0)} HP
+                    HeardPoints Earned: {formatNumber(userReward?.heardPointsAwarded || survey?.heardPointsReward || 0)} HP
                   </p>
                 )}
               </div>
 
               <p>Thanks for taking part in the prediction survey.</p>
-              {(userReward.heardPointsAwarded > 0 || survey?.heardPointsReward) && (
+              {((userReward?.heardPointsAwarded ?? 0) > 0 || survey?.heardPointsReward) && (
                 <p>
-                  You have just earned <strong>{formatNumber(userReward.heardPointsAwarded || survey?.heardPointsReward || 0)} Heard Points</strong>.
+                  You have just earned <strong>{formatNumber(userReward?.heardPointsAwarded || survey?.heardPointsReward || 0)} Heard Points</strong>.
                 </p>
               )}
               {endDateFormatted && (
@@ -118,8 +118,8 @@ export function SurveyReward({
                   <span className="font-medium text-green-800">Congratulations! You're a winner!</span>
                 </div>
                 <div className="text-sm text-green-700">
-                  {userReward.heardPointsAwarded > 0 && (
-                    <p>HeardPoints Earned: {formatNumber(userReward.heardPointsAwarded)} HP</p>
+                  {(userReward?.heardPointsAwarded ?? 0) > 0 && (
+                    <p>HeardPoints Earned: {formatNumber(userReward?.heardPointsAwarded ?? 0)} HP</p>
                   )}
                   {winnerStatus.reward?.rewardType && (
                     <p>Prize: {winnerStatus.reward.rewardType}{winnerStatus.reward.place && ` (Place #${winnerStatus.reward.place})`}</p>
@@ -160,9 +160,9 @@ export function SurveyReward({
                 <XCircle className="w-5 h-5 text-zinc-500" />
                 <span className="font-medium text-zinc-700">Unfortunately, you didn't win this time.</span>
               </div>
-              {userReward.heardPointsAwarded > 0 && (
+              {(userReward?.heardPointsAwarded ?? 0) > 0 && (
                 <p className="text-sm text-zinc-600 mt-2">
-                  HeardPoints Earned: {formatNumber(userReward.heardPointsAwarded)} HP
+                  HeardPoints Earned: {formatNumber(userReward?.heardPointsAwarded ?? 0)} HP
                 </p>
               )}
               <p className="text-sm text-zinc-600 mt-2">
@@ -179,10 +179,10 @@ export function SurveyReward({
                 </div>
                 <div className="text-sm text-green-700">
                   {showTokenReward && (
-                    <p>Token Reward: {formatNumber(userReward.survey?.rewardAmount || 0)} {userReward.survey?.rewardToken}</p>
+                    <p>Token Reward: {formatNumber(userReward?.survey?.rewardAmount || 0)} {userReward?.survey?.rewardToken}</p>
                   )}
-                  <p>HeardPoints Earned: {formatNumber(userReward.heardPointsAwarded)} HP</p>
-                  {userReward.usedAt && (
+                  <p>HeardPoints Earned: {formatNumber(userReward?.heardPointsAwarded ?? 0)} HP</p>
+                  {userReward?.usedAt && (
                     <p>Reward given: {new Date(userReward.usedAt).toLocaleDateString()}</p>
                   )}
                 </div>
@@ -193,7 +193,7 @@ export function SurveyReward({
                 <div className="space-y-3">
                   <div className="text-sm text-zinc-600">
                     {showTokenReward
-                      ? `Use the link below to claim your ${formatNumber(userReward.survey?.rewardAmount || 0)} ${userReward.survey?.rewardToken} tokens:`
+                      ? `Use the link below to claim your ${formatNumber(userReward?.survey?.rewardAmount || 0)} ${userReward?.survey?.rewardToken} tokens:`
                       : 'Use the link below to claim your reward:'}
                   </div>
 
@@ -219,7 +219,7 @@ export function SurveyReward({
                   <div className="text-center">
                     <div className="inline-block p-2 bg-white rounded-lg border">
                       <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(userReward.claimLink!)}`}
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(userReward?.claimLink ?? '')}`}
                         alt="QR Code for reward claim"
                         className="w-30 h-30"
                       />

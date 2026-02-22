@@ -3,8 +3,6 @@
 import { ReactNode } from 'react'
 import { OnchainKitProvider } from '@coinbase/onchainkit'
 import { base } from 'wagmi/chains'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClient } from '@/src/platforms/web/providers/Web3Provider'
 import { CreateSurveyModalProvider } from '@/components/providers/create-survey-modal-provider'
 import { NavigationProvider } from '@/components/providers/navigation-provider'
 import { NotificationContainer } from '@/components/ui/notifications'
@@ -24,17 +22,15 @@ export default function BaseAppLayout({ children }: BaseAppLayoutProps) {
       miniKit={{ enabled: true, autoConnect: true }}
     >
       <MiniKitBridge>
-        <QueryClientProvider client={queryClient}>
-          <CreateSurveyModalProvider>
-            <NavigationProvider>
-              <BringIDProvider>
-                <MiniKitReady />
-                {children}
-                <NotificationContainer />
-              </BringIDProvider>
-            </NavigationProvider>
-          </CreateSurveyModalProvider>
-        </QueryClientProvider>
+        <CreateSurveyModalProvider>
+          <NavigationProvider>
+            <BringIDProvider>
+              <MiniKitReady />
+              {children}
+              <NotificationContainer />
+            </BringIDProvider>
+          </NavigationProvider>
+        </CreateSurveyModalProvider>
       </MiniKitBridge>
     </OnchainKitProvider>
   )

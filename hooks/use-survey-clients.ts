@@ -16,6 +16,7 @@ import {
   type QuestionWithAnswers
 } from '@/lib/api/survey-clients'
 import { useAuthStore } from '@/lib/store'
+import { surveyKeys } from '@/hooks/use-surveys'
 import { toast } from 'sonner'
 
 // Query keys for cache management
@@ -24,7 +25,6 @@ export const surveyClientKeys = {
   clients: (surveyId: string) => [...surveyClientKeys.all, 'clients', surveyId] as const,
   visibility: (surveyId: string) => [...surveyClientKeys.all, 'visibility', surveyId] as const,
   results: (surveyId: string, token?: string) => ['survey-results', surveyId, token] as const,
-  questions: (surveyId: string) => ['survey-questions', surveyId] as const,
 }
 
 // Admin hooks for managing survey clients
@@ -162,7 +162,7 @@ export function useSurveyResults(surveyId: string, token?: string) {
 export function useSurveyResultsWithQuestions(surveyId: string, token?: string) {
   const resultsQuery = useSurveyResults(surveyId, token)
   const questionsQuery = useQuery({
-    queryKey: surveyClientKeys.questions(surveyId),
+    queryKey: surveyKeys.questions(surveyId),
     queryFn: async () => {
       const data = await surveyResultsApi.getSurveyQuestions(surveyId)
       // Ensure we always return an array

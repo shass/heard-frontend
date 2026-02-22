@@ -10,8 +10,6 @@ import { useAuthStore } from '@/lib/store'
  */
 export class WebAuthStrategy implements IAuthStrategy {
   private _authProvider: WebAuthProvider | null = null
-  private _unsubscribe: (() => void) | null = null
-
   constructor(
     private wagmiAccount: { address: string | undefined; isConnected: boolean },
     private signMessageFn: (message: string) => Promise<string>
@@ -107,9 +105,6 @@ export class WebAuthStrategy implements IAuthStrategy {
   }
 
   destroy() {
-    if (this._unsubscribe) {
-      this._unsubscribe()
-      this._unsubscribe = null
-    }
+    // No-op: reserved for future cleanup logic
   }
 }
