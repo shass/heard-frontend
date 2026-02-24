@@ -153,7 +153,11 @@ export interface PaginationMeta {
 export interface AuthResponse {
   user: User
   token?: string // Optional for backward compatibility, HttpOnly cookie is preferred
-  expiresAt: string
+  session: {
+    platform: string
+    expiresAt: string
+    capabilities: Record<string, unknown>
+  }
 }
 
 export interface NonceResponse {
@@ -181,7 +185,7 @@ export interface EligibilityResponse {
 export interface RewardInfo {
   amount: number
   token: string
-  linkDropCode: string
+  linkDropCode?: string
   claimUrl: string
 }
 

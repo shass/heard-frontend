@@ -30,7 +30,8 @@ export interface StartSurveyRequest {
 
 export interface StartSurveyResponse {
   responseId: string
-  firstQuestionId: string
+  firstQuestionId?: string
+  message?: string
 }
 
 export class SurveyApi {
