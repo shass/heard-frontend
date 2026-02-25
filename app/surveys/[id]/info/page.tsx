@@ -290,7 +290,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
             <PredictionSurveyInfo survey={survey} strategy={strategy} />
 
             {/* Survey Information */}
-            <SurveyInfo survey={survey} eligibility={eligibility} isEligibilityLoading={isEligibilityFetching && !!address} isConnected={isConnected} requiresVerification={buttonPhase === 'verify_bringid' || buttonPhase === 'verifying_bringid'} />
+            <SurveyInfo survey={survey} eligibility={eligibility} isEligibilityLoading={isEligibilityFetching && !!address} isConnected={isConnected} isAuthenticated={isAuthenticated} requiresVerification={buttonPhase === 'verify_bringid' || buttonPhase === 'verifying_bringid'} />
 
             {/* Reward Section */}
             {hasCompleted && (userReward || winnerStatus) && (

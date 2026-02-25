@@ -44,7 +44,13 @@ function getQueryClient() {
         refetchOnWindowFocus: false,
         refetchOnMount: false, // Default to not refetch on mount - use cache
         refetchOnReconnect: false, // Don't automatically refetch on reconnect
-        retry: (failureCount) => failureCount < 3,
+        retry: (failureCount, error) => {
+          if (error && typeof error === 'object' && 'statusCode' in error) {
+            const status = (error as { statusCode: number }).statusCode
+            if (status === 401 || status === 403) return false
+          }
+          return failureCount < 3
+        },
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
         staleTime: 5 * 60 * 1000, // 5 minutes - keep data fresh longer
         gcTime: 30 * 60 * 1000, // 30 minutes - keep in memory much longer
@@ -53,7 +59,13 @@ function getQueryClient() {
         networkMode: 'online',
       },
       mutations: {
-        retry: (failureCount) => failureCount < 2,
+        retry: (failureCount, error) => {
+          if (error && typeof error === 'object' && 'statusCode' in error) {
+            const status = (error as { statusCode: number }).statusCode
+            if (status === 401 || status === 403) return false
+          }
+          return failureCount < 2
+        },
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
         networkMode: 'online',
       },

@@ -104,6 +104,7 @@ export function useSurveyEligibility(
   bringIdScore?: number,
   bringIdPoints?: number
 ) {
+  const isAuthenticated = useIsAuthenticated()
   // Normalize wallet address to lowercase to prevent duplicate requests
   const normalizedAddress = walletAddress?.toLowerCase()
 
@@ -127,7 +128,7 @@ export function useSurveyEligibility(
         bringIdPoints: points
       })
     },
-    enabled: !!id && !!normalizedAddress,
+    enabled: !!id && !!normalizedAddress && !!isAuthenticated,
     staleTime: 0, // Always fetch fresh data
     gcTime: 30 * 1000, // 30 seconds
     placeholderData: keepPreviousData,

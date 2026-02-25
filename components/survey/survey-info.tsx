@@ -14,10 +14,11 @@ interface SurveyInfoProps {
   }
   isEligibilityLoading?: boolean
   isConnected?: boolean
+  isAuthenticated?: boolean
   requiresVerification?: boolean
 }
 
-export function SurveyInfo({ survey, eligibility, isEligibilityLoading, isConnected, requiresVerification }: SurveyInfoProps) {
+export function SurveyInfo({ survey, eligibility, isEligibilityLoading, isConnected, isAuthenticated, requiresVerification }: SurveyInfoProps) {
   const hasCompleted = eligibility?.hasCompleted
 
   return (
@@ -51,6 +52,8 @@ export function SurveyInfo({ survey, eligibility, isEligibilityLoading, isConnec
           <div className="space-y-2">
             {!isConnected ? (
               <p className="text-zinc-500">Connect your wallet to check eligibility.</p>
+            ) : !isAuthenticated ? (
+              <p className="text-zinc-500">Sign in to check your eligibility.</p>
             ) : isEligibilityLoading || !eligibility ? (
               <div className="flex items-center gap-2 text-zinc-500">
                 <Loader2 className="h-4 w-4 animate-spin" />

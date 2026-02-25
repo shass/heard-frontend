@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { winnersApi } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
-import { ApiError, type WinnerStatus } from '@/lib/types'
+import { type WinnerStatus } from '@/lib/types'
 
 /**
  * Hook to check if current authenticated user is a winner for a prediction survey
@@ -20,12 +20,5 @@ export function useWinnerStatus(surveyId: string | undefined) {
     enabled: !!surveyId && isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
-    retry: (failureCount, error) => {
-      // Don't retry on 404 (not a winner) or 401 (not authenticated)
-      if (error instanceof ApiError && (error.statusCode === 404 || error.statusCode === 401)) {
-        return false
-      }
-      return failureCount < 3
-    }
   })
 }
