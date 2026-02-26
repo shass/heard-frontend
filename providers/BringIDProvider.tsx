@@ -3,7 +3,6 @@
 import { useCallback, useRef, useEffect } from 'react'
 import { BringIDModal } from 'bringid/react'
 import { useWallet } from '@/src/platforms/_core'
-import { env } from '@/lib/env'
 
 interface BringIDProviderProps {
   children: React.ReactNode
@@ -30,7 +29,6 @@ export function BringIDProvider({ children }: BringIDProviderProps) {
   return (
     <>
       <BringIDModal
-        mode={env.BRINGID_MODE}
         address={wallet.address}
         generateSignature={generateSignature}
       />

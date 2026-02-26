@@ -12,6 +12,7 @@ const requiredEnvVars = [
   'NEXT_PUBLIC_FARCASTER_HEADER',
   'NEXT_PUBLIC_FARCASTER_PAYLOAD',
   'NEXT_PUBLIC_FARCASTER_SIGNATURE',
+  'NEXT_PUBLIC_BRINGID_APP_ID',
 ] as const
 
 // Only validate on server side during build/startup
@@ -48,6 +49,7 @@ export const env = {
   ENABLE_TESTNETS: process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true',
 
   // BringID
+  BRINGID_APP_ID: process.env.NEXT_PUBLIC_BRINGID_APP_ID!,
   BRINGID_MODE: (process.env.NEXT_PUBLIC_BRINGID_MODE === 'dev' ? 'dev' : 'production') as 'dev' | 'production',
 } as const
 

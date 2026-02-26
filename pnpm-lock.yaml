@@ -108,8 +108,8 @@ importers:
         specifier: ^5.83.0
         version: 5.83.0(react@19.1.0)
       bringid:
-        specifier: 0.2.0-beta
-        version: 0.2.0-beta(@coinbase/wallet-sdk@4.3.6(@types/react@19.1.8)(bufferutil@4.0.9)(immer@10.1.1)(react@19.1.0)(typescript@5.8.3)(use-sync-external-store@1.4.0(react@19.1.0))(utf-8-validate@5.0.10)(zod@3.25.76))(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(@types/snarkjs@0.7.9)(bufferutil@4.0.9)(commander@14.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(utf-8-validate@5.0.10)
+        specifier: 0.5.2-beta
+        version: 0.5.2-beta(@coinbase/wallet-sdk@4.3.6(@types/react@19.1.8)(bufferutil@4.0.9)(immer@10.1.1)(react@19.1.0)(typescript@5.8.3)(use-sync-external-store@1.4.0(react@19.1.0))(utf-8-validate@5.0.10)(zod@3.25.76))(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(@types/snarkjs@0.7.9)(bufferutil@4.0.9)(commander@14.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(utf-8-validate@5.0.10)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -2758,8 +2758,8 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
-  bringid@0.2.0-beta:
-    resolution: {integrity: sha512-iz5UEL81nU6rWxrkQHBpYNjM/YXxoTHdv1hl3f6dX/YE/ZNitq90ZhiZqYJg7KZdjHmcDuaqI6VXBu9M9REw8g==}
+  bringid@0.5.2-beta:
+    resolution: {integrity: sha512-/YOFmt17IQgQ5PgoEb99mIrpZDi9U5uQaY04Z4G2qAvgcz2uYeLr871NsaOsQlE0R/JnhyS4tOIOhy5/b8eqGQ==}
     engines: {node: '>=16.x'}
     peerDependencies:
       '@coinbase/wallet-sdk': ^4.3.7
@@ -5262,10 +5262,6 @@ packages:
 
   util@0.12.5:
     resolution: {integrity: sha512-kZf/K6hEIrWHI6XqOFUiiMa+79wE/D8Q+NCNAWclkyg3b4d2k7s0QGepNjiABc+aR3N1PAyHL7p6UcLY6LmrnA==}
-
-  uuid@13.0.0:
-    resolution: {integrity: sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==}
-    hasBin: true
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
@@ -8099,7 +8095,7 @@ snapshots:
 
   '@semaphore-protocol/utils@4.14.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
     dependencies:
-      ethers: 6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      ethers: 6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -9264,7 +9260,7 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  bringid@0.2.0-beta(@coinbase/wallet-sdk@4.3.6(@types/react@19.1.8)(bufferutil@4.0.9)(immer@10.1.1)(react@19.1.0)(typescript@5.8.3)(use-sync-external-store@1.4.0(react@19.1.0))(utf-8-validate@5.0.10)(zod@3.25.76))(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(@types/snarkjs@0.7.9)(bufferutil@4.0.9)(commander@14.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(utf-8-validate@5.0.10):
+  bringid@0.5.2-beta(@coinbase/wallet-sdk@4.3.6(@types/react@19.1.8)(bufferutil@4.0.9)(immer@10.1.1)(react@19.1.0)(typescript@5.8.3)(use-sync-external-store@1.4.0(react@19.1.0))(utf-8-validate@5.0.10)(zod@3.25.76))(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(@types/snarkjs@0.7.9)(bufferutil@4.0.9)(commander@14.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(utf-8-validate@5.0.10):
     dependencies:
       '@coinbase/wallet-sdk': 4.3.6(@types/react@19.1.8)(bufferutil@4.0.9)(immer@10.1.1)(react@19.1.0)(typescript@5.8.3)(use-sync-external-store@1.4.0(react@19.1.0))(utf-8-validate@5.0.10)(zod@3.25.76)
       '@semaphore-protocol/core': 4.14.2(@types/snarkjs@0.7.9)(bufferutil@4.0.9)(commander@14.0.0)(utf-8-validate@5.0.10)
@@ -9276,7 +9272,6 @@ snapshots:
       redux-logger: 3.0.6
       redux-thunk: 2.4.2(redux@4.2.1)
       styled-components: 6.3.8(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      uuid: 13.0.0
     transitivePeerDependencies:
       - '@types/react'
       - '@types/react-dom'
@@ -11976,8 +11971,6 @@ snapshots:
       is-generator-function: 1.1.2
       is-typed-array: 1.1.15
       which-typed-array: 1.1.19
-
-  uuid@13.0.0: {}
 
   uuid@8.3.2: {}
 
