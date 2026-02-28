@@ -35,8 +35,13 @@ export class FarcasterAuthStrategy implements IAuthStrategy {
 
     const token = localStorage.getItem('auth_token')
     if (!token) {
-      // No saved session — don't auto-authenticate, let the UI trigger auth on user action
-      useAuthStore.getState().setLoading(false)
+      if (this.context) {
+        // Context available — silently authenticate via Quick Auth (consent-free in mini apps)
+        await this.authenticate()
+      } else {
+        // No context yet — unblock UI, auto-auth will trigger when context arrives via updateContext
+        useAuthStore.getState().setLoading(false)
+      }
       return
     }
 
