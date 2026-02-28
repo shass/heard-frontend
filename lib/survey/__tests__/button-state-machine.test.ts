@@ -6,6 +6,7 @@ const defaultInput: SurveyButtonInput = {
   surveyType: SurveyType.STANDARD,
   eligibility: { isEligible: true, hasStarted: false, hasCompleted: false },
   isEligibilityFetching: false,
+  isEligibilityError: false,
   isConnected: true,
   hasAddress: true,
   isAuthenticated: true,

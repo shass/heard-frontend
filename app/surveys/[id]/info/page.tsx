@@ -86,7 +86,18 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
     return () => { cancelled = true }
   }, [hasBringIdStrategy, address])
 
-  const { data: eligibility, isFetching: isEligibilityFetching } = useSurveyEligibility(id, address ?? undefined, survey, bringIdScore, bringIdPoints)
+  const { data: eligibility, isFetching: isEligibilityFetching, isError: isEligibilityError, error: eligibilityError } = useSurveyEligibility(id, address ?? undefined, survey, bringIdScore, bringIdPoints)
+
+  // Handle WALLET_MISMATCH: session is invalid for current wallet — logout
+  useEffect(() => {
+    if (eligibilityError && typeof eligibilityError === 'object' && 'code' in eligibilityError) {
+      const apiError = eligibilityError as { code?: string; statusCode?: number }
+      if (apiError.code === 'WALLET_MISMATCH' || apiError.statusCode === 403) {
+        console.warn('[Survey] Wallet mismatch detected — clearing session')
+        useAuthStore.getState().logout()
+      }
+    }
+  }, [eligibilityError])
 
   // BringId verification
   const { verify: verifyHumanity, isVerifying: isBringIdVerifying } = useHumanityVerification()
@@ -260,6 +271,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
       accessStrategies: eligibility.accessStrategies,
     } : undefined,
     isEligibilityFetching,
+    isEligibilityError,
     isConnected,
     hasAddress: !!address,
     isAuthenticated,
