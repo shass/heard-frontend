@@ -10,6 +10,7 @@ export type SurveyButtonPhase =
   | 'check_results'
   | 'connect_wallet'
   | 'checking_eligibility'
+  | 'eligibility_error'
   | 'not_eligible'
   | 'verify_bringid'
   | 'verifying_bringid'
@@ -36,6 +37,7 @@ export interface SurveyButtonInput {
     }>
   } | undefined
   isEligibilityFetching: boolean
+  isEligibilityError: boolean
 
   isConnected: boolean
   hasAddress: boolean
@@ -110,10 +112,13 @@ export function resolveSurveyButtonPhase(input: SurveyButtonInput): SurveyButton
     return input.isAuthLoading ? 'authenticating' : 'authenticate'
   }
 
-  // 8. No eligibility data and not fetching — still resolving
+  // 8. Eligibility check failed
+  if (!input.eligibility && input.isEligibilityError) return 'eligibility_error'
+
+  // 9. No eligibility data and not fetching — still resolving
   if (!input.eligibility) return 'resolving'
 
-  // 9. Ready
+  // 10. Ready
   return input.eligibility.hasStarted ? 'continue' : 'start'
 }
 
@@ -124,6 +129,7 @@ const PHASE_CONFIG: Record<SurveyButtonPhase, { text: string; disabled: boolean;
   check_results:        { text: 'Sign to check your results', disabled: false, loading: false },
   connect_wallet:       { text: 'Connect Wallet',            disabled: false, loading: false },
   checking_eligibility: { text: 'Checking eligibility...',   disabled: true,  loading: true  },
+  eligibility_error:    { text: 'Eligibility Check Failed', disabled: true,  loading: false },
   not_eligible:         { text: 'Not Eligible',              disabled: true,  loading: false },
   verify_bringid:       { text: 'Verify with BringId',       disabled: false, loading: false },
   verifying_bringid:    { text: 'Verifying...',              disabled: true,  loading: true  },
@@ -142,6 +148,7 @@ const PHASE_HANDLER_KEY: Record<SurveyButtonPhase, keyof SurveyButtonHandlers | 
   check_results:        'onAuthenticate',
   connect_wallet:       'onConnect',
   checking_eligibility: null,
+  eligibility_error:    null,
   not_eligible:         null,
   verify_bringid:       'onVerifyBringId',
   verifying_bringid:    null,
