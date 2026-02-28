@@ -8,8 +8,10 @@ export class FarcasterWalletStrategy implements IWalletStrategy {
   private _address: string | undefined = undefined
   private _isLoading: boolean = false
   private _error: string | null = null
+  private _onAddressResolved: ((address: string) => void) | undefined
 
-  constructor() {
+  constructor(onAddressResolved?: (address: string) => void) {
+    this._onAddressResolved = onAddressResolved
     this.initialize()
   }
 
@@ -19,6 +21,9 @@ export class FarcasterWalletStrategy implements IWalletStrategy {
       if (provider) {
         const accounts = await provider.request({ method: 'eth_accounts' })
         this._address = accounts[0]
+        if (this._address) {
+          this._onAddressResolved?.(this._address)
+        }
       }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {

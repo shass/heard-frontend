@@ -56,11 +56,11 @@ export function useAuth(): IAuthStrategy {
         strategyRef.current = new WebAuthStrategy(wagmiDeps, signFn)
       }
     } else if (platform.id === 'base-app') {
-      if (!strategyRef.current && miniKitContext) {
+      if (!strategyRef.current) {
         strategyRef.current = new BaseAppAuthStrategy(miniKitContext)
       }
     } else if (platform.id === 'farcaster') {
-      if (!strategyRef.current && miniKitContext) {
+      if (!strategyRef.current) {
         strategyRef.current = new FarcasterAuthStrategy(miniKitContext)
       }
     } else {
@@ -78,6 +78,13 @@ export function useAuth(): IAuthStrategy {
     const strategy = strategyRef.current as BaseAppAuthStrategy | FarcasterAuthStrategy
     if (strategy.updateContext) {
       strategy.updateContext(miniKitContext)
+    }
+
+    // Auto-authenticate in mini app platforms when context arrives
+    // and user is not yet authenticated (first visit, no cached token)
+    const store = useAuthStore.getState()
+    if (store.initialized && !store.isAuthenticated && !store.loading) {
+      strategyRef.current.authenticate?.()
     }
   }, [miniKitContext, platform])
 

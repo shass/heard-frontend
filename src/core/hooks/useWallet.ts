@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useAccount, useConnect, useDisconnect, useBalance, useSendTransaction, useSignMessage } from 'wagmi'
 import { IWalletStrategy } from '@/src/platforms/_core/shared/interfaces/IWalletStrategy'
 import { usePlatform } from './usePlatform'
@@ -42,6 +42,9 @@ export function useWallet(): IWalletStrategy {
   const { data: balance } = useBalance({ address })
   const { sendTransactionAsync } = useSendTransaction()
   const { signMessageAsync } = useSignMessage()
+
+  // Mini app address reactivity (BaseApp/Farcaster resolve address asynchronously)
+  const [miniAppAddress, setMiniAppAddress] = useState<string | undefined>(undefined)
 
   // Strategy instance management
   const strategyRef = useRef<IWalletStrategy | null>(null)
@@ -91,17 +94,19 @@ export function useWallet(): IWalletStrategy {
         strategy = new WebWalletStrategy(wagmiHooks)
         strategyRef.current = strategy
       } else if (platform.id === 'base-app') {
-        // BaseApp uses MiniKit SDK - no dependencies needed
         if (!strategyRef.current) {
-          strategy = new BaseAppWalletStrategy()
+          strategy = new BaseAppWalletStrategy((resolvedAddress) => {
+            setMiniAppAddress(resolvedAddress)
+          })
           strategyRef.current = strategy
         } else {
           strategy = strategyRef.current
         }
       } else if (platform.id === 'farcaster') {
-        // Farcaster uses MiniKit SDK - no dependencies needed
         if (!strategyRef.current) {
-          strategy = new FarcasterWalletStrategy()
+          strategy = new FarcasterWalletStrategy((resolvedAddress) => {
+            setMiniAppAddress(resolvedAddress)
+          })
           strategyRef.current = strategy
         } else {
           strategy = strategyRef.current
@@ -138,7 +143,8 @@ export function useWallet(): IWalletStrategy {
     disconnect,
     signMessageAsync,
     sendTransactionAsync,
-    connectors
+    connectors,
+    miniAppAddress
   ])
 
   return walletStrategy
