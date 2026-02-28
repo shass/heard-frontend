@@ -16,14 +16,6 @@ import {
   ERROR_MESSAGES
 } from '@/src/core/utils/error-handling'
 import { PlatformErrorBoundary } from './ErrorBoundary'
-import { sdk as farcasterSdk } from '@farcaster/miniapp-sdk'
-
-// Signal ready to host app IMMEDIATELY on module evaluation.
-// Must fire before React hydrates — Base App / Warpcast dismiss their
-// splash screen on this signal and have a ~5s timeout from page load.
-if (typeof window !== 'undefined') {
-  farcasterSdk.actions.ready().catch(() => {})
-}
 
 interface BootstrapContextType {
   isBootstrapped: boolean
@@ -82,12 +74,6 @@ export function AppBootstrap({ children, fallback, onReady }: AppBootstrapProps)
           setIsReady(true)
           setRetryCount(0)
           onReady?.()
-
-          // Safety net: signal ready to Mini App host (Base App / Warpcast)
-          // This ensures the splash screen is dismissed even if platform detection
-          // fell back to web platform and MiniKitReady component didn't mount.
-          // sdk.actions.ready() is a no-op outside of mini app containers.
-          farcasterSdk.actions.ready().catch(() => {})
         }
       } catch (err) {
         console.error('[AppBootstrap] Initialization failed:', err)
