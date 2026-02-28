@@ -74,6 +74,18 @@ export function AppBootstrap({ children, fallback, onReady }: AppBootstrapProps)
           setIsReady(true)
           setRetryCount(0)
           onReady?.()
+
+          // Safety net: signal ready to Mini App host (Base App / Warpcast)
+          // This ensures the splash screen is dismissed even if platform detection
+          // fell back to web platform and MiniKitReady component didn't mount.
+          // sdk.actions.ready() is a no-op outside of mini app containers.
+          import('@farcaster/miniapp-sdk').then(({ sdk }) => {
+            sdk.actions.ready().catch(() => {
+              // Not in a mini app context — expected, ignore
+            })
+          }).catch(() => {
+            // Module not available — ignore
+          })
         }
       } catch (err) {
         console.error('[AppBootstrap] Initialization failed:', err)
