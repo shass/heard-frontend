@@ -35,8 +35,8 @@ export class FarcasterAuthStrategy implements IAuthStrategy {
 
     const token = localStorage.getItem('auth_token')
     if (!token) {
-      // No saved session — auto-authenticate (wallet always available via MiniKit)
-      await this.authenticate()
+      // No saved session — don't auto-authenticate, let the UI trigger auth on user action
+      useAuthStore.getState().setLoading(false)
       return
     }
 
@@ -57,20 +57,21 @@ export class FarcasterAuthStrategy implements IAuthStrategy {
         useAuthStore.getState().authSuccess(storeUser)
       } else {
         apiClient.clearAuthToken()
-        // Token invalid — auto-authenticate
-        await this.authenticate()
+        // Token invalid — don't auto-authenticate, let the UI trigger auth on user action
+        useAuthStore.getState().setLoading(false)
       }
     } catch (err) {
       console.warn('[FarcasterAuthStrategy] Failed to restore session:', err)
       const { apiClient } = await import('@/lib/api/client')
       apiClient.clearAuthToken()
-      // Session restoration failed — auto-authenticate
-      await this.authenticate()
+      // Session restoration failed — don't auto-authenticate, let the UI trigger auth on user action
+      useAuthStore.getState().setLoading(false)
     }
   }
 
   authenticate = async (): Promise<AuthResult> => {
     if (!this.context) {
+      useAuthStore.getState().authFailure('Farcaster context not available')
       return { success: false, error: 'Farcaster context not available' }
     }
 

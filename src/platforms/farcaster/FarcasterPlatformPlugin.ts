@@ -57,7 +57,7 @@ export class FarcasterPlatformPlugin implements IPlatformPlugin {
     try {
       const { sdk } = await import('@farcaster/miniapp-sdk')
       const context = await sdk.context
-      const clientFid = (context?.client as any)?.clientFid?.toString()
+      const clientFid = context?.client?.clientFid?.toString()
 
       const isWarpcast = clientFid === '9152'
 
@@ -184,7 +184,7 @@ export class FarcasterPlatformPlugin implements IPlatformPlugin {
         console.log('[FarcasterPlatformPlugin] SDK initialized:', {
           hasContext: !!context,
           user: context?.user,
-          client: (context?.client as any)?.clientFid,
+          client: context?.client?.clientFid,
         })
       }
     } catch (error) {

@@ -28,8 +28,8 @@ export class WinnersApi {
   async getWinners(surveyId: string, params: GetWinnersParams = {}): Promise<WinnersPagedData> {
     const queryParams = new URLSearchParams()
 
-    if (params.limit) queryParams.append('limit', params.limit.toString())
-    if (params.offset) queryParams.append('offset', params.offset.toString())
+    if (params.limit != null) queryParams.append('limit', params.limit.toString())
+    if (params.offset != null) queryParams.append('offset', params.offset.toString())
 
     const url = `/admin/surveys/${surveyId}/winners${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
     const response = await apiClient.get<WinnersPagedData>(url)

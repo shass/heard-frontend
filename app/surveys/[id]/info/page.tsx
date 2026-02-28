@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useState, useEffect } from "react"
+import { use, useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -8,12 +8,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSurvey, useSurveyEligibility, useUserReward, useWinnerStatus, useSurveyStrategy } from "@/hooks"
 import { useHumanityVerification } from "@/hooks/use-humanity-verification"
-import { usePlatform } from "@/src/core/hooks/usePlatform"
 import { useAuth, useWallet, useOpenUrl } from "@/src/platforms/_core"
-import { Platform } from "@/src/platforms/config"
 import { RewardSource } from "@/lib/survey/strategies"
 import { resolveSurveyButtonPhase, getButtonConfig } from '@/lib/survey/button-state-machine'
 import type { SurveyButtonHandlers } from '@/lib/survey/button-state-machine'
+import { useConnectModal } from "@rainbow-me/rainbowkit"
 import { useAuthStore } from "@/lib/store"
 import { bringid } from "@/lib/bringid"
 import {
@@ -31,19 +30,6 @@ interface SurveyInfoPageProps {
   }>
 }
 
-// Hook to safely use RainbowKit only on Web platform
-const useWebConnectModal = () => {
-  const { platform: platformPlugin } = usePlatform()
-  const platform = platformPlugin?.id as Platform | undefined
-
-  if (platform === Platform.WEB) {
-    const { useConnectModal } = require('@rainbow-me/rainbowkit')
-    return useConnectModal()
-  }
-
-  return { openConnectModal: undefined }
-}
-
 export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const router = useRouter()
   const openUrl = useOpenUrl()
@@ -59,7 +45,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const isConnected = wallet.isConnected
   const address = wallet.address || user?.walletAddress || null
 
-  const { openConnectModal } = useWebConnectModal()
+  const { openConnectModal } = useConnectModal()
   const { id } = use(params)
 
   // Note: checkAuth is handled by auth strategies internally
@@ -69,6 +55,9 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   // BringId score (on-chain reputation) and points (from humanity verification)
   const [bringIdScore, setBringIdScore] = useState<number | undefined>(undefined)
   const [bringIdPoints, setBringIdPoints] = useState<number | undefined>(undefined)
+
+  // Flag: navigate to survey page reactively once eligibility resolves after auth
+  const [pendingNavigation, setPendingNavigation] = useState(false)
 
   // Check if survey uses BringId strategy
   const hasBringIdStrategy = survey?.accessStrategyIds?.includes('bringid') ?? false
@@ -97,7 +86,7 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
     return () => { cancelled = true }
   }, [hasBringIdStrategy, address])
 
-  const { data: eligibility, refetch: refetchEligibility, isFetching: isEligibilityFetching } = useSurveyEligibility(id, address ?? undefined, survey, bringIdScore, bringIdPoints)
+  const { data: eligibility, isFetching: isEligibilityFetching } = useSurveyEligibility(id, address ?? undefined, survey, bringIdScore, bringIdPoints)
 
   // BringId verification
   const { verify: verifyHumanity, isVerifying: isBringIdVerifying } = useHumanityVerification()
@@ -114,18 +103,16 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
     shouldFetchWinnerStatus ? id : undefined
   )
 
-  const handleStartSurvey = () => {
-    // Pass BringId params to survey page to preserve verification state
-    const params = new URLSearchParams()
+  const handleStartSurvey = useCallback(() => {
+    // Store BringId params in sessionStorage instead of URL to prevent spoofing
     if (bringIdScore !== undefined) {
-      params.set('bringIdScore', String(bringIdScore))
+      sessionStorage.setItem(`bringid_score_${id}`, String(bringIdScore))
     }
     if (bringIdPoints !== undefined) {
-      params.set('bringIdPoints', String(bringIdPoints))
+      sessionStorage.setItem(`bringid_points_${id}`, String(bringIdPoints))
     }
-    const queryString = params.toString()
-    router.push(`/surveys/${id}${queryString ? `?${queryString}` : ''}`)
-  }
+    router.push(`/surveys/${id}`)
+  }, [bringIdScore, bringIdPoints, id, router])
 
   const handleConnectWallet = () => {
     if (openConnectModal) {
@@ -137,21 +124,14 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
     try {
       const result = await auth.authenticate()
       if (result?.success) {
-        // Refetch eligibility with fresh auth state
-        const { data: freshEligibility } = await refetchEligibility()
-
-        if (freshEligibility?.hasCompleted) {
-          console.log('[Survey] ✅ User authenticated, staying on info page to show results')
-        } else if (freshEligibility?.isEligible !== false) {
-          handleStartSurvey()
-        } else {
-          console.log('[Survey] ⚠️ User authenticated but not eligible for this survey')
-        }
+        // Don't navigate imperatively — set flag and let useEffect handle it
+        // once React re-renders with fresh eligibility data after auth state propagates
+        setPendingNavigation(true)
       } else {
-        console.log('[Survey] ❌ Authentication failed or cancelled')
+        console.log('[Survey] Authentication failed or cancelled')
       }
     } catch (error: any) {
-      console.error('[Survey] ❌ Authentication failed:', error)
+      console.error('[Survey] Authentication failed:', error)
     }
   }
 
@@ -172,6 +152,30 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
     }
   }
 
+  // Reactive navigation: after auth succeeds, wait for eligibility to fully resolve
+  // This avoids the race condition where refetchEligibility() returns stale data
+  // because the query key hadn't updated with post-auth state yet
+  useEffect(() => {
+    if (!pendingNavigation) return
+    // Still loading — wait for fresh data
+    if (isEligibilityFetching) return
+
+    if (eligibility?.hasCompleted) {
+      console.log('[Survey] User authenticated, staying on info page to show results')
+      setPendingNavigation(false)
+    } else if (eligibility?.isEligible === true) {
+      setPendingNavigation(false)
+      handleStartSurvey()
+    } else if (eligibility?.isEligible === false) {
+      console.log('[Survey] User authenticated but not eligible for this survey')
+      setPendingNavigation(false)
+    } else {
+      // Eligibility data unavailable — reset pending state
+      console.warn('[Survey] Eligibility data unavailable after auth')
+      setPendingNavigation(false)
+    }
+  }, [pendingNavigation, eligibility, isEligibilityFetching, handleStartSurvey])
+
   const handleClaimReward = () => {
     const claimLink = strategy?.getClaimLink({ survey: survey!, userReward, winnerStatus })
     if (claimLink) {
@@ -182,7 +186,9 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
   const handleCopyClaimLink = () => {
     const claimLink = strategy?.getClaimLink({ survey: survey!, userReward, winnerStatus })
     if (claimLink) {
-      navigator.clipboard.writeText(claimLink)
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(claimLink)
+      }
       // TODO: Add notification
     }
   }
@@ -284,10 +290,10 @@ export default function SurveyInfoPage({ params }: SurveyInfoPageProps) {
             <PredictionSurveyInfo survey={survey} strategy={strategy} />
 
             {/* Survey Information */}
-            <SurveyInfo survey={survey} eligibility={eligibility} isEligibilityLoading={isEligibilityFetching && !!address} isConnected={isConnected} requiresVerification={buttonPhase === 'verify_bringid' || buttonPhase === 'verifying_bringid'} />
+            <SurveyInfo survey={survey} eligibility={eligibility} isEligibilityLoading={isEligibilityFetching && !!address} isConnected={isConnected} isAuthenticated={isAuthenticated} requiresVerification={buttonPhase === 'verify_bringid' || buttonPhase === 'verifying_bringid'} />
 
             {/* Reward Section */}
-            {hasCompleted && userReward && (
+            {hasCompleted && (userReward || winnerStatus) && (
               <SurveyReward
                 userReward={userReward}
                 survey={survey}

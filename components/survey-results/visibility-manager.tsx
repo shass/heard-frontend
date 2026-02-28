@@ -37,7 +37,7 @@ import {
   useUpdateSurveyVisibility,
   useGenerateShareLink
 } from '@/hooks/use-survey-clients'
-import { toast } from 'sonner'
+import { useNotifications } from '@/components/ui/notifications'
 
 interface VisibilityManagerProps {
   surveyId: string
@@ -46,6 +46,7 @@ interface VisibilityManagerProps {
 export function VisibilityManager({ surveyId }: VisibilityManagerProps) {
   const user = useAuthStore(state => state.user)
   const isAdmin = user?.role === 'admin'
+  const notifications = useNotifications()
 
   const { data: visibility, isLoading } = useSurveyVisibility(surveyId)
   const updateVisibility = useUpdateSurveyVisibility()
@@ -82,7 +83,7 @@ export function VisibilityManager({ surveyId }: VisibilityManagerProps) {
   const copyToClipboard = (text: string) => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text)
-      toast.success('Copied to clipboard')
+      notifications.success('Copied to clipboard')
     }
   }
 

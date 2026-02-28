@@ -7,7 +7,8 @@ import { useAuthStore } from '@/lib/store'
 
 export function useAdminDashboard() {
   const [activeTab, setActiveTab] = useState('surveys')
-  const { isAuthenticated, user } = useAuthStore()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const user = useAuthStore((s) => s.user)
 
   const {
     data: stats,

@@ -62,7 +62,9 @@ export function SurveyResults({
 
   const handleCopyClaimLink = () => {
     if (userReward?.claimLink) {
-      navigator.clipboard.writeText(userReward.claimLink)
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(userReward.claimLink)
+      }
     }
   }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Wifi, WifiOff, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { useNotifications } from './notifications'
 
@@ -10,8 +10,10 @@ interface NetworkStatusProps {
 
 export function NetworkStatus({ className }: NetworkStatusProps) {
   const [isOnline, setIsOnline] = useState(true)
-  const [wasOffline, setWasOffline] = useState(false)
+  const wasOfflineRef = useRef(false)
   const notifications = useNotifications()
+  const notificationsRef = useRef(notifications)
+  notificationsRef.current = notifications
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -21,20 +23,20 @@ export function NetworkStatus({ className }: NetworkStatusProps) {
 
     const handleOnline = () => {
       setIsOnline(true)
-      if (wasOffline) {
-        notifications.success(
+      if (wasOfflineRef.current) {
+        notificationsRef.current.success(
           'Connection restored',
           'You are back online',
           { duration: 3000 }
         )
-        setWasOffline(false)
+        wasOfflineRef.current = false
       }
     }
 
     const handleOffline = () => {
       setIsOnline(false)
-      setWasOffline(true)
-      notifications.error(
+      wasOfflineRef.current = true
+      notificationsRef.current.error(
         'Connection lost',
         'You are currently offline. Some features may not work.',
         { duration: 5000 }
@@ -48,7 +50,7 @@ export function NetworkStatus({ className }: NetworkStatusProps) {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [wasOffline, notifications])
+  }, [])
 
   if (isOnline) {
     return null // Don't show anything when online
@@ -151,6 +153,14 @@ export function useOfflineFirst<T>(
   const [lastFetch, setLastFetch] = useState<Date | null>(null)
   const { isOnline } = useNetworkStatus()
 
+  // Refs to avoid stale closures and unnecessary effect re-runs
+  const fetcherRef = useRef(fetcher)
+  fetcherRef.current = fetcher
+  const isOnlineRef = useRef(isOnline)
+  isOnlineRef.current = isOnline
+  const keyRef = useRef(key)
+  keyRef.current = key
+
   // Load from localStorage on mount
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -167,22 +177,22 @@ export function useOfflineFirst<T>(
     }
   }, [key])
 
-  // Fetch data function
-  const fetchData = async (force = false) => {
-    if (!isOnline && !force) return
+  // Stable fetch function using refs to avoid stale closures
+  const fetchData = useCallback(async (force = false) => {
+    if (!isOnlineRef.current && !force) return
 
     setLoading(true)
     setError(null)
 
     try {
-      const result = await fetcher()
+      const result = await fetcherRef.current()
       setData(result)
       setLastFetch(new Date())
-      
+
       // Cache the result
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem(key, JSON.stringify({
+          localStorage.setItem(keyRef.current, JSON.stringify({
             data: result,
             timestamp: new Date().toISOString()
           }))
@@ -195,25 +205,26 @@ export function useOfflineFirst<T>(
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   // Auto-refresh when coming back online
   useEffect(() => {
     if (isOnline && data === null) {
       fetchData()
     }
-  }, [isOnline])
+  }, [isOnline, data, fetchData])
 
   // Refresh interval
+  const refreshInterval = options.refreshInterval
   useEffect(() => {
-    if (options.refreshInterval && isOnline) {
+    if (refreshInterval && isOnline) {
       const interval = setInterval(() => {
         fetchData()
-      }, options.refreshInterval)
+      }, refreshInterval)
 
       return () => clearInterval(interval)
     }
-  }, [options.refreshInterval, isOnline])
+  }, [refreshInterval, isOnline, fetchData])
 
   return {
     data,

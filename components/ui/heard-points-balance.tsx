@@ -47,6 +47,7 @@ export function HeardPointsBalance({
   useEffect(() => {
     if (previousBalance !== null && currentBalance !== previousBalance) {
       const difference = currentBalance - previousBalance
+      if (difference === 0) return
       setAnimationType(difference > 0 ? 'increase' : 'decrease')
       setIsAnimating(true)
       

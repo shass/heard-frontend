@@ -8,12 +8,29 @@ import { WebWalletStrategy } from '@/src/platforms/web/strategies/WebWalletStrat
 import { BaseAppWalletStrategy } from '@/src/platforms/base-app/strategies/BaseAppWalletStrategy'
 import { FarcasterWalletStrategy } from '@/src/platforms/farcaster/strategies/FarcasterWalletStrategy'
 
+/** Safe no-op fallback returned while platform is loading or in error state */
+const NOT_READY_WALLET: IWalletStrategy = {
+  address: undefined,
+  isConnected: false,
+  chainId: undefined,
+  balance: undefined,
+  isLoading: true,
+  error: null,
+  connect: async () => {},
+  disconnect: async () => {},
+  signMessage: async () => { throw new Error('Wallet not ready') },
+  sendTransaction: async () => { throw new Error('Wallet not ready') },
+  getConnectors: () => [],
+  canConnect: false,
+  canSignMessage: false,
+  canSendTransaction: false,
+}
+
 /**
  * Get wallet strategy from active platform with Dependency Injection
  * Creates strategy instances with required dependencies from React hooks
  *
- * @returns wallet strategy instance
- * @throws if platform not ready
+ * @returns wallet strategy instance (safe no-op fallback while platform loads)
  */
 export function useWallet(): IWalletStrategy {
   const { platform, isLoading, error } = usePlatform()
@@ -35,22 +52,21 @@ export function useWallet(): IWalletStrategy {
       if (process.env.NODE_ENV === 'development') {
         console.warn('[useWallet] Platform is loading, wallet strategy not available yet')
       }
-      throw new Error('[useWallet] Platform is still loading')
+      return NOT_READY_WALLET
     }
 
     if (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('[useWallet] Platform error:', error.message)
       }
-      throw error
+      return { ...NOT_READY_WALLET, isLoading: false, error: error.message }
     }
 
     if (!platform) {
-      const err = new Error('[useWallet] No active platform detected')
       if (process.env.NODE_ENV === 'development') {
-        console.error(err.message)
+        console.error('[useWallet] No active platform detected')
       }
-      throw err
+      return NOT_READY_WALLET
     }
 
     try {

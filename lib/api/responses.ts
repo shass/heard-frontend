@@ -15,13 +15,9 @@ export interface SubmitAnswerRequest {
 }
 
 export interface SubmitAnswerResponse {
-  nextQuestion?: Question
-  progress: {
-    currentQuestion: number
-    totalQuestions: number
-    percentComplete: number
-  }
-  canSubmit: boolean
+  message: string
+  nextQuestionId?: string
+  isLastQuestion: boolean
 }
 
 export interface SubmitSurveyRequest {

@@ -185,8 +185,10 @@ export function useRewardLinksModal({ survey, isOpen }: UseRewardLinksModalProps
   }
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    notifications.success('Copied', 'Link copied to clipboard')
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text)
+      notifications.success('Copied', 'Link copied to clipboard')
+    }
   }
 
   const handleSearch = (searchTerm: string) => {

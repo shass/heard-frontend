@@ -30,7 +30,8 @@ export interface StartSurveyRequest {
 
 export interface StartSurveyResponse {
   responseId: string
-  firstQuestionId: string
+  firstQuestionId?: string
+  message?: string
 }
 
 export class SurveyApi {
@@ -40,8 +41,8 @@ export class SurveyApi {
   async getSurveys(params: GetSurveysRequest = {}, options?: { signal?: AbortSignal }): Promise<GetSurveysResponse> {
     const queryParams = new URLSearchParams()
 
-    if (params.limit) queryParams.append('limit', params.limit.toString())
-    if (params.offset) queryParams.append('offset', params.offset.toString())
+    if (params.limit != null) queryParams.append('limit', params.limit.toString())
+    if (params.offset != null) queryParams.append('offset', params.offset.toString())
     if (params.company) queryParams.append('company', params.company)
     if (params.status) queryParams.append('status', params.status)
     if (params.search) queryParams.append('search', params.search)

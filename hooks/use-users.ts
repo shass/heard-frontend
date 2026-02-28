@@ -273,7 +273,7 @@ export function useAutoRefreshHeardPoints(intervalMs: number = 30000) {
   const isAuthenticated = useIsAuthenticated()
 
   return useQuery({
-    queryKey: [...userKeys.heardPoints(), 'auto-refresh'],
+    queryKey: userKeys.heardPoints(),
     queryFn: () => userApi.getHeardPoints(),
     enabled: isAuthenticated,
     refetchInterval: intervalMs,

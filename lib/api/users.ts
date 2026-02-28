@@ -53,8 +53,8 @@ export class UserApi {
   async getHeardPointsHistory(params: GetHeardPointsHistoryRequest = {}): Promise<GetHeardPointsHistoryResponse> {
     const queryParams = new URLSearchParams()
 
-    if (params.limit) queryParams.append('limit', params.limit.toString())
-    if (params.offset) queryParams.append('offset', params.offset.toString())
+    if (params.limit != null) queryParams.append('limit', params.limit.toString())
+    if (params.offset != null) queryParams.append('offset', params.offset.toString())
     if (params.type) queryParams.append('type', params.type)
 
     const url = `/users/me/heard-points/history${queryParams.toString() ? `?${queryParams.toString()}` : ''}`

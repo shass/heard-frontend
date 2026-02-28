@@ -2,7 +2,7 @@
 
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import type { User, Survey, SurveyResponse } from '@/lib/types'
+import type { User, Survey, SurveyResponse, Notification } from '@/lib/types'
 import { apiClient } from '@/lib/api/client'
 
 // Auth store
@@ -150,37 +150,22 @@ interface UIStore {
   removeNotification: (id: string) => void
 }
 
-interface Notification {
-  id: string
-  type: 'success' | 'error' | 'warning' | 'info'
-  title: string
-  message?: string
-  duration?: number
-}
-
 export const useUIStore = create<UIStore>()(
   devtools(
-    (set, get) => ({
+    (set) => ({
       theme: 'system',
       notifications: [],
 
       setTheme: (theme) => set({ theme }),
 
       addNotification: (notification) => {
-        const id = Math.random().toString(36).slice(2)
+        const id = crypto.randomUUID()
         const newNotification = { ...notification, id }
 
         set((state) => ({
           notifications: [...state.notifications, newNotification]
         }))
-
-        // Auto-remove after duration (default 5s)
-        const duration = notification.duration || 5000
-        if (typeof window !== 'undefined') {
-          setTimeout(() => {
-            get().removeNotification(id)
-          }, duration)
-        }
+        // Auto-dismiss is handled by the NotificationItem component's useEffect timer
       },
 
       removeNotification: (id) => set((state) => ({

@@ -116,16 +116,29 @@ export interface ApiResponse<T> {
   }
 }
 
-export interface ApiError {
-  success: false
-  error: {
-    code: string
-    message: string
-    details?: any
-  }
-  meta: {
+export class ApiError extends Error {
+  readonly statusCode: number
+  readonly code: string
+  readonly details?: any
+  readonly meta: {
     timestamp: string
     requestId: string
+  }
+
+  constructor(
+    statusCode: number,
+    body: {
+      error: { code: string; message: string; details?: any }
+      meta: { timestamp: string; requestId: string }
+    }
+  ) {
+    super(body.error.message)
+    Object.setPrototypeOf(this, ApiError.prototype)
+    this.name = 'ApiError'
+    this.statusCode = statusCode
+    this.code = body.error.code
+    this.details = body.error.details
+    this.meta = body.meta
   }
 }
 
@@ -140,7 +153,11 @@ export interface PaginationMeta {
 export interface AuthResponse {
   user: User
   token?: string // Optional for backward compatibility, HttpOnly cookie is preferred
-  expiresAt: string
+  session: {
+    platform: string
+    expiresAt: string
+    capabilities: Record<string, unknown>
+  }
 }
 
 export interface NonceResponse {
@@ -168,7 +185,7 @@ export interface EligibilityResponse {
 export interface RewardInfo {
   amount: number
   token: string
-  linkDropCode: string
+  linkDropCode?: string
   claimUrl: string
 }
 

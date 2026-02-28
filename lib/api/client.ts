@@ -1,13 +1,14 @@
 // HTTP client for API communication
 
 import { env } from '@/lib/env'
-import type { ApiResponse, ApiError } from '@/lib/types'
+import { type ApiResponse, ApiError } from '@/lib/types'
 import { ITokenStorage, NoOpTokenStorage } from './token-storage'
 
 class ApiClient {
   private baseURL: string
   private timeout: number
   private tokenStorage: ITokenStorage
+  private onUnauthorized: (() => void) | null = null
 
   constructor() {
     this.baseURL = env.API_URL
@@ -24,6 +25,15 @@ class ApiClient {
   setTokenStorage(storage: ITokenStorage): void {
     this.tokenStorage = storage
     console.log('[ApiClient] Token storage strategy configured:', storage.constructor.name)
+  }
+
+  /**
+   * Set callback for 401 Unauthorized responses.
+   * Called synchronously before throwing the error, avoiding race conditions
+   * with async dynamic imports.
+   */
+  setOnUnauthorized(callback: () => void): void {
+    this.onUnauthorized = callback
   }
 
   /**
@@ -99,48 +109,40 @@ class ApiClient {
       // HttpOnly cookie will be cleared by server
       this.clearAuthToken()
 
-      // Logout from store only if auth was already initialized
-      // (avoids false logout during initial auth check)
-      import('@/lib/store').then(({ useAuthStore }) => {
-        const state = useAuthStore.getState()
-        if (state.initialized) {
-          state.logout()
-        }
-      })
+      // Logout synchronously via injected callback to avoid race condition
+      // where deferred dynamic import fires mid-re-authentication
+      this.onUnauthorized?.()
     }
 
     if (!response.ok) {
-      let errorData: ApiError
+      let errorBody: {
+        error: { code: string; message: string; details?: any }
+        meta: { timestamp: string; requestId: string }
+      }
       try {
-        errorData = await response.json()
+        errorBody = await response.json()
         console.error('[ApiClient] Request failed:', {
           url: response.url,
           status: response.status,
-          error: errorData
+          error: errorBody
         })
       } catch {
-        errorData = this.formatError(new Error(`HTTP ${response.status}: ${response.statusText}`))
+        errorBody = {
+          error: {
+            code: 'NETWORK_ERROR',
+            message: `HTTP ${response.status}: ${response.statusText}`,
+          },
+          meta: {
+            timestamp: new Date().toISOString(),
+            requestId: 'unknown',
+          },
+        }
       }
-      throw errorData
+      throw new ApiError(response.status, errorBody)
     }
 
     const data: ApiResponse<T> = await response.json()
     return data.data
-  }
-
-  private formatError(error: any): ApiError {
-    return {
-      success: false,
-      error: {
-        code: 'NETWORK_ERROR',
-        message: error.message || 'Network error occurred',
-        details: error,
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: 'unknown',
-      },
-    }
   }
 
   // Public methods for making requests
@@ -179,14 +181,7 @@ class ApiClient {
       ...config,
     })
     
-    const result = await this.handleResponse<T>(response)
-    
-    // Handle upload endpoints that return wrapped ApiResponse
-    if (url.includes('/whitelist/upload')) {
-      return result
-    }
-    
-    return result
+    return this.handleResponse<T>(response)
   }
 
   async put<T>(url: string, data?: any, config?: RequestInit): Promise<T> {
@@ -244,14 +239,31 @@ class ApiClient {
       ...config,
     })
 
+    if (response.status === 401) {
+      this.clearAuthToken()
+      this.onUnauthorized?.()
+    }
+
     if (!response.ok) {
-      let errorData: ApiError
-      try {
-        errorData = await response.json()
-      } catch {
-        errorData = this.formatError(new Error(`HTTP ${response.status}: ${response.statusText}`))
+      let errorBody: {
+        error: { code: string; message: string; details?: any }
+        meta: { timestamp: string; requestId: string }
       }
-      throw errorData
+      try {
+        errorBody = await response.json()
+      } catch {
+        errorBody = {
+          error: {
+            code: 'NETWORK_ERROR',
+            message: `HTTP ${response.status}: ${response.statusText}`,
+          },
+          meta: {
+            timestamp: new Date().toISOString(),
+            requestId: 'unknown',
+          },
+        }
+      }
+      throw new ApiError(response.status, errorBody)
     }
 
     return response.blob()

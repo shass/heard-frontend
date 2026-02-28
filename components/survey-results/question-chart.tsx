@@ -91,7 +91,7 @@ export function QuestionChart({ question, data, colors, totalResponses }: Questi
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    label={(entry) => `${entry.percentage}%`}
+                    label={(entry) => `${entry.percent}%`}
                   >
                     {nonZeroData.map((entry, index) => (
                       <Cell 

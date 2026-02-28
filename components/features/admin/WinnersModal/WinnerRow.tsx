@@ -16,13 +16,17 @@ const truncateAddress = (address: string) => {
 }
 
 const handleCopyAddress = (address: string) => {
-  navigator.clipboard.writeText(address)
-  toast.success('Address copied to clipboard')
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(address)
+    toast.success('Address copied to clipboard')
+  }
 }
 
 const handleCopyLink = (link: string) => {
-  navigator.clipboard.writeText(link)
-  toast.success('Reward link copied to clipboard')
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link)
+    toast.success('Reward link copied to clipboard')
+  }
 }
 
 export function WinnerRow({ winner, onDeleteClick }: WinnerRowProps) {

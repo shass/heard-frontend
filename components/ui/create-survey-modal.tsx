@@ -17,8 +17,12 @@ export function CreateSurveyModal({ isOpen, onClose }: CreateSurveyModalProps) {
     }
 
     if (isOpen) {
+      document.body.style.overflow = 'hidden'
       document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
+      return () => {
+        document.body.style.overflow = ''
+        document.removeEventListener('keydown', handleEscape)
+      }
     }
   }, [isOpen, onClose])
 

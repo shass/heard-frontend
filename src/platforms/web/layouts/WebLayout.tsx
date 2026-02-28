@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, memo } from 'react'
+import { ReactNode } from 'react'
 import { Web3Provider } from '@/src/platforms/web/providers/Web3Provider'
 import { CreateSurveyModalProvider } from '@/components/providers/create-survey-modal-provider'
 import { NavigationProvider } from '@/components/providers/navigation-provider'
@@ -25,4 +25,4 @@ function WebLayoutComponent({ children }: WebLayoutProps) {
   )
 }
 
-export default memo(WebLayoutComponent)
+export default WebLayoutComponent

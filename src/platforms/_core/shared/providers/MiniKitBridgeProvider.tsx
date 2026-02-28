@@ -2,12 +2,15 @@
 
 import { createContext, useContext, useMemo, ReactNode } from 'react'
 import { useMiniKit } from '@coinbase/onchainkit/minikit'
+import type { Context } from '@farcaster/miniapp-sdk'
+
+type UseMiniKitReturn = ReturnType<typeof useMiniKit>
 
 interface MiniKitBridgeValue {
-  context: any | null
+  context: Context.MiniAppContext | null
   isMiniAppReady: boolean
-  setMiniAppReady: ((readyOptions?: any) => Promise<any>) | null
-  updateClientContext: ((context: any) => void) | null
+  setMiniAppReady: UseMiniKitReturn['setMiniAppReady'] | null
+  updateClientContext: UseMiniKitReturn['updateClientContext'] | null
   notificationProxyUrl: string | null
 }
 

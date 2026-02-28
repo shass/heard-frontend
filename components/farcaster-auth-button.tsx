@@ -39,7 +39,7 @@ function ModernFarcasterAuthButton({
       } else {
         await auth.authenticate();
         notifications.success('Authentication successful!');
-        onSuccess?.(user);
+        onSuccess?.(useAuthStore.getState().user);
       }
     } catch (error) {
       console.error('Auth failed:', error);

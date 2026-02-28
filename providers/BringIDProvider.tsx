@@ -1,9 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useRef, useEffect } from 'react'
 import { BringIDModal } from 'bringid/react'
-import { useAccount, useWalletClient } from 'wagmi'
-import { env } from '@/lib/env'
+import { useWallet } from '@/src/platforms/_core'
 
 interface BringIDProviderProps {
   children: React.ReactNode
@@ -13,28 +12,24 @@ interface BringIDProviderProps {
  * BringID Provider Component
  *
  * Wraps children with BringIDModal for identity verification UI.
- * Requires wagmi's WagmiProvider to be mounted above this component.
+ * Uses platform-agnostic wallet strategy so signing works on Web,
+ * Farcaster and Base App (MiniKit) equally.
  */
 export function BringIDProvider({ children }: BringIDProviderProps) {
-  const { address } = useAccount()
-  const { data: walletClient } = useWalletClient()
+  const wallet = useWallet()
 
-  const walletClientRef = useRef(walletClient)
-  useEffect(() => { walletClientRef.current = walletClient }, [walletClient])
+  const walletRef = useRef(wallet)
+  useEffect(() => { walletRef.current = wallet }, [wallet])
 
   const generateSignature = useCallback(
-    (message: string) => {
-      if (!walletClientRef.current) return Promise.reject(new Error('No wallet client'))
-      return walletClientRef.current.signMessage({ message })
-    },
+    (message: string) => walletRef.current.signMessage(message),
     []
   )
 
   return (
     <>
       <BringIDModal
-        mode={env.BRINGID_MODE}
-        address={address}
+        address={wallet.address}
         generateSignature={generateSignature}
       />
       {children}

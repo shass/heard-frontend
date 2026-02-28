@@ -5,6 +5,7 @@
 import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { responseApi, type SubmitAnswerRequest, type SubmitSurveyRequest } from '@/lib/api/responses'
+import { surveyKeys } from '@/hooks/use-surveys'
 import { useIsAuthenticated, useUIStore } from '@/lib/store'
 import type { SurveyResponse, Question } from '@/lib/types'
 
@@ -18,14 +19,17 @@ export const responseKeys = {
 
 /**
  * Hook to get survey response details
+ * NOTE: Disabled — backend endpoint for response details is not implemented yet.
+ * Re-enable when GET /surveys/responses/:id is available on backend.
  */
 export function useSurveyResponse(responseId: string) {
   const isAuthenticated = useIsAuthenticated()
-  
+
   return useQuery({
     queryKey: responseKeys.detail(responseId),
     queryFn: () => responseApi.getResponse(responseId),
-    enabled: !!responseId && isAuthenticated,
+    // Disabled: backend endpoint not implemented (getResponse always throws)
+    enabled: false,
     staleTime: 30 * 1000, // 30 seconds (frequent updates during survey)
     gcTime: 5 * 60 * 1000, // 5 minutes
   })
@@ -61,24 +65,37 @@ export function useSubmitAnswer() {
 
 /**
  * Mutation hook to submit completed survey
+ * Accepts surveyId in variables to invalidate eligibility and detail caches after completion.
  */
 export function useSubmitSurvey() {
   const queryClient = useQueryClient()
   const { addNotification } = useUIStore()
-  
+
   return useMutation({
-    mutationFn: (request: SubmitSurveyRequest) => responseApi.submitSurvey(request),
+    mutationFn: (variables: SubmitSurveyRequest & { surveyId?: string }) =>
+      responseApi.submitSurvey({ responseId: variables.responseId }),
     onSuccess: (data, variables) => {
       // Clear response caches
-      queryClient.removeQueries({ 
-        queryKey: responseKeys.detail(variables.responseId) 
+      queryClient.removeQueries({
+        queryKey: responseKeys.detail(variables.responseId)
       })
-      
+
+      // Invalidate eligibility cache so UI reflects completion immediately
+      if (variables.surveyId) {
+        queryClient.invalidateQueries({
+          queryKey: surveyKeys.detail(variables.surveyId),
+        })
+        queryClient.invalidateQueries({
+          queryKey: surveyKeys.eligibility(variables.surveyId),
+          exact: false,
+        })
+      }
+
       // Invalidate user points (they got rewarded)
-      queryClient.invalidateQueries({ 
-        queryKey: ['users', 'heard-points'] 
+      queryClient.invalidateQueries({
+        queryKey: ['users', 'heard-points']
       })
-      
+
       // Show success notification
       addNotification({
         type: 'success',
@@ -105,8 +122,9 @@ export function useAutoSaveAnswer() {
     mutationFn: (request: SubmitAnswerRequest) => responseApi.autoSaveAnswer(request),
     onSuccess: (data) => {
       if (data.saved) {
-        // Silently saved without notifications
         console.log('[AutoSave] Answer saved successfully')
+      } else {
+        console.warn('[AutoSave] Answer save returned saved:false — check API logs')
       }
     },
     // Don't show error notifications for auto-save failures
@@ -150,16 +168,20 @@ export function useSurveyResponseState(responseId: string | null, options: { ena
 
   // Clear response caches when not authenticated or responseId changes
   React.useEffect(() => {
-    if (!isAuthenticated || !responseId) {
-      // Clear all response-related queries when authentication is lost
+    if (!isAuthenticated) {
+      // Clear ALL response cache on logout to prevent stale data
       queryClient.removeQueries({ queryKey: responseKeys.all })
+    } else if (!responseId) {
+      // Clear specific response cache when responseId changes
+      queryClient.removeQueries({ queryKey: responseKeys.detail('') })
     }
   }, [isAuthenticated, responseId, queryClient])
 
   const { data: response, isLoading: responseLoading } = useQuery({
     queryKey: responseKeys.detail(responseId || ''),
     queryFn: () => responseApi.getResponse(responseId || ''),
-    enabled: !!responseId && isAuthenticated && enableResponse,
+    // Disabled: backend endpoint not implemented (getResponse always throws)
+    enabled: false,
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
   })
@@ -189,17 +211,13 @@ export function useSurveyResponseState(responseId: string | null, options: { ena
 
 /**
  * Hook to prefetch response data
+ * NOTE: No-op — backend endpoint for response details is not implemented yet.
+ * Re-enable when GET /surveys/responses/:id is available on backend.
  */
 export function usePrefetchResponse() {
-  const queryClient = useQueryClient()
-
   return {
-    prefetchResponse: (responseId: string) => {
-      queryClient.prefetchQuery({
-        queryKey: responseKeys.detail(responseId),
-        queryFn: () => responseApi.getResponse(responseId),
-        staleTime: 30 * 1000,
-      })
+    prefetchResponse: (_responseId: string) => {
+      // No-op: backend endpoint not implemented (getResponse always throws)
     }
   }
 }

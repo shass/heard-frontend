@@ -42,7 +42,7 @@ export class BaseAppPlatformPlugin implements IPlatformPlugin {
     try {
       const { sdk } = await import('@farcaster/miniapp-sdk')
       const context = await sdk.context
-      const clientFid = (context?.client as any)?.clientFid?.toString()
+      const clientFid = context?.client?.clientFid?.toString()
 
       if (DEV_MODE) {
         console.log('[BaseAppPlatformPlugin] Detection result:', {

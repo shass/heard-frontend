@@ -1,7 +1,7 @@
 "use client"
 
-import { use, useEffect, useRef } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { use, useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { SurveyPage } from "@/components/survey-page"
 import { Footer } from "@/components/footer"
@@ -20,15 +20,31 @@ interface SurveyDetailPageProps {
 
 export default function SurveyDetailPage({ params }: SurveyDetailPageProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { id } = use(params)
   const user = useAuthStore(state => state.user)
 
-  // Read BringId params from URL (passed from info page after verification)
-  const bringIdScoreParam = searchParams.get('bringIdScore')
-  const bringIdPointsParam = searchParams.get('bringIdPoints')
-  const bringIdScore = bringIdScoreParam ? parseInt(bringIdScoreParam, 10) : undefined
-  const bringIdPoints = bringIdPointsParam ? parseInt(bringIdPointsParam, 10) : undefined
+  // Read BringId params from sessionStorage (set by info page after verification)
+  // Using useState to read once on mount, then clear to prevent reuse
+  const [bringIdScore] = useState<number | undefined>(() => {
+    if (typeof window === 'undefined') return undefined
+    const stored = sessionStorage.getItem(`bringid_score_${id}`)
+    if (stored !== null) {
+      sessionStorage.removeItem(`bringid_score_${id}`)
+      const parsed = parseInt(stored, 10)
+      return isNaN(parsed) ? undefined : parsed
+    }
+    return undefined
+  })
+  const [bringIdPoints] = useState<number | undefined>(() => {
+    if (typeof window === 'undefined') return undefined
+    const stored = sessionStorage.getItem(`bringid_points_${id}`)
+    if (stored !== null) {
+      sessionStorage.removeItem(`bringid_points_${id}`)
+      const parsed = parseInt(stored, 10)
+      return isNaN(parsed) ? undefined : parsed
+    }
+    return undefined
+  })
 
   const { data: survey, isLoading, error } = useSurvey(id)
 

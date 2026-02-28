@@ -101,19 +101,17 @@ export function resolveSurveyButtonPhase(input: SurveyButtonInput): SurveyButton
     return 'not_eligible'
   }
 
-  // 6. No eligibility data and not fetching — still resolving
-  if (!input.eligibility) return 'resolving'
+  // 6. Time gates (apply to all survey types)
+  if (input.startDate && !isPast(input.startDate)) return 'not_started_yet'
+  if (input.endDate && isPast(input.endDate)) return 'ended'
 
-  // 7. Prediction time gates
-  if (input.surveyType === SurveyType.PREDICTION) {
-    if (input.startDate && !isPast(input.startDate)) return 'not_started_yet'
-    if (input.endDate && isPast(input.endDate)) return 'ended'
-  }
-
-  // 8. Not authenticated — need to sign
+  // 7. Not authenticated — need to sign
   if (!input.isAuthenticated) {
     return input.isAuthLoading ? 'authenticating' : 'authenticate'
   }
+
+  // 8. No eligibility data and not fetching — still resolving
+  if (!input.eligibility) return 'resolving'
 
   // 9. Ready
   return input.eligibility.hasStarted ? 'continue' : 'start'

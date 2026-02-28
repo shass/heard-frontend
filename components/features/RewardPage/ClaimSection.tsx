@@ -25,8 +25,10 @@ export function ClaimSection({
   if (!qrCodeUrl || !claimUrl) return null
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(claimUrl)
-    notifications.success('Link copied', 'Claim link copied to clipboard')
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(claimUrl)
+      notifications.success('Link copied', 'Claim link copied to clipboard')
+    }
     setLinkCopied(true)
     setTimeout(() => setLinkCopied(false), 1500)
   }

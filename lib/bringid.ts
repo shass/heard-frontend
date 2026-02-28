@@ -7,4 +7,4 @@
 import { BringID } from 'bringid'
 import { env } from '@/lib/env'
 
-export const bringid = new BringID({ mode: env.BRINGID_MODE })
+export const bringid = new BringID({ appId: env.BRINGID_APP_ID, mode: env.BRINGID_MODE })
