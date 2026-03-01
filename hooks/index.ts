@@ -13,7 +13,6 @@ export * from './use-survey-strategy'
 export * from './use-users'
 
 // Utility hooks
-export * from './use-mobile'
 export * from './use-navigation-fix'
 // BringId hooks
 export * from './use-humanity-verification'

@@ -6,6 +6,3 @@ export { useAuth } from './useAuth'
 
 // Wallet strategy
 export { useWallet } from './useWallet'
-
-// Access control
-export { useAccessControl, useCanAccess } from './useAccessControl'

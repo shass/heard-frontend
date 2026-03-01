@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { Skeleton } from './skeleton'
+import React from 'react';
 
 interface SpinnerProps {
   size?: 'sm' | 'md' | 'lg'
@@ -105,71 +106,6 @@ export function PageLoading({ message = 'Loading...', className }: PageLoadingPr
   )
 }
 
-interface LoadingButtonProps {
-  loading?: boolean
-  children: React.ReactNode
-  className?: string
-  disabled?: boolean
-  onClick?: () => void
-}
-
-export function LoadingButton({
-  loading = false,
-  children,
-  className,
-  disabled,
-  onClick,
-  ...props
-}: LoadingButtonProps) {
-  return (
-    <button
-      className={cn(
-        'inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg',
-        'bg-orange-500 hover:bg-orange-600 text-white',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
-        'transition-colors duration-200',
-        className
-      )}
-      disabled={loading || disabled}
-      onClick={onClick}
-      {...props}
-    >
-      {loading && <Spinner size="sm" className="mr-2" />}
-      {children}
-    </button>
-  )
-}
-
-interface LoadingOverlayProps {
-  visible: boolean
-  message?: string
-  className?: string
-}
-
-export function LoadingOverlay({
-  visible,
-  message = 'Loading...',
-  className
-}: LoadingOverlayProps) {
-  if (!visible) return null
-
-  return (
-    <div
-      className={cn(
-        'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50',
-        className
-      )}
-    >
-      <div className="bg-white rounded-lg p-6 shadow-lg">
-        <div className="text-center">
-          <Spinner size="lg" className="mx-auto mb-4 text-orange-500" />
-          <p className="text-zinc-700">{message}</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 interface InlineLoadingProps {
   size?: 'sm' | 'md'
   message?: string
@@ -239,22 +175,6 @@ export function LoadingState({
 }
 
 // Additional specialized skeletons
-export function SurveyQuestionSkeleton({ className }: { className?: string }) {
-  return (
-    <div className={cn('space-y-6', className)}>
-      <Skeleton className="h-6 w-3/4" />
-      <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="flex items-center space-x-3 p-4 border rounded-lg">
-            <Skeleton className="h-4 w-4 rounded-full" />
-            <Skeleton className="h-4 w-48" />
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export function RewardPageSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn('text-center space-y-8', className)}>
@@ -286,15 +206,6 @@ export function HeardPointsHistorySkeleton({ rows = 5, className }: { rows?: num
           </div>
         </div>
       ))}
-    </div>
-  )
-}
-
-export function AuthSectionSkeleton({ className }: { className?: string }) {
-  return (
-    <div className={cn('flex items-center space-x-4', className)}>
-      <Skeleton className="h-10 w-32" />
-      <Skeleton className="h-10 w-32" />
     </div>
   )
 }
