@@ -135,13 +135,15 @@ export async function bootstrapApplication(onProgress?: (p: BootstrapProgress) =
     bootstrapAccessStrategies()
 
     // Detect and activate platform
-    onProgress?.({ step: 'detecting' })
+    onProgress?.({ step: 'detecting', detail: `${platformRegistry.getAll().length} plugins` })
     if (process.env.NODE_ENV === 'development') {
       console.log('[Bootstrap] Detecting platform...')
     }
 
     try {
-      await platformRegistry.detectAndActivate()
+      await platformRegistry.detectAndActivate((msg) => {
+        onProgress?.({ step: 'detecting', detail: msg })
+      })
     } catch (detectionError) {
       console.error('[Bootstrap] Platform detection failed:', detectionError)
 
@@ -163,6 +165,8 @@ export async function bootstrapApplication(onProgress?: (p: BootstrapProgress) =
       }
     }
 
+    onProgress?.({ step: 'detected', detail: platformRegistry.getActive().name })
+
     // Wire up platform-specific token storage to ApiClient
     onProgress?.({ step: 'wiring' })
     apiClient.setTokenStorage(platformRegistry.getActive().createTokenStorage())
@@ -175,17 +179,18 @@ export async function bootstrapApplication(onProgress?: (p: BootstrapProgress) =
       }
     })
 
-    // Safety-net: dismiss splash screen immediately for mini-app platforms
-    // sdk.actions.ready() is idempotent — calling it again from MiniKitReady is harmless
+    // Safety-net: dismiss splash screen for mini-app platforms
+    // Fire-and-forget with timeout — do NOT await, as ready() can hang indefinitely
+    // if the host doesn't respond to the comlink call
     const activePlatform = platformRegistry.getActive()
     if (activePlatform.id === 'base-app' || activePlatform.id === 'farcaster') {
-      try {
-        const { sdk } = await import('@farcaster/miniapp-sdk')
-        await sdk.actions.ready()
-        onProgress?.({ step: 'ready', detail: 'splash dismissed' })
-      } catch (e) {
-        console.error('[Bootstrap] Safety-net ready() failed:', e)
-      }
+      import('@farcaster/miniapp-sdk')
+        .then(({ sdk }) => Promise.race([
+          sdk.actions.ready(),
+          new Promise(resolve => setTimeout(resolve, 3000))
+        ]))
+        .then(() => onProgress?.({ step: 'ready', detail: 'splash dismissed' }))
+        .catch((e) => console.error('[Bootstrap] Safety-net ready() failed:', e))
     }
 
     const duration = Date.now() - start

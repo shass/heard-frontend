@@ -64,7 +64,7 @@ export class PlatformRegistry {
    * @returns activated platform plugin
    * @throws if no platform detected or detection already in progress
    */
-  async detectAndActivate(): Promise<IPlatformPlugin> {
+  async detectAndActivate(onProgress?: (msg: string) => void): Promise<IPlatformPlugin> {
     if (this.isDetecting) {
       throw new Error('[PlatformRegistry] Detection already in progress')
     }
@@ -81,6 +81,7 @@ export class PlatformRegistry {
       }
 
       // Run detection on all plugins with timeout per plugin
+      onProgress?.('running detection on all plugins')
       const DETECTION_TIMEOUT = 3000
       const detectionResults = await Promise.all(
         Array.from(this.plugins.values()).map(async (plugin) => {
@@ -114,6 +115,8 @@ export class PlatformRegistry {
         })
       )
 
+      onProgress?.(`detection done: ${detectionResults.filter(r => r.detected).length} detected of ${detectionResults.length} total`)
+
       // Filter detected platforms and sort by priority (highest first)
       const detected = detectionResults
         .filter(r => r.detected)
@@ -131,6 +134,7 @@ export class PlatformRegistry {
       }
 
       const winner = detected[0].plugin
+      onProgress?.(`winner: ${winner.name} (priority ${detected[0].priority})`)
 
       // Deactivate current platform if different
       if (this.activePlugin && this.activePlugin.id !== winner.id) {
@@ -154,6 +158,7 @@ export class PlatformRegistry {
         try {
           await winner.onActivate?.()
           this.activePlugin = winner
+          onProgress?.(`activated: ${winner.name}`)
         } catch (error) {
           console.error(`[PlatformRegistry] Activation error:`, error)
           throw new Error(`Failed to activate ${winner.name}: ${error instanceof Error ? error.message : 'Unknown error'}`)

@@ -175,6 +175,16 @@ export function AppBootstrap({ children, fallback, onReady }: AppBootstrapProps)
             </pre>
           </details>
         )}
+        {steps.length > 0 && (
+          <div style={{ marginTop: '20px', textAlign: 'left', maxWidth: '400px', margin: '20px auto 0' }}>
+            <p style={{ fontSize: '12px', color: '#718096', marginBottom: '4px' }}>Bootstrap steps:</p>
+            {steps.map((s, i) => (
+              <p key={i} style={{ fontSize: '11px', color: '#a0aec0', lineHeight: 1.3 }}>
+                {s}
+              </p>
+            ))}
+          </div>
+        )}
       </div>
     )
   }
