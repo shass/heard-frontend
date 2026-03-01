@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Script from 'next/script'
 import ErrorBoundary from '@/components/ui/error-boundary'
 import { AppProviders } from '@/src/core/components/AppProviders'
 import { PlatformLayoutRenderer } from '@/src/core/components/PlatformLayoutRenderer'
@@ -69,23 +68,44 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <Script id="debug-errors" strategy="beforeInteractive">{`
-          window.__heardErrors = [];
-          window.onerror = function(msg, src, line, col, err) {
-            window.__heardErrors.push(msg);
-            var el = document.getElementById('heard-debug');
-            if (!el) {
-              el = document.createElement('div');
-              el.id = 'heard-debug';
-              el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;padding:8px;background:#1a1a2e;color:#e94560;font-size:11px;z-index:99999;max-height:40vh;overflow:auto;font-family:monospace';
-              document.body.appendChild(el);
-            }
-            el.innerHTML += msg + '<br>at ' + (src||'?').split('/').pop() + ':' + line + '<br><br>';
-          };
-        `}</Script>
-      </head>
       <body>
+        <script dangerouslySetInnerHTML={{ __html: `
+(function(){
+  var el = document.createElement('div');
+  el.id = 'dbg';
+  el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;padding:8px;background:#000;color:#0f0;font:11px/1.4 monospace;z-index:99999;max-height:50vh;overflow:auto';
+  document.body.appendChild(el);
+
+  function log(msg) {
+    el.innerHTML += new Date().toISOString().substr(11,12) + ' ' + msg + '<br>';
+    el.scrollTop = el.scrollHeight;
+  }
+
+  log('diag loaded');
+  log('UA: ' + navigator.userAgent.substr(0, 80));
+  log('RNWebView: ' + !!window.ReactNativeWebView);
+  log('parent===self: ' + (window.parent === window));
+
+  window.onerror = function(msg, src, line) {
+    log('ERR: ' + msg + ' @ ' + (src||'?').split('/').pop() + ':' + line);
+  };
+  window.onunhandledrejection = function(e) {
+    log('REJECT: ' + (e.reason ? (e.reason.message || String(e.reason)).substr(0,200) : '?'));
+  };
+
+  var t0 = Date.now();
+  var checks = 0;
+  var iv = setInterval(function() {
+    checks++;
+    var elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+    var scripts = document.querySelectorAll('script[src]').length;
+    var hasNext = !!document.getElementById('__next');
+    var bodyLen = (document.body.innerText || '').length;
+    log(elapsed + 's: scripts=' + scripts + ' __next=' + hasNext + ' bodyChars=' + bodyLen);
+    if (checks >= 20) { clearInterval(iv); log('done monitoring'); }
+  }, 1500);
+})();
+` }} />
         <ErrorBoundary>
           <AppProviders>
             {/* Platform-specific layout renderer */}
