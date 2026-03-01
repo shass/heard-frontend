@@ -88,6 +88,18 @@ export default function RootLayout({
 
   window.onerror = function(msg, src, line) {
     log('ERR: ' + msg + ' @ ' + (src||'?').split('/').pop() + ':' + line);
+    // Auto-reload once on chunk load failure (SyntaxError = truncated JS)
+    if (msg && msg.toString().indexOf('SyntaxError') !== -1 && src && src.indexOf('.js') !== -1) {
+      var key = '__chunk_reload';
+      var count = parseInt(sessionStorage.getItem(key) || '0', 10);
+      if (count < 2) {
+        sessionStorage.setItem(key, String(count + 1));
+        log('Chunk corrupted, reloading (attempt ' + (count + 1) + ')...');
+        setTimeout(function() { location.reload(); }, 500);
+      } else {
+        log('Chunk reload limit reached');
+      }
+    }
   };
   window.onunhandledrejection = function(e) {
     log('REJECT: ' + (e.reason ? (e.reason.message || String(e.reason)).substr(0,200) : '?'));

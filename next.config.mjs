@@ -67,37 +67,6 @@ const nextConfig = {
   webpack: (config, { isServer }) => {
     config.resolve.fallback = { fs: false, net: false, tls: false };
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
-
-    // Bundle size optimizations — client only
-    if (!isServer) {
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            priority: 10,
-            reuseExistingChunk: true,
-          },
-          web3: {
-            test: /[\\/]node_modules[\\/](wagmi|viem|@rainbow-me|@walletconnect)[\\/]/,
-            name: 'web3',
-            priority: 20,
-            reuseExistingChunk: true,
-          },
-          ui: {
-            test: /[\\/]node_modules[\\/](@radix-ui|@tanstack)[\\/]/,
-            name: 'ui',
-            priority: 15,
-            reuseExistingChunk: true,
-          },
-        },
-      },
-    }
-    }
-
     return config;
   },
 }
