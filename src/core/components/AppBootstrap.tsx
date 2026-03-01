@@ -37,6 +37,7 @@ export function AppBootstrap({ children, fallback, onReady }: AppBootstrapProps)
   const [error, setError] = useState<Error | null>(null)
   const [retryCount, setRetryCount] = useState(0)
   const [steps, setSteps] = useState<string[]>([])
+  const [elapsed, setElapsed] = useState(0)
   const startRef = useRef(Date.now())
 
   const contextValue: BootstrapContextType = {
@@ -46,6 +47,13 @@ export function AppBootstrap({ children, fallback, onReady }: AppBootstrapProps)
   }
 
   useEffect(() => {
+    // Dismiss mini-app splash screen immediately
+    // Safe: React has hydrated, the loading UI is visible
+    // ready() is idempotent — calling it again later is harmless
+    import('@farcaster/miniapp-sdk')
+      .then(({ sdk }) => sdk.actions.ready())
+      .catch(() => {}) // Ignore errors in non-mini-app environments
+
     let isMounted = true
 
     const init = async () => {
@@ -54,6 +62,8 @@ export function AppBootstrap({ children, fallback, onReady }: AppBootstrapProps)
         if (isOffline()) {
           throw new Error(ERROR_MESSAGES.NETWORK_ERROR)
         }
+
+        if (isMounted) setSteps(['starting...'])
 
         // Bootstrap with retry logic and timeout
         await withTimeout(
@@ -98,6 +108,16 @@ export function AppBootstrap({ children, fallback, onReady }: AppBootstrapProps)
       isMounted = false
     }
   }, [onReady])
+
+  useEffect(() => {
+    if (isReady || error) return // Stop updating once done
+
+    const interval = setInterval(() => {
+      setElapsed(Math.round((Date.now() - startRef.current) / 100) / 10)
+    }, 500)
+
+    return () => clearInterval(interval)
+  }, [isReady, error])
 
   if (error) {
     return (
@@ -166,12 +186,12 @@ export function AppBootstrap({ children, fallback, onReady }: AppBootstrapProps)
           {retryCount > 0 ? `Retrying (attempt ${retryCount})...` : 'Loading...'}
         </p>
         <p style={{ fontSize: '11px', color: '#a0aec0', marginTop: '4px' }}>
-          {Math.round((Date.now() - startRef.current) / 100) / 10}s
+          {elapsed}s
         </p>
         {steps.length > 0 && (
           <div style={{ marginTop: '8px', textAlign: 'left', maxWidth: '300px', margin: '8px auto 0' }}>
             {steps.map((s, i) => (
-              <p key={i} style={{ fontSize: '10px', color: '#718096', lineHeight: 1.4 }}>
+              <p key={i} style={{ fontSize: '12px', color: '#718096', lineHeight: 1.4 }}>
                 {s}
               </p>
             ))}
