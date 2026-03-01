@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import ErrorBoundary from '@/components/ui/error-boundary'
 import { AppProviders } from '@/src/core/components/AppProviders'
 import { PlatformLayoutRenderer } from '@/src/core/components/PlatformLayoutRenderer'
@@ -68,6 +69,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <Script id="debug-errors" strategy="beforeInteractive">{`
+          window.__heardErrors = [];
+          window.onerror = function(msg, src, line, col, err) {
+            window.__heardErrors.push(msg);
+            var el = document.getElementById('heard-debug');
+            if (!el) {
+              el = document.createElement('div');
+              el.id = 'heard-debug';
+              el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;padding:8px;background:#1a1a2e;color:#e94560;font-size:11px;z-index:99999;max-height:40vh;overflow:auto;font-family:monospace';
+              document.body.appendChild(el);
+            }
+            el.innerHTML += msg + '<br>at ' + (src||'?').split('/').pop() + ':' + line + '<br><br>';
+          };
+        `}</Script>
+      </head>
       <body>
         <ErrorBoundary>
           <AppProviders>
