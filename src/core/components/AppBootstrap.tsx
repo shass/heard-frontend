@@ -7,10 +7,11 @@
  * Must be called once before any platform-dependent code runs
  */
 
-import { useEffect, useState, createContext, useContext, ReactNode } from 'react'
+import { useEffect, useState, useRef, createContext, useContext, ReactNode } from 'react'
 import { bootstrapApplication } from '@/src/app-bootstrap'
 import {
   withRetry,
+  withTimeout,
   isOffline,
   getUserFriendlyMessage,
   ERROR_MESSAGES
@@ -35,6 +36,8 @@ export function AppBootstrap({ children, fallback, onReady }: AppBootstrapProps)
   const [isReady, setIsReady] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const [retryCount, setRetryCount] = useState(0)
+  const [steps, setSteps] = useState<string[]>([])
+  const startRef = useRef(Date.now())
 
   const contextValue: BootstrapContextType = {
     isBootstrapped: isReady,
@@ -52,22 +55,27 @@ export function AppBootstrap({ children, fallback, onReady }: AppBootstrapProps)
           throw new Error(ERROR_MESSAGES.NETWORK_ERROR)
         }
 
-        // Bootstrap with retry logic
-        await withRetry(
-          () => bootstrapApplication(),
-          {
-            maxAttempts: 3,
-            baseDelay: 1000,
-            onRetry: (attempt, error) => {
-              if (isMounted) {
-                setRetryCount(attempt)
-              }
-
-              if (process.env.NODE_ENV === 'development') {
-                console.log(`[AppBootstrap] Retry attempt ${attempt}:`, error.message)
+        // Bootstrap with retry logic and timeout
+        await withTimeout(
+          withRetry(
+            () => bootstrapApplication((p) => {
+              if (isMounted) setSteps(prev => [...prev, `${p.step}${p.detail ? ': ' + p.detail : ''}`])
+            }),
+            {
+              maxAttempts: 3,
+              baseDelay: 1000,
+              onRetry: (attempt, error) => {
+                if (isMounted) {
+                  setRetryCount(attempt)
+                  setSteps(prev => [...prev, `retry-${attempt}: ${error.message}`])
+                }
+                if (process.env.NODE_ENV === 'development') {
+                  console.log(`[AppBootstrap] Retry attempt ${attempt}:`, error.message)
+                }
               }
             }
-          }
+          ),
+          { timeoutMs: 15000, timeoutMessage: 'Bootstrap timed out after 15s' }
         )
 
         if (isMounted) {
@@ -157,6 +165,18 @@ export function AppBootstrap({ children, fallback, onReady }: AppBootstrapProps)
         <p style={{ fontSize: '16px', color: '#4a5568' }}>
           {retryCount > 0 ? `Retrying (attempt ${retryCount})...` : 'Loading...'}
         </p>
+        <p style={{ fontSize: '11px', color: '#a0aec0', marginTop: '4px' }}>
+          {Math.round((Date.now() - startRef.current) / 100) / 10}s
+        </p>
+        {steps.length > 0 && (
+          <div style={{ marginTop: '8px', textAlign: 'left', maxWidth: '300px', margin: '8px auto 0' }}>
+            {steps.map((s, i) => (
+              <p key={i} style={{ fontSize: '10px', color: '#718096', lineHeight: 1.4 }}>
+                {s}
+              </p>
+            ))}
+          </div>
+        )}
       </div>
     )
   }

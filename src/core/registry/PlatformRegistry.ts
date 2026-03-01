@@ -81,7 +81,7 @@ export class PlatformRegistry {
       }
 
       // Run detection on all plugins with timeout per plugin
-      const DETECTION_TIMEOUT = 1500
+      const DETECTION_TIMEOUT = 3000
       const detectionResults = await Promise.all(
         Array.from(this.plugins.values()).map(async (plugin) => {
           try {

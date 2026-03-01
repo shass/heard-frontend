@@ -56,6 +56,17 @@ export class FarcasterPlatformPlugin implements IPlatformPlugin {
   async detect(): Promise<boolean> {
     try {
       const { sdk } = await import('@farcaster/miniapp-sdk')
+
+      // Fast check — short-circuits immediately in non-mini-app environments
+      const isMiniApp = await sdk.isInMiniApp()
+      if (!isMiniApp) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[FarcasterPlatformPlugin] Not in mini app environment')
+        }
+        return false
+      }
+
+      // We're in a mini app — check if it's specifically Warpcast
       const context = await sdk.context
       const clientFid = context?.client?.clientFid?.toString()
 

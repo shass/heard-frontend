@@ -41,6 +41,17 @@ export class BaseAppPlatformPlugin implements IPlatformPlugin {
 
     try {
       const { sdk } = await import('@farcaster/miniapp-sdk')
+
+      // Fast check — short-circuits immediately in non-mini-app environments
+      const isMiniApp = await sdk.isInMiniApp()
+      if (!isMiniApp) {
+        if (DEV_MODE) {
+          console.log('[BaseAppPlatformPlugin] Not in mini app environment')
+        }
+        return false
+      }
+
+      // We're in a mini app — check if it's specifically Base App
       const context = await sdk.context
       const clientFid = context?.client?.clientFid?.toString()
 

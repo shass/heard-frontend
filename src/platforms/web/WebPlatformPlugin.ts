@@ -42,29 +42,25 @@ export class WebPlatformPlugin implements IPlatformPlugin {
   // ========================================
 
   async detect(): Promise<boolean> {
-    // Web platform is active when NOT running in any specialized environment
-
-    // Check if running in MiniKit environment (Farcaster)
     try {
-      // Dynamic import to avoid build errors if SDK not installed
       const { sdk } = await import('@farcaster/miniapp-sdk')
 
-      // If SDK context exists, we're in Farcaster - NOT Web
-      const context = await sdk.context
-      if (context) {
+      // Fast check — short-circuits immediately in non-mini-app environments
+      const isMiniApp = await sdk.isInMiniApp()
+
+      if (isMiniApp) {
         if (isDevelopment) {
-          console.log('[WebPlatformPlugin] MiniKit context detected - NOT Web platform')
+          console.log('[WebPlatformPlugin] Mini app environment detected - NOT Web platform')
         }
         return false
       }
-    } catch (error) {
-      // SDK not available or import failed - this is fine for Web platform
+    } catch {
+      // SDK not available or import failed — definitely Web platform
       if (isDevelopment) {
         console.log('[WebPlatformPlugin] MiniKit SDK not available - defaulting to Web platform')
       }
     }
 
-    // If we get here, we're running as a standard web app
     if (isDevelopment) {
       console.log('[WebPlatformPlugin] Detected as Web platform')
     }

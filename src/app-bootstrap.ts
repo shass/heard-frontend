@@ -24,6 +24,8 @@ import { PredictionMarketSurveyType } from '@/src/survey-types/prediction-market
 import { WhitelistAccessStrategy } from '@/src/access-strategies/whitelist'
 import { BringIdAccessStrategy } from '@/src/access-strategies/bringid'
 
+export type BootstrapProgress = { step: string; detail?: string }
+
 /**
  * Bootstrap platform system
  * Registers all platform plugins
@@ -105,7 +107,7 @@ let isBootstrapped = false
  * Bootstrap entire application
  * Registers all plugins and initializes the system
  */
-export async function bootstrapApplication() {
+export async function bootstrapApplication(onProgress?: (p: BootstrapProgress) => void) {
   // Guard against double initialization (React StrictMode in dev)
   if (isBootstrapped) {
     if (process.env.NODE_ENV === 'development') {
@@ -124,12 +126,16 @@ export async function bootstrapApplication() {
   isBootstrapped = true
 
   try {
+    onProgress?.({ step: 'start' })
+
     // Register all plugins
+    onProgress?.({ step: 'registering' })
     bootstrapPlatforms()
     bootstrapSurveyTypes()
     bootstrapAccessStrategies()
 
     // Detect and activate platform
+    onProgress?.({ step: 'detecting' })
     if (process.env.NODE_ENV === 'development') {
       console.log('[Bootstrap] Detecting platform...')
     }
@@ -158,6 +164,7 @@ export async function bootstrapApplication() {
     }
 
     // Wire up platform-specific token storage to ApiClient
+    onProgress?.({ step: 'wiring' })
     apiClient.setTokenStorage(platformRegistry.getActive().createTokenStorage())
 
     // Wire up synchronous 401 handler to avoid race condition with async logout
@@ -167,6 +174,19 @@ export async function bootstrapApplication() {
         state.logout()
       }
     })
+
+    // Safety-net: dismiss splash screen immediately for mini-app platforms
+    // sdk.actions.ready() is idempotent — calling it again from MiniKitReady is harmless
+    const activePlatform = platformRegistry.getActive()
+    if (activePlatform.id === 'base-app' || activePlatform.id === 'farcaster') {
+      try {
+        const { sdk } = await import('@farcaster/miniapp-sdk')
+        await sdk.actions.ready()
+        onProgress?.({ step: 'ready', detail: 'splash dismissed' })
+      } catch (e) {
+        console.error('[Bootstrap] Safety-net ready() failed:', e)
+      }
+    }
 
     const duration = Date.now() - start
 
@@ -178,7 +198,13 @@ export async function bootstrapApplication() {
       console.log(`[Bootstrap] Available access strategies: ${accessStrategyRegistry.getAll().length}`)
       console.log('='.repeat(60))
     }
+
+    onProgress?.({ step: 'done', detail: platformRegistry.getActive().name })
   } catch (error) {
+    isBootstrapped = false
+    platformRegistry.reset()
+    surveyTypeRegistry.reset()
+    accessStrategyRegistry.reset()
     console.error('[Bootstrap] ❌ Bootstrap failed:', error)
     throw error
   }
