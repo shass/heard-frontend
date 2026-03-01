@@ -175,21 +175,9 @@ export class FarcasterPlatformPlugin implements IPlatformPlugin {
       console.log('[FarcasterPlatformPlugin] Config:', this.getConfig())
     }
 
-    // Initialize Farcaster SDK if needed
-    try {
-      const { sdk } = await import('@farcaster/miniapp-sdk')
-      const context = await sdk.context
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[FarcasterPlatformPlugin] SDK initialized:', {
-          hasContext: !!context,
-          user: context?.user,
-          client: context?.client?.clientFid,
-        })
-      }
-    } catch (error) {
-      console.error('[FarcasterPlatformPlugin] Failed to initialize SDK:', error)
-    }
+    // Context was already validated during detect() — no need to await it again.
+    // Calling sdk.context here without a timeout would hang bootstrap indefinitely
+    // if the host doesn't respond to the comlink call.
   }
 
   async onDeactivate(): Promise<void> {
