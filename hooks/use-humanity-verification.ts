@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { bringid } from '@/lib/bringid'
+import { getBringId } from '@/lib/bringid'
 import { bringIdApi } from '@/lib/api/bringid'
 
 interface VerificationResult {
@@ -20,7 +20,7 @@ export function useHumanityVerification() {
 
     try {
       // Open BringId modal and get proofs and points
-      const { proofs, points } = await bringid.verifyHumanity()
+      const { proofs, points } = await getBringId().verifyHumanity()
 
       // Send proofs AND points to backend for verification
       const response = await bringIdApi.verifyHumanity(walletAddress, proofs, points)
